@@ -24,7 +24,7 @@ export default function MetricCard({
     <div
       className={`rounded-xl border p-5 card-hover ${
         accent
-          ? "bg-[#AAFF00] border-[#AAFF00] accent-glow"
+          ? "bg-[#00FF00] border-[#00FF00] accent-glow"
           : "bg-[#111111] border-[#1e1e1e]"
       }`}
     >
@@ -34,7 +34,7 @@ export default function MetricCard({
             accent ? "bg-black/20" : "bg-[#1a1a1a] border border-[#2a2a2a]"
           }`}
         >
-          <span className={accent ? "text-black" : "text-[#AAFF00]"}>
+          <span className={accent ? "text-black" : "text-[#00FF00]"}>
             {icon}
           </span>
         </div>
@@ -45,7 +45,7 @@ export default function MetricCard({
               accent
                 ? "bg-black/15 text-black"
                 : isPositive
-                ? "bg-[#AAFF00]/10 text-[#AAFF00]"
+                ? "bg-[#00FF00]/10 text-[#00FF00]"
                 : "bg-red-500/10 text-red-400"
             }`}
           >

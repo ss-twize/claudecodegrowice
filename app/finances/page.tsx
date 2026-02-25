@@ -44,7 +44,7 @@ const BarTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
         <p className="text-[#888888] mb-1">{label}</p>
-        <p className="text-[#AAFF00] font-semibold">
+        <p className="text-[#00FF00] font-semibold">
           {new Intl.NumberFormat("ru-RU", {
             style: "currency",
             currency: "RUB",
@@ -58,7 +58,7 @@ const BarTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const serviceColors = ["#AAFF00", "#88CC00", "#66AA00", "#448800", "#2a4400"];
+const serviceColors = ["#00FF00", "#88CC00", "#66AA00", "#448800", "#2a4400"];
 
 export default function FinancesPage() {
   return (
@@ -101,12 +101,12 @@ export default function FinancesPage() {
         {/* Profit summary */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Выручка (год)", value: financesKPIs.totalRevenue, color: "#AAFF00" },
+            { label: "Выручка (год)", value: financesKPIs.totalRevenue, color: "#00FF00" },
             { label: "Расходы (год)", value: financesKPIs.totalExpenses, color: "#ff4444" },
             {
               label: "Прибыль (год)",
               value: financesKPIs.totalProfit,
-              color: "#AAFF00",
+              color: "#00FF00",
               highlight: true,
             },
           ].map((item) => (
@@ -114,7 +114,7 @@ export default function FinancesPage() {
               key={item.label}
               className={`rounded-xl border p-5 ${
                 item.highlight
-                  ? "bg-[#0f1a00] border-[#AAFF00]/20"
+                  ? "bg-[#0f1a00] border-[#00FF00]/20"
                   : "bg-[#111111] border-[#1e1e1e]"
               }`}
             >
@@ -123,7 +123,7 @@ export default function FinancesPage() {
                 {formatCurrency(item.value)}
               </p>
               {item.highlight && (
-                <p className="text-[#AAFF00]/60 text-xs mt-1">
+                <p className="text-[#00FF00]/60 text-xs mt-1">
                   Маржа: {Math.round((item.value / financesKPIs.totalRevenue) * 100)}%
                 </p>
               )}
@@ -140,7 +140,7 @@ export default function FinancesPage() {
             </div>
             <div className="flex items-center gap-4 text-xs">
               {[
-                { color: "#AAFF00", label: "Выручка" },
+                { color: "#00FF00", label: "Выручка" },
                 { color: "#444444", label: "Расходы" },
                 { color: "#88CC00", label: "Прибыль" },
               ].map((l) => (
@@ -172,10 +172,10 @@ export default function FinancesPage() {
                 type="monotone"
                 dataKey="revenue"
                 name="Выручка"
-                stroke="#AAFF00"
+                stroke="#00FF00"
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: "#AAFF00", strokeWidth: 0 }}
+                activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }}
               />
               <Line
                 type="monotone"
@@ -224,7 +224,7 @@ export default function FinancesPage() {
                 tickFormatter={(v) => `${v / 1000}к`}
                 width={45}
               />
-              <Tooltip content={<BarTooltip />} cursor={{ fill: "rgba(170,255,0,0.05)" }} />
+              <Tooltip content={<BarTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
               <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                 {serviceRevenueData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={serviceColors[index]} />

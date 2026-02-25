@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className="bg-[#0a0a0a] text-white antialiased">
+      <body className="bg-[#002322] text-white antialiased">
         <Sidebar />
         <main className="ml-60 min-h-screen">
           {children}

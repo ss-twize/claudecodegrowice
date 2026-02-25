@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 
 const activityIcons: Record<string, React.ReactNode> = {
-  appointment: <CalendarCheck size={14} className="text-[#AAFF00]" />,
+  appointment: <CalendarCheck size={14} className="text-[#00FF00]" />,
   client: <UserPlus size={14} className="text-blue-400" />,
-  payment: <CreditCard size={14} className="text-[#AAFF00]" />,
+  payment: <CreditCard size={14} className="text-[#00FF00]" />,
   cancel: <XCircle size={14} className="text-red-400" />,
 };
 
@@ -93,7 +93,7 @@ export default function DashboardPage() {
                   {activity.amount !== null && (
                     <span
                       className={`text-xs font-bold flex-shrink-0 ${
-                        activity.amount > 0 ? "text-[#AAFF00]" : "text-red-400"
+                        activity.amount > 0 ? "text-[#00FF00]" : "text-red-400"
                       }`}
                     >
                       {activity.amount > 0 ? "+" : ""}

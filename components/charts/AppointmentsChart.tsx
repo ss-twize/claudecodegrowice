@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
         <p className="text-[#888888] mb-1">{label}</p>
-        <p className="text-[#AAFF00] font-semibold">
+        <p className="text-[#00FF00] font-semibold">
           {payload[0].value} записей
         </p>
       </div>
@@ -50,12 +50,12 @@ export default function AppointmentsChart() {
             tickLine={false}
             width={30}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(170,255,0,0.05)" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
           <Bar dataKey="appointments" radius={[4, 4, 0, 0]}>
             {appointmentsByDay.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={entry.appointments === maxVal ? "#AAFF00" : "#1e2e00"}
+                fill={entry.appointments === maxVal ? "#00FF00" : "#1e2e00"}
               />
             ))}
           </Bar>

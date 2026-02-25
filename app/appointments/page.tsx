@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
         <p className="text-[#888888] mb-1">{label}</p>
-        <p className="text-[#AAFF00] font-semibold">{payload[0].value} записей</p>
+        <p className="text-[#00FF00] font-semibold">{payload[0].value} записей</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default function AppointmentsPage() {
                 tickLine={false}
                 width={25}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(170,255,0,0.05)" }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
               <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                 {appointmentsByHour.map((entry, index) => {
                   const intensity = entry.count / maxHour;
@@ -103,7 +103,7 @@ export default function AppointmentsPage() {
                       key={`cell-${index}`}
                       fill={
                         intensity > 0.8
-                          ? "#AAFF00"
+                          ? "#00FF00"
                           : intensity > 0.6
                           ? "#88CC00"
                           : intensity > 0.4
@@ -122,7 +122,7 @@ export default function AppointmentsPage() {
               { color: "#1e2e00", label: "Низкая" },
               { color: "#3a5c00", label: "Средняя" },
               { color: "#88CC00", label: "Высокая" },
-              { color: "#AAFF00", label: "Пик" },
+              { color: "#00FF00", label: "Пик" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
