@@ -1,0 +1,66 @@
+"use client";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import { appointmentsByDay } from "@/lib/mockData";
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
+        <p className="text-[#888888] mb-1">{label}</p>
+        <p className="text-[#AAFF00] font-semibold">
+          {payload[0].value} записей
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+export default function AppointmentsChart() {
+  const maxVal = Math.max(...appointmentsByDay.map((d) => d.appointments));
+
+  return (
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
+      <div className="mb-5">
+        <h3 className="text-white font-semibold">Записи по дням</h3>
+        <p className="text-[#555555] text-sm">Средние показатели за неделю</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={appointmentsByDay} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" vertical={false} />
+          <XAxis
+            dataKey="day"
+            tick={{ fill: "#555555", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fill: "#555555", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            width={30}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(170,255,0,0.05)" }} />
+          <Bar dataKey="appointments" radius={[4, 4, 0, 0]}>
+            {appointmentsByDay.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.appointments === maxVal ? "#AAFF00" : "#1e2e00"}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
