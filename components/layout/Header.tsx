@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export default function Header({ title, subtitle }: HeaderProps) {
   return (
-    <header className="h-16 border-b border-[#1e1e1e] bg-[#0a0a0a] flex items-center justify-between px-6 sticky top-0 z-40">
+    <header className="h-16 border-b border-[#1e1e1e] bg-[#002322] flex items-center justify-between px-6 sticky top-0 z-40">
       <div>
         <h1 className="text-white font-semibold text-lg">{title}</h1>
         {subtitle && (
@@ -31,7 +31,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
         {/* Notifications */}
         <button className="relative w-9 h-9 rounded-lg bg-[#141414] border border-[#1e1e1e] flex items-center justify-center hover:border-[#333333] transition-colors">
           <Bell size={16} className="text-[#888888]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#AAFF00] rounded-full" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#00FF00] rounded-full" />
         </button>
 
         {/* Date */}

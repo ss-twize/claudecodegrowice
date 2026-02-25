@@ -16,7 +16,7 @@ export const revenueData = [
 ];
 
 export const servicesData = [
-  { name: "Стрижка", value: 32, color: "#AAFF00" },
+  { name: "Стрижка", value: 32, color: "#00FF00" },
   { name: "Окрашивание", value: 28, color: "#88CC00" },
   { name: "Маникюр", value: 18, color: "#66AA00" },
   { name: "Педикюр", value: 12, color: "#448800" },
@@ -258,7 +258,7 @@ export const staffData = [
     workload: 88,
     appointments: 62,
     avgCheck: 6240,
-    color: "#AAFF00",
+    color: "#00FF00",
   },
   {
     id: 2,
@@ -308,7 +308,7 @@ export const staffRevenueData = staffData.map((s) => ({
 }));
 
 export const clientSourcesData = [
-  { name: "Instagram", value: 38, color: "#AAFF00" },
+  { name: "Instagram", value: 38, color: "#00FF00" },
   { name: "Рекомендации", value: 27, color: "#88CC00" },
   { name: "ВКонтакте", value: 16, color: "#66AA00" },
   { name: "2GIS/Google", value: 12, color: "#448800" },

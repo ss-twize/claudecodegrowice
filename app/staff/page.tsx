@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
         <p className="text-[#888888] mb-1">{label}</p>
-        <p className="text-[#AAFF00] font-semibold">
+        <p className="text-[#00FF00] font-semibold">
           {new Intl.NumberFormat("ru-RU", {
             style: "currency",
             currency: "RUB",
@@ -40,7 +40,7 @@ const totalClients = staffData.reduce((s, m) => s + m.clients, 0);
 const avgRating = (staffData.reduce((s, m) => s + m.rating, 0) / staffData.length).toFixed(1);
 const avgWorkload = Math.round(staffData.reduce((s, m) => s + m.workload, 0) / staffData.length);
 
-const colors = ["#AAFF00", "#88CC00", "#66AA00", "#448800"];
+const colors = ["#00FF00", "#88CC00", "#66AA00", "#448800"];
 
 export default function StaffPage() {
   return (
@@ -100,7 +100,7 @@ export default function StaffPage() {
                 tickFormatter={(v) => `${v / 1000}к`}
                 width={45}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(170,255,0,0.05)" }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
               <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                 {staffRevenueData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
@@ -116,7 +116,7 @@ export default function StaffPage() {
             <h3 className="text-white font-semibold">Карточки мастеров</h3>
             <div className="flex items-center gap-2 text-sm text-[#888888]">
               Средняя загрузка:{" "}
-              <span className="text-[#AAFF00] font-semibold">{avgWorkload}%</span>
+              <span className="text-[#00FF00] font-semibold">{avgWorkload}%</span>
             </div>
           </div>
           <StaffTable />
