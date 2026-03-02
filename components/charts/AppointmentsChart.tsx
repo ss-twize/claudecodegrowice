@@ -30,12 +30,13 @@ export default function AppointmentsChart() {
   const maxVal = Math.max(...appointmentsByDay.map((d) => d.appointments));
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex-1">
+    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex-1 flex flex-col">
       <div className="mb-5">
         <h3 className="text-[#e6edf3] font-semibold font-unbounded">Записи по дням</h3>
         <p className="text-[#7d8590] text-sm">Средние показатели за неделю</p>
       </div>
-      <ResponsiveContainer width="100%" height={200}>
+      <div className="flex-1 min-h-0">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={appointmentsByDay} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
           <XAxis
@@ -61,6 +62,7 @@ export default function AppointmentsChart() {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
