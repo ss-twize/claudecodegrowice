@@ -6,7 +6,7 @@ import {
   analyticsKPIs, dailyContactsData, cancellationsData,
   noShowData, dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
-  analyticsFunnel, analyticsTrends, revenueForecast,
+  analyticsFunnel, analyticsTrends, revenueHistory,
 } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -20,7 +20,7 @@ import {
 
 const PERIOD_LABELS: Record<string, string> = {
   month: "Февраль 2026 г.",
-  quarter: "Q1 2026",
+  quarter: "1-й квартал 2026",
   half: "Янв–Июн 2026",
 };
 
@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Не пришли (no-show)" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} />
+          <KpiCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} />
           <KpiCard title="Сообщений на обращение" value={String(k.messagesPerContact)} sub="сред. длина диалога" icon={<MessageSquare size={16} />} />
           <KpiCard title="Возвращаемость" value={`${k.retention}%`} sub="повторные визиты" icon={<RotateCcw size={16} />} />
           <KpiCard title="Ср. скорость ответа" value={k.avgResponseTime} sub="время реакции агента" icon={<Clock size={16} />} />
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard title="Записи вне рабочего времени" value={String(k.offHoursAppointments)} sub="агент работает пока все спят" icon={<MoonStar size={16} />} />
           <KpiCard title="Сэкономлено времени" value={`${k.timeSaved} ч`} sub="администратора" icon={<Zap size={16} />} />
-          <KpiCard title="Реанимированных клиентов" value={String(k.reactivated)} sub="после триггера inactive_50d" icon={<RotateCcw size={16} />} />
+          <KpiCard title="Реанимированных клиентов" value={String(k.reactivated)} sub="после рассылки по неактивным" icon={<RotateCcw size={16} />} />
           <KpiCard title="Обращений всего" value={String(k.incomingMessages)} sub="уникальных контактов" icon={<MessageSquare size={16} />} />
         </div>
 
@@ -203,49 +203,21 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Revenue Forecast */}
+          {/* Revenue History */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="text-[#e6edf3] font-semibold font-unbounded">Прогноз выручки</h3>
-                <p className="text-[#7d8590] text-sm">Факт + прогноз до июня 2026</p>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-[#00FF00] rounded" />
-                  <span className="text-[#9198a1]">Факт</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-[#00FF00] rounded opacity-50" style={{ borderTop: "1px dashed #00FF00" }} />
-                  <span className="text-[#9198a1]">Прогноз</span>
-                </div>
-              </div>
+            <div className="mb-5">
+              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по месяцам</h3>
+              <p className="text-[#7d8590] text-sm">Октябрь 2025 — февраль 2026</p>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={revenueForecast} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="forecastLineGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#00FF00" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#00FF00" stopOpacity={0.6} />
-                  </linearGradient>
-                </defs>
+              <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
                 <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 10 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => `${v / 1000}к`} width={42} />
                 <Tooltip content={<ForecastTooltip />} />
-                <Line
-                  type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
-                  dot={(props: any) => {
-                    const entry = revenueForecast[props.index];
-                    return (
-                      <circle key={props.index} cx={props.cx} cy={props.cy} r={entry.type === "forecast" ? 3 : 0}
-                        fill="#00FF00" fillOpacity={entry.type === "forecast" ? 0.5 : 0} stroke="none" />
-                    );
-                  }}
-                  strokeDasharray={(revenueForecast[0].type === "forecast") ? "6 3" : undefined}
-                  activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }}
-                />
+                <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
+                  dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -270,7 +242,7 @@ export default function AnalyticsPage() {
                 {analyticsTrends.map((row) => {
                   const diff = row.current - row.previous;
                   const pct = Math.round((diff / row.previous) * 100);
-                  const isPositive = row.metric === "No-show" ? diff <= 0 : diff >= 0;
+                  const isPositive = row.metric === "Не явки" ? diff <= 0 : diff >= 0;
                   const formatVal = (v: number) => {
                     if (row.unit === "currency") return formatCurrency(v);
                     if (row.unit === "percent") return `${v}%`;
@@ -386,7 +358,7 @@ export default function AnalyticsPage() {
         {/* Daily KPI Table */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[#30363d]">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Таблица KPI по дням</h3>
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Ежедневная статистика</h3>
             <p className="text-[#7d8590] text-sm">Последние {dailyKPITable.length} дней</p>
           </div>
           <div className="overflow-x-auto">
