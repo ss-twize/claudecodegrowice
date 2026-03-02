@@ -9,11 +9,11 @@ const statusColors: Record<string, string> = {
 
 export default function ClientsTable() {
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between">
+    <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#223444] flex items-center justify-between">
         <div>
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded">База клиентов</h3>
-          <p className="text-[#7d8590] text-sm">{clientsData.length} клиентов показано</p>
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">База клиентов</h3>
+          <p className="text-[#5E7488] text-sm">{clientsData.length} клиентов показано</p>
         </div>
         <button className="text-sm bg-[#00FF00] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#ccff33] transition-colors">
           + Добавить
@@ -22,9 +22,9 @@ export default function ClientsTable() {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#21262d]">
+            <tr className="border-b border-[#1A2535]">
               {["Клиент", "Контакты", "Визиты", "Последний визит", "Сумма", "LTV", "Статус", "Источник"].map((h) => (
-                <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">
+                <th key={h} className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -34,23 +34,23 @@ export default function ClientsTable() {
             {clientsData.map((client) => (
               <tr
                 key={client.id}
-                className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors"
+                className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors"
               >
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
                       <span className="text-[#00FF00] text-xs font-bold">{client.avatar}</span>
                     </div>
-                    <span className="text-[#e6edf3] text-sm font-medium whitespace-nowrap">{client.name}</span>
+                    <span className="text-[#EDF2FA] text-sm font-medium whitespace-nowrap">{client.name}</span>
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
-                  <p className="text-[#e6edf3] text-sm whitespace-nowrap">{client.phone}</p>
-                  <p className="text-[#7d8590] text-xs">{client.email}</p>
+                  <p className="text-[#EDF2FA] text-sm whitespace-nowrap">{client.phone}</p>
+                  <p className="text-[#5E7488] text-xs">{client.email}</p>
                 </td>
-                <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-semibold">{client.visits}</td>
-                <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.lastVisit}</td>
-                <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-semibold whitespace-nowrap">
+                <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold">{client.visits}</td>
+                <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.lastVisit}</td>
+                <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">
                   {formatCurrency(client.totalSpent)}
                 </td>
                 <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">
@@ -61,7 +61,7 @@ export default function ClientsTable() {
                     {client.status}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.source}</td>
+                <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.source}</td>
               </tr>
             ))}
           </tbody>

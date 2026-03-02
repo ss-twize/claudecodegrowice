@@ -20,7 +20,7 @@ interface MetricCardProps {
   tooltip?: MetricTooltipDef;
 }
 
-function TooltipPopup({ tooltip, accent }: { tooltip: MetricTooltipDef; accent: boolean }) {
+function TooltipPopup({ tooltip }: { tooltip: MetricTooltipDef }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const [mounted, setMounted] = useState(false);
@@ -45,7 +45,7 @@ function TooltipPopup({ tooltip, accent }: { tooltip: MetricTooltipDef; accent: 
     <>
       <button
         ref={ref}
-        className={`flex-shrink-0 transition-colors ${accent ? "text-black/40 hover:text-black/70" : "text-[#7d8590] hover:text-[#9198a1]"}`}
+        className="flex-shrink-0 text-[#2C4460] hover:text-[#5E7488] transition-colors"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setOpen(false)}
         tabIndex={-1}
@@ -54,18 +54,20 @@ function TooltipPopup({ tooltip, accent }: { tooltip: MetricTooltipDef; accent: 
       </button>
       {mounted && open && createPortal(
         <div
-          className="fixed z-[9999] w-64 bg-[#1c2128] border border-[#30363d] rounded-xl shadow-2xl pointer-events-none overflow-hidden"
+          className="fixed z-[9999] w-64 bg-[#141E2B] border border-[#223444] rounded-xl shadow-2xl pointer-events-none overflow-hidden"
           style={{ top: pos.top + 8, left: pos.left, transform: "translateX(-50%)" }}
         >
           {tooltip.formula && (
-            <div className="px-4 pt-3.5 pb-3 border-b border-[#30363d]">
-              <p className="text-[#7d8590] text-xs font-medium uppercase tracking-wider mb-1.5">Формула</p>
-              <p className="text-[#00FF00] text-xs font-mono bg-[#0d1117] rounded-lg px-2.5 py-1.5 leading-relaxed">{tooltip.formula}</p>
+            <div className="px-4 pt-3.5 pb-3 border-b border-[#1A2535]">
+              <p className="text-[#2C4460] text-[10px] font-semibold uppercase tracking-[0.1em] mb-2">Формула</p>
+              <p className="text-[#00FF00] text-xs font-mono bg-[#0A0D14] rounded-lg px-2.5 py-1.5 leading-relaxed">
+                {tooltip.formula}
+              </p>
             </div>
           )}
           <div className="px-4 py-3.5">
-            <p className="text-[#7d8590] text-xs font-medium uppercase tracking-wider mb-1.5">Значение для бизнеса</p>
-            <p className="text-[#9198a1] text-xs leading-relaxed">{tooltip.description}</p>
+            <p className="text-[#2C4460] text-[10px] font-semibold uppercase tracking-[0.1em] mb-2">Значение для бизнеса</p>
+            <p className="text-[#8299B4] text-xs leading-relaxed">{tooltip.description}</p>
           </div>
         </div>,
         document.body
@@ -80,25 +82,48 @@ export default function MetricCard({
   const isPositive = change !== undefined && change >= 0;
 
   return (
-    <div className={`rounded-xl border p-5 card-hover ${accent ? "bg-[#00FF00] border-[#00FF00] accent-glow" : "bg-[#161b22] border-[#30363d]"}`}>
+    <div
+      className={`rounded-xl border p-5 card-hover transition-all duration-150 ${
+        accent ? "card-accent" : "bg-[#0F1622] border-[#223444] card-premium"
+      }`}
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent ? "bg-black/20" : "bg-[#21262d] border border-[#30363d]"}`}>
-          <span className={accent ? "text-black" : "text-[#00FF00]"}>{icon}</span>
+        {/* Icon */}
+        <div
+          className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+            accent
+              ? "bg-[#00FF00]/[0.1] border border-[#00FF00]/25"
+              : "bg-[#141E2B] border border-[#1A2535]"
+          }`}
+        >
+          <span className="text-[#00FF00]">{icon}</span>
         </div>
+
+        {/* Badge + tooltip */}
         <div className="flex items-center gap-1.5">
-          {tooltip && <TooltipPopup tooltip={tooltip} accent={accent} />}
+          {tooltip && <TooltipPopup tooltip={tooltip} />}
           {change !== undefined && (
-            <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${accent ? "bg-black/15 text-black" : isPositive ? "bg-[#00FF00]/10 text-[#00FF00]" : "bg-red-500/10 text-red-400"}`}>
-              {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            <div
+              className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${
+                isPositive
+                  ? "bg-[#00FF00]/[0.08] text-[#00FF00]"
+                  : "bg-red-500/[0.08] text-red-400"
+              }`}
+            >
+              {isPositive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
               {formatPercent(Math.abs(change))}
             </div>
           )}
         </div>
       </div>
-      <p className={`text-sm font-medium mb-1 ${accent ? "text-black/70" : "text-[#9198a1]"}`}>{title}</p>
-      <p className={`text-2xl font-bold ${accent ? "text-black" : "text-[#e6edf3]"}`}>{value}</p>
+
+      {/* Text */}
+      <p className="text-xs font-medium mb-1.5 text-[#5E7488] uppercase tracking-[0.06em]">{title}</p>
+      <p className={`text-2xl font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
+        {value}
+      </p>
       {changeLabel && (
-        <p className={`text-xs mt-1 ${accent ? "text-black/60" : "text-[#7d8590]"}`}>{changeLabel}</p>
+        <p className="text-xs mt-2 text-[#2C4460]">{changeLabel}</p>
       )}
     </div>
   );

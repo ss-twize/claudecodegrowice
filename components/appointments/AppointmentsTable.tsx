@@ -12,7 +12,7 @@ const statusConfig: Record<string, { classes: string; dot: string }> = {
   "Не пришёл":  { classes: "bg-orange-500/10 text-orange-400 border border-orange-500/20",  dot: "bg-orange-400" },
 };
 
-const defaultStatus = { classes: "bg-[#21262d] text-[#9198a1] border border-[#30363d]", dot: "bg-[#9198a1]" };
+const defaultStatus = { classes: "bg-[#1A2535] text-[#8299B4] border border-[#223444]", dot: "bg-[#8299B4]" };
 
 interface Props {
   appointments: Appointment[]
@@ -24,29 +24,29 @@ export default function AppointmentsTable({ appointments, loading }: Props) {
   const { sorted, sortCol, sortDir, onSort } = useSortable(tableData);
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between">
+    <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#223444] flex items-center justify-between">
         <div>
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded">Записи</h3>
-          <p className="text-[#7d8590] text-sm">
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Записи</h3>
+          <p className="text-[#5E7488] text-sm">
             {loading ? "Загрузка..." : `${appointments.length} последних записей`}
           </p>
         </div>
       </div>
       <div className="overflow-x-auto">
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-[#7d8590] text-sm">Загрузка данных...</div>
+          <div className="flex items-center justify-center py-16 text-[#5E7488] text-sm">Загрузка данных...</div>
         ) : appointments.length === 0 ? (
-          <div className="flex items-center justify-center py-16 text-[#7d8590] text-sm">Записей не найдено</div>
+          <div className="flex items-center justify-center py-16 text-[#5E7488] text-sm">Записей не найдено</div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#21262d]">
+              <tr className="border-b border-[#1A2535]">
                 <SortableHeader label="Клиент"      col="clientName" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                 <SortableHeader label="Услуга"       col="service"    sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                 <SortableHeader label="Мастер"       col="master"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                 <SortableHeader label="Дата"         col="date"       sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                <th className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">Длит.</th>
+                <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Длит.</th>
                 <SortableHeader label="Сумма"        col="price"      sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                 <SortableHeader label="Статус"       col="status"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
               </tr>
@@ -55,16 +55,16 @@ export default function AppointmentsTable({ appointments, loading }: Props) {
               {sorted.map((appt) => {
                 const sc = statusConfig[appt.status] || defaultStatus;
                 return (
-                  <tr key={appt.id} className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors">
-                    <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-medium whitespace-nowrap">{appt.client}</td>
-                    <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{appt.service}</td>
-                    <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{appt.master}</td>
+                  <tr key={appt.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors">
+                    <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-medium whitespace-nowrap">{appt.client}</td>
+                    <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{appt.service}</td>
+                    <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{appt.master}</td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
-                      <p className="text-[#e6edf3] text-sm">{appt.date}</p>
-                      <p className="text-[#7d8590] text-xs">{appt.time}</p>
+                      <p className="text-[#EDF2FA] text-sm">{appt.date}</p>
+                      <p className="text-[#5E7488] text-xs">{appt.time}</p>
                     </td>
-                    <td className="px-5 py-3.5 text-[#9198a1] text-sm">{appt.duration}</td>
-                    <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-semibold whitespace-nowrap">
+                    <td className="px-5 py-3.5 text-[#8299B4] text-sm">{appt.duration}</td>
+                    <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">
                       {appt.price > 0 ? formatCurrency(appt.price) : '—'}
                     </td>
                     <td className="px-5 py-3.5">

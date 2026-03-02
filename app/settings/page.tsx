@@ -27,7 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
   return (
     <button onClick={onChange}
-      className={`relative inline-flex w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${enabled ? "bg-[#00FF00]" : "bg-[#21262d]"}`}>
+      className={`relative inline-flex w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${enabled ? "bg-[#00FF00]" : "bg-[#1A2535]"}`}>
       <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${enabled ? "translate-x-6" : "translate-x-1"}`} />
     </button>
   );
@@ -176,15 +176,15 @@ export default function SettingsPage() {
 
         {/* ── Main agent toggle ── */}
         {isOwner && mainAgent && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Power size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Основной агент</h3>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Основной агент</h3>
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[#e6edf3] font-medium">{mainAgent.name}</p>
-                <p className="text-[#7d8590] text-sm mt-0.5">{mainAgent.description}</p>
+                <p className="text-[#EDF2FA] font-medium">{mainAgent.name}</p>
+                <p className="text-[#5E7488] text-sm mt-0.5">{mainAgent.description}</p>
                 <p className={`text-xs mt-1 font-medium ${mainAgent.enabled ? "text-[#00FF00]" : "text-red-400"}`}>
                   {mainAgent.enabled ? "Активен — принимает обращения" : "Выключен — обращения не обрабатываются"}
                 </p>
@@ -198,17 +198,17 @@ export default function SettingsPage() {
         )}
 
         {/* ── Greeting message ── */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <MessageSquare size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Приветственное сообщение</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Приветственное сообщение</h3>
           </div>
-          <p className="text-[#7d8590] text-sm mb-4">Первое сообщение агента новому клиенту</p>
+          <p className="text-[#5E7488] text-sm mb-4">Первое сообщение агента новому клиенту</p>
           <textarea
             rows={3}
             value={greeting}
             onChange={(e) => setGreeting(e.target.value)}
-            className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#7d8590] resize-none"
+            className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488] resize-none"
           />
           <div className="flex justify-end mt-3">
             <button onClick={saveGreeting} disabled={greetingLoading}
@@ -225,21 +225,21 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Knowledge base ── */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <FileText size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">База знаний</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">База знаний</h3>
           </div>
-          <p className="text-[#7d8590] text-sm mb-4">Загрузите документы для агента — они отправляются в обработку и сохраняются на Google Диск</p>
+          <p className="text-[#5E7488] text-sm mb-4">Загрузите документы для агента — они отправляются в обработку и сохраняются на Google Диск</p>
 
           {/* Upload area */}
           <div
-            className="border-2 border-dashed border-[#30363d] rounded-xl p-6 text-center hover:border-[#00FF00]/40 transition-colors cursor-pointer"
+            className="border-2 border-dashed border-[#223444] rounded-xl p-6 text-center hover:border-[#00FF00]/40 transition-colors cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload size={24} className="text-[#7d8590] mx-auto mb-2" />
-            <p className="text-[#e6edf3] text-sm font-medium">Нажмите или перетащите файл</p>
-            <p className="text-[#7d8590] text-xs mt-1">PDF, TXT, DOC, DOCX — до 20 МБ</p>
+            <Upload size={24} className="text-[#5E7488] mx-auto mb-2" />
+            <p className="text-[#EDF2FA] text-sm font-medium">Нажмите или перетащите файл</p>
+            <p className="text-[#5E7488] text-xs mt-1">PDF, TXT, DOC, DOCX — до 20 МБ</p>
             {uploading && <p className="text-[#00FF00] text-xs mt-2 font-medium">Загрузка...</p>}
             {uploadError && <p className="text-red-400 text-xs mt-2">{uploadError}</p>}
           </div>
@@ -255,14 +255,14 @@ export default function SettingsPage() {
           {files.length > 0 && (
             <div className="mt-4 space-y-2">
               {files.map((file) => (
-                <div key={file.id} className="flex items-center justify-between bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2.5">
+                <div key={file.id} className="flex items-center justify-between bg-[#0A0D14] border border-[#223444] rounded-lg px-3 py-2.5">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center flex-shrink-0">
-                      <span className="text-[#9198a1] text-xs font-bold">{(FILE_TYPE_LABELS[file.file_type] || file.file_type).slice(0, 3)}</span>
+                    <div className="w-8 h-8 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#8299B4] text-xs font-bold">{(FILE_TYPE_LABELS[file.file_type] || file.file_type).slice(0, 3)}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[#e6edf3] text-sm truncate">{file.name}</p>
-                      <span className={`text-xs px-1.5 py-0.5 rounded border ${STATUS_COLORS[file.status] || 'text-[#9198a1] bg-[#21262d] border-[#30363d]'}`}>
+                      <p className="text-[#EDF2FA] text-sm truncate">{file.name}</p>
+                      <span className={`text-xs px-1.5 py-0.5 rounded border ${STATUS_COLORS[file.status] || 'text-[#8299B4] bg-[#1A2535] border-[#223444]'}`}>
                         {file.status}
                       </span>
                     </div>
@@ -270,12 +270,12 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                     {file.drive_url && (
                       <a href={file.drive_url} target="_blank" rel="noopener noreferrer"
-                        className="w-7 h-7 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center hover:border-[#3d444d] transition-colors">
-                        <ExternalLink size={12} className="text-[#9198a1]" />
+                        className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors">
+                        <ExternalLink size={12} className="text-[#8299B4]" />
                       </a>
                     )}
                     <button onClick={() => deleteFile(file.id)}
-                      className="w-7 h-7 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center hover:border-red-500/40 hover:text-red-400 text-[#7d8590] transition-colors">
+                      className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-red-500/40 hover:text-red-400 text-[#5E7488] transition-colors">
                       <X size={12} />
                     </button>
                   </div>
@@ -285,32 +285,32 @@ export default function SettingsPage() {
           )}
 
           {files.length === 0 && !uploading && (
-            <p className="text-[#7d8590] text-xs mt-3 text-center">Файлы не загружены</p>
+            <p className="text-[#5E7488] text-xs mt-3 text-center">Файлы не загружены</p>
           )}
         </div>
 
         {/* ── Auto-systems toggles ── */}
         {isOwner && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-1">
               <Settings2 size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Автосистемы</h3>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автосистемы</h3>
             </div>
-            <p className="text-[#7d8590] text-sm mb-4">Включение и настройка автоматических сценариев</p>
+            <p className="text-[#5E7488] text-sm mb-4">Включение и настройка автоматических сценариев</p>
             <div className="space-y-3">
               {autoSystems.map((sys) => (
-                <div key={sys.system_code} className="flex items-center justify-between py-3 border-b border-[#21262d] last:border-0">
+                <div key={sys.system_code} className="flex items-center justify-between py-3 border-b border-[#1A2535] last:border-0">
                   <div className="flex-1 min-w-0 mr-4">
-                    <p className="text-[#e6edf3] text-sm font-medium">{sys.name}</p>
-                    <p className="text-[#7d8590] text-xs mt-0.5">{sys.description}</p>
-                    <p className={`text-xs mt-1 font-medium ${sys.enabled ? "text-[#00FF00]" : "text-[#7d8590]"}`}>
+                    <p className="text-[#EDF2FA] text-sm font-medium">{sys.name}</p>
+                    <p className="text-[#5E7488] text-xs mt-0.5">{sys.description}</p>
+                    <p className={`text-xs mt-1 font-medium ${sys.enabled ? "text-[#00FF00]" : "text-[#5E7488]"}`}>
                       {sys.enabled ? "Активна" : "Отключена"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => configureSystem(sys.system_code)}
-                      className="px-3 py-1.5 rounded-lg border border-[#30363d] text-[#9198a1] text-xs font-medium hover:border-[#3d444d] hover:text-[#e6edf3] transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-[#223444] text-[#8299B4] text-xs font-medium hover:border-[#2C4460] hover:text-[#EDF2FA] transition-colors"
                     >
                       Настроить
                     </button>
@@ -327,24 +327,24 @@ export default function SettingsPage() {
 
         {/* ── Profile (owner only) ── */}
         {isOwner && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Профиль</h3>
-            <p className="text-[#7d8590] text-sm mb-5">Личные данные владельца</p>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Профиль</h3>
+            <p className="text-[#5E7488] text-sm mb-5">Личные данные владельца</p>
             <div className="space-y-4">
               {[
                 { label: "ФИО", field: "name" as const },
                 { label: "Телефон", field: "phone" as const },
               ].map(({ label, field }) => (
                 <div key={field}>
-                  <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">{label}</label>
+                  <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">{label}</label>
                   <input value={profile[field]} onChange={(e) => setProfile((p) => ({ ...p, [field]: e.target.value }))}
-                    className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                    className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
                 </div>
               ))}
               <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Роль</label>
+                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Роль</label>
                 <input value={profile.role} readOnly
-                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#9198a1] text-sm rounded-lg px-3 py-2.5 outline-none cursor-not-allowed" />
+                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#8299B4] text-sm rounded-lg px-3 py-2.5 outline-none cursor-not-allowed" />
               </div>
               <div className="flex justify-end pt-2">
                 <button onClick={saveProfile}
@@ -361,45 +361,45 @@ export default function SettingsPage() {
 
         {/* ── Organization (owner only) ── */}
         {isOwner && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Организация</h3>
-                <p className="text-[#7d8590] text-sm">Данные салона и контакты</p>
+                <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Организация</h3>
+                <p className="text-[#5E7488] text-sm">Данные салона и контакты</p>
               </div>
               <button onClick={addBranch}
-                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-[#30363d] text-[#9198a1] hover:text-[#e6edf3] hover:border-[#3d444d] transition-colors">
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors">
                 <Plus size={14} />Добавить филиал
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Название организации</label>
+                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Название организации</label>
                 <input value={org.name} onChange={(e) => setOrg((o) => ({ ...o, name: e.target.value }))}
-                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
               </div>
               <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Адрес</label>
+                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Адрес</label>
                 <input value={org.address} onChange={(e) => setOrg((o) => ({ ...o, address: e.target.value }))}
-                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
               </div>
               <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-2 block">Страница на картах</label>
+                <label className="text-[#8299B4] text-xs font-medium mb-2 block">Страница на картах</label>
                 <div className="space-y-2">
                   {[
                     { key: "yandexMapsUrl" as const, label: "Я", placeholder: "Ссылка на Яндекс Карты" },
                     { key: "dgisUrl" as const, label: "2Г", placeholder: "Ссылка на 2ГИС" },
                   ].map((map) => (
                     <div key={map.key} className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-[#e6edf3]">{map.label}</span>
+                      <div className="w-8 h-8 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-[#EDF2FA]">{map.label}</span>
                       </div>
                       <input value={org[map.key]} onChange={(e) => setOrg((o) => ({ ...o, [map.key]: e.target.value }))}
                         placeholder={map.placeholder}
-                        className="flex-1 bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#7d8590]" />
+                        className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
                       <a href={org[map.key]} target="_blank" rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center hover:border-[#3d444d] transition-colors flex-shrink-0">
-                        <ExternalLink size={14} className="text-[#9198a1]" />
+                        className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors flex-shrink-0">
+                        <ExternalLink size={14} className="text-[#8299B4]" />
                       </a>
                     </div>
                   ))}
@@ -407,16 +407,16 @@ export default function SettingsPage() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-[#9198a1] text-xs font-medium">Администраторы</label>
+                  <label className="text-[#8299B4] text-xs font-medium">Администраторы</label>
                   <button onClick={addAdmin} className="text-[#00FF00] text-xs font-medium hover:text-[#ccff33] transition-colors">+ Добавить</button>
                 </div>
                 <div className="space-y-2">
                   {admins.map((admin, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <input value={admin} onChange={(e) => updateAdmin(i, e.target.value)} placeholder="Введите ФИО"
-                        className="flex-1 bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#7d8590]" />
+                        className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
                       <button onClick={() => removeAdmin(i)}
-                        className="w-9 h-9 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center hover:border-red-500/40 hover:text-red-400 text-[#7d8590] transition-colors flex-shrink-0">
+                        className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-red-500/40 hover:text-red-400 text-[#5E7488] transition-colors flex-shrink-0">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -425,19 +425,19 @@ export default function SettingsPage() {
               </div>
               {branches.length > 0 && (
                 <div>
-                  <p className="text-[#9198a1] text-xs font-medium mb-3">Филиалы</p>
+                  <p className="text-[#8299B4] text-xs font-medium mb-3">Филиалы</p>
                   <div className="space-y-3">
                     {branches.map((branch, i) => (
-                      <div key={i} className="bg-[#0d1117] border border-[#30363d] rounded-xl p-4">
+                      <div key={i} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-[#9198a1] text-xs font-medium">Филиал {i + 1}</span>
-                          <button onClick={() => removeBranch(i)} className="text-[#7d8590] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                          <span className="text-[#8299B4] text-xs font-medium">Филиал {i + 1}</span>
+                          <button onClick={() => removeBranch(i)} className="text-[#5E7488] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                         </div>
                         <div className="space-y-2">
                           <input value={branch.name} onChange={(e) => updateBranch(i, "name", e.target.value)} placeholder="Название"
-                            className="w-full bg-[#161b22] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#7d8590]" />
+                            className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
                           <input value={branch.address} onChange={(e) => updateBranch(i, "address", e.target.value)} placeholder="Адрес"
-                            className="w-full bg-[#161b22] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#7d8590]" />
+                            className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
                         </div>
                       </div>
                     ))}
@@ -459,12 +459,12 @@ export default function SettingsPage() {
 
         {/* ── Roles (owner only) ── */}
         {isOwner && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-1">
               <Shield size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Роли и права доступа</h3>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Роли и права доступа</h3>
             </div>
-            <p className="text-[#7d8590] text-sm mb-5">Управление уровнями доступа для сотрудников</p>
+            <p className="text-[#5E7488] text-sm mb-5">Управление уровнями доступа для сотрудников</p>
             <div className="space-y-3">
               {rolesData.map((roleItem) => {
                 const colors = ROLE_COLORS[roleItem.id];
@@ -473,22 +473,22 @@ export default function SettingsPage() {
                     <div className="flex items-start justify-between mb-3">
                       <span className={`text-sm font-semibold ${colors.text}`}>{roleItem.name}</span>
                       <div className="flex items-center gap-1.5">
-                        <Users size={13} className="text-[#7d8590]" />
-                        <span className="text-[#9198a1] text-xs">{roleItem.members.length} чел.</span>
+                        <Users size={13} className="text-[#5E7488]" />
+                        <span className="text-[#8299B4] text-xs">{roleItem.members.length} чел.</span>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {roleItem.permissions.map((perm) => (
-                        <span key={perm} className="text-xs px-2 py-0.5 rounded-md bg-[#161b22] border border-[#30363d] text-[#9198a1]">{perm}</span>
+                        <span key={perm} className="text-xs px-2 py-0.5 rounded-md bg-[#0F1622] border border-[#223444] text-[#8299B4]">{perm}</span>
                       ))}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {roleItem.members.map((member) => (
-                        <div key={member} className="flex items-center gap-1.5 bg-[#0d1117] border border-[#30363d] rounded-lg px-2.5 py-1">
+                        <div key={member} className="flex items-center gap-1.5 bg-[#0A0D14] border border-[#223444] rounded-lg px-2.5 py-1">
                           <div className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold text-black ${roleItem.id === "owner" ? "bg-[#00FF00]" : roleItem.id === "admin" ? "bg-blue-400" : "bg-yellow-400"}`}>
                             {member[0]}
                           </div>
-                          <span className="text-[#9198a1] text-xs">{member}</span>
+                          <span className="text-[#8299B4] text-xs">{member}</span>
                         </div>
                       ))}
                     </div>
@@ -500,25 +500,25 @@ export default function SettingsPage() {
         )}
 
         {/* ── Notifications ── */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Bell size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Уведомления</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Уведомления</h3>
           </div>
-          <p className="text-[#7d8590] text-sm mb-5">Настройте, куда приходят уведомления о событиях</p>
+          <p className="text-[#5E7488] text-sm mb-5">Настройте, куда приходят уведомления о событиях</p>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
-                  <th className="text-left text-[#7d8590] text-xs font-medium pb-3">Событие</th>
-                  <th className="text-center text-[#7d8590] text-xs font-medium pb-3 px-4 whitespace-nowrap">Telegram</th>
-                  <th className="text-center text-[#7d8590] text-xs font-medium pb-3 px-4 whitespace-nowrap">Email</th>
+                <tr className="border-b border-[#1A2535]">
+                  <th className="text-left text-[#5E7488] text-xs font-medium pb-3">Событие</th>
+                  <th className="text-center text-[#5E7488] text-xs font-medium pb-3 px-4 whitespace-nowrap">Telegram</th>
+                  <th className="text-center text-[#5E7488] text-xs font-medium pb-3 px-4 whitespace-nowrap">Email</th>
                 </tr>
               </thead>
               <tbody>
                 {notifications.map((notif) => (
-                  <tr key={notif.id} className="border-b border-[#21262d] last:border-0">
-                    <td className="py-3 pr-4"><span className="text-[#9198a1] text-sm">{notif.label}</span></td>
+                  <tr key={notif.id} className="border-b border-[#1A2535] last:border-0">
+                    <td className="py-3 pr-4"><span className="text-[#8299B4] text-sm">{notif.label}</span></td>
                     <td className="py-3 px-4 text-center">
                       <Toggle enabled={notif.telegram} onChange={() => toggleNotification(notif.id, "telegram")} />
                     </td>
@@ -534,10 +534,10 @@ export default function SettingsPage() {
 
         {/* Admin-only access note */}
         {!isOwner && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-3">
               <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0" />
-              <p className="text-[#9198a1] text-sm">
+              <p className="text-[#8299B4] text-sm">
                 Некоторые разделы настроек доступны только владельцу.
               </p>
             </div>

@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={`${unbounded.variable} ${montserrat.variable} font-montserrat bg-[#0d1117] text-[#e6edf3] antialiased`}>
+      <body className={`${unbounded.variable} ${montserrat.variable} font-montserrat bg-[#0A0D14] text-[#EDF2FA] antialiased`}>
         <AuthProvider>
           <Sidebar />
           <main className="ml-60 min-h-screen">

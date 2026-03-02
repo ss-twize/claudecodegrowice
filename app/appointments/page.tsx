@@ -14,8 +14,8 @@ import {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-        <p className="text-[#9198a1] mb-1">{label}</p>
+      <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+        <p className="text-[#8299B4] mb-1">{label}</p>
         <p className="text-[#00FF00] font-semibold">{payload[0].value} записей</p>
       </div>
     );
@@ -86,10 +86,10 @@ export default function AppointmentsPage() {
         {/* Funnel + Hour heatmap */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Funnel (mock) */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="mb-5">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Воронка конверсии</h3>
-              <p className="text-[#7d8590] text-sm">Путь от обращения до оплаты</p>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Воронка конверсии</h3>
+              <p className="text-[#5E7488] text-sm">Путь от обращения до оплаты</p>
             </div>
             <div className="space-y-3">
               {appointmentsFunnel.map((stage, i) => {
@@ -101,8 +101,8 @@ export default function AppointmentsPage() {
                   <div key={stage.stage}>
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#7d8590] text-xs w-4 text-right">{i + 1}</span>
-                        <span className="text-[#e6edf3] text-sm">{stage.stage}</span>
+                        <span className="text-[#5E7488] text-xs w-4 text-right">{i + 1}</span>
+                        <span className="text-[#EDF2FA] text-sm">{stage.stage}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         {i > 0 && (
@@ -110,10 +110,10 @@ export default function AppointmentsPage() {
                             ↓ {convFromPrev}%
                           </span>
                         )}
-                        <span className="text-[#e6edf3] font-bold text-sm w-12 text-right">{stage.count}</span>
+                        <span className="text-[#EDF2FA] font-bold text-sm w-12 text-right">{stage.count}</span>
                       </div>
                     </div>
-                    <div className="h-2 bg-[#21262d] rounded-full overflow-hidden">
+                    <div className="h-2 bg-[#1A2535] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -126,8 +126,8 @@ export default function AppointmentsPage() {
                 );
               })}
             </div>
-            <div className="mt-5 pt-4 border-t border-[#21262d] flex items-center justify-between">
-              <span className="text-[#7d8590] text-sm">Итоговая конверсия</span>
+            <div className="mt-5 pt-4 border-t border-[#1A2535] flex items-center justify-between">
+              <span className="text-[#5E7488] text-sm">Итоговая конверсия</span>
               <span className="text-[#00FF00] font-bold text-xl">
                 {Math.round((appointmentsFunnel[appointmentsFunnel.length - 1].count / funnelMax) * 100)}%
               </span>
@@ -135,17 +135,17 @@ export default function AppointmentsPage() {
           </div>
 
           {/* Heatmap by hour */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col">
             <div className="mb-5">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Загрузка по часам</h3>
-              <p className="text-[#7d8590] text-sm">Количество записей по времени суток</p>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Загрузка по часам</h3>
+              <p className="text-[#5E7488] text-sm">Количество записей по времени суток</p>
             </div>
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={hourData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                  <XAxis dataKey="hour" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
+                  <XAxis dataKey="hour" tick={{ fill: "#5E7488", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {hourData.map((entry, index) => {
@@ -162,7 +162,7 @@ export default function AppointmentsPage() {
               </ResponsiveContainer>
             </div>
             <div className="flex items-center gap-4 mt-3 justify-end">
-              <span className="text-[#7d8590] text-xs">Загрузка:</span>
+              <span className="text-[#5E7488] text-xs">Загрузка:</span>
               {[
                 { color: "#1f3a12", label: "Низкая" },
                 { color: "#2d5a1b", label: "Средняя" },
@@ -171,7 +171,7 @@ export default function AppointmentsPage() {
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-[#7d8590] text-xs">{item.label}</span>
+                  <span className="text-[#5E7488] text-xs">{item.label}</span>
                 </div>
               ))}
             </div>

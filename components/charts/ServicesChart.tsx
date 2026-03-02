@@ -12,8 +12,8 @@ import { servicesData } from "@/lib/mockData";
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-        <p className="text-[#e6edf3] font-semibold">{payload[0].name}</p>
+      <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+        <p className="text-[#EDF2FA] font-semibold">{payload[0].name}</p>
         <p className="text-[#00FF00]">{payload[0].value}% клиентов</p>
       </div>
     );
@@ -23,10 +23,10 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export default function ServicesChart() {
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+    <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
       <div className="mb-5">
-        <h3 className="text-[#e6edf3] font-semibold font-unbounded">Популярные услуги</h3>
-        <p className="text-[#7d8590] text-sm">Распределение по записям</p>
+        <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Популярные услуги</h3>
+        <p className="text-[#5E7488] text-sm">Распределение по записям</p>
       </div>
       <div className="flex items-center gap-4">
         <ResponsiveContainer width={160} height={160}>
@@ -55,9 +55,9 @@ export default function ServicesChart() {
                   className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-[#9198a1] text-xs">{item.name}</span>
+                <span className="text-[#8299B4] text-xs">{item.name}</span>
               </div>
-              <span className="text-[#e6edf3] text-xs font-semibold">
+              <span className="text-[#EDF2FA] text-xs font-semibold">
                 {item.value}%
               </span>
             </div>

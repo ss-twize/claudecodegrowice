@@ -14,8 +14,8 @@ import { revenueData } from "@/lib/mockData";
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-        <p className="text-[#9198a1] mb-2 font-medium">{label}</p>
+      <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+        <p className="text-[#8299B4] mb-2 font-medium">{label}</p>
         {payload.map((p: any, i: number) => (
           <p key={i} style={{ color: p.color }} className="font-semibold">
             {p.name}:{" "}
@@ -34,20 +34,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function RevenueChart() {
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 h-full flex flex-col">
+    <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка за год</h3>
-          <p className="text-[#7d8590] text-sm">Март 2025 — Февраль 2026</p>
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка за год</h3>
+          <p className="text-[#5E7488] text-sm">Март 2025 — Февраль 2026</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-[#00FF00]" />
-            <span className="text-[#9198a1]">Выручка</span>
+            <span className="text-[#8299B4]">Выручка</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-[#4a5568]" />
-            <span className="text-[#9198a1]">Расходы</span>
+            <span className="text-[#8299B4]">Расходы</span>
           </div>
         </div>
       </div>
@@ -64,15 +64,15 @@ export default function RevenueChart() {
               <stop offset="95%" stopColor="#4a5568" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fill: "#7d8590", fontSize: 12 }}
+            tick={{ fill: "#5E7488", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#7d8590", fontSize: 12 }}
+            tick={{ fill: "#5E7488", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => `${v / 1000}к`}
