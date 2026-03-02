@@ -1,12 +1,49 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Header from "@/components/layout/Header";
 import { marketingClients, autoSystems, clientPredictive } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { Send, Bot, X, TrendingUp, AlertTriangle, UserCheck, UserX } from "lucide-react";
 
 const channels = Array.from(new Set(marketingClients.map((c) => c.channel)));
+
+function ServicesCell({ services }: { services: string[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const first = services[0];
+  const rest = services.slice(1);
+  return (
+    <div className="flex items-center gap-1 whitespace-nowrap">
+      {first && (
+        <span className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d]">
+          {first}
+        </span>
+      )}
+      {rest.length > 0 && (
+        <div
+          ref={ref}
+          className="relative"
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+        >
+          <span className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#00FF00] border border-[#00FF00]/20 cursor-default select-none">
+            +{rest.length}
+          </span>
+          {open && (
+            <div className="absolute bottom-full left-0 mb-2 z-50 bg-[#1c2128] border border-[#30363d] rounded-lg p-2 shadow-xl flex flex-col gap-1 min-w-max">
+              {services.map((s) => (
+                <span key={s} className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">
+                  {s}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const SEGMENTS = [
   { key: "all", label: "Все клиенты" },
@@ -185,11 +222,7 @@ export default function ClientsPage() {
                         ) : <span className="text-[#7d8590]">—</span>}
                       </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex flex-wrap gap-1">
-                          {client.services.map((s) => (
-                            <span key={s} className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{s}</span>
-                          ))}
-                        </div>
+                        <ServicesCell services={client.services} />
                       </td>
                     </tr>
                   );
