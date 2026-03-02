@@ -6,15 +6,16 @@ import {
   analyticsKPIs, dailyContactsData, cancellationsData,
   noShowData, dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
+  analyticsFunnel, analyticsTrends, revenueForecast,
 } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "recharts";
 import {
-  TrendingUp, CalendarCheck, MessageSquare, Receipt, AlertTriangle,
-  RotateCcw, Clock, Zap, ArrowDownLeft, ArrowUpRight, MoonStar,
+  TrendingUp, TrendingDown, CalendarCheck, MessageSquare, Receipt, AlertTriangle,
+  RotateCcw, Clock, Zap, ArrowDownLeft, ArrowUpRight, MoonStar, Minus,
 } from "lucide-react";
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -29,6 +30,21 @@ const AreaTooltip = ({ active, payload, label }: any) => {
     <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
       <p className="text-[#9198a1] mb-1">{label}</p>
       <p className="text-[#00FF00] font-semibold">{payload[0].value} обращений</p>
+    </div>
+  );
+};
+
+const ForecastTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
+      <p className="text-[#9198a1] mb-1">{label}</p>
+      {payload.map((p: any, i: number) => p.value != null && (
+        <p key={i} style={{ color: p.color }} className="font-semibold">
+          {p.name}:{" "}
+          {new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(p.value)}
+        </p>
+      ))}
     </div>
   );
 };
@@ -73,6 +89,8 @@ function KpiCard({ title, value, sub, icon, accent }: { title: string; value: st
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<"month" | "quarter" | "half">("month");
   const k = analyticsKPIs;
+
+  const funnelMax = analyticsFunnel[0].value;
 
   return (
     <div>
@@ -140,6 +158,151 @@ export default function AnalyticsPage() {
           <KpiCard title="Обращений всего" value={String(k.incomingMessages)} sub="уникальных контактов" icon={<MessageSquare size={16} />} />
         </div>
 
+        {/* Marketing Funnel + Revenue Forecast */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+          {/* Analytics Funnel */}
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Маркетинговая воронка</h3>
+            <p className="text-[#7d8590] text-sm mb-5">От охвата до визита</p>
+            <div className="space-y-3">
+              {analyticsFunnel.map((stage, i) => {
+                const pct = Math.round((stage.value / funnelMax) * 100);
+                const convFromPrev = i > 0
+                  ? Math.round((stage.value / analyticsFunnel[i - 1].value) * 100)
+                  : 100;
+                const colors = ["#00FF00", "#66CC00", "#44AA00", "#2a7a00", "#1a5200"];
+                return (
+                  <div key={stage.stage}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div>
+                        <span className="text-[#e6edf3] text-sm">{stage.stage}</span>
+                        <span className="text-[#7d8590] text-xs ml-2">{stage.desc}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {i > 0 && (
+                          <span className={`text-xs font-medium ${convFromPrev >= 60 ? "text-[#00FF00]" : convFromPrev >= 40 ? "text-yellow-400" : "text-red-400"}`}>
+                            ↓ {convFromPrev}%
+                          </span>
+                        )}
+                        <span className="text-[#e6edf3] font-bold text-sm w-12 text-right">{stage.value.toLocaleString("ru")}</span>
+                      </div>
+                    </div>
+                    <div className="h-2 bg-[#21262d] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: colors[i] }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-5 pt-4 border-t border-[#21262d] flex justify-between">
+              <span className="text-[#7d8590] text-sm">Охват → Визит</span>
+              <span className="text-[#00FF00] font-bold text-xl">
+                {Math.round((analyticsFunnel[analyticsFunnel.length - 1].value / funnelMax) * 100)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Revenue Forecast */}
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-[#e6edf3] font-semibold font-unbounded">Прогноз выручки</h3>
+                <p className="text-[#7d8590] text-sm">Факт + прогноз до июня 2026</p>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-[#00FF00] rounded" />
+                  <span className="text-[#9198a1]">Факт</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-[#00FF00] rounded opacity-50" style={{ borderTop: "1px dashed #00FF00" }} />
+                  <span className="text-[#9198a1]">Прогноз</span>
+                </div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={revenueForecast} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="forecastLineGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#00FF00" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#00FF00" stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => `${v / 1000}к`} width={42} />
+                <Tooltip content={<ForecastTooltip />} />
+                <Line
+                  type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
+                  dot={(props: any) => {
+                    const entry = revenueForecast[props.index];
+                    return (
+                      <circle key={props.index} cx={props.cx} cy={props.cy} r={entry.type === "forecast" ? 3 : 0}
+                        fill="#00FF00" fillOpacity={entry.type === "forecast" ? 0.5 : 0} stroke="none" />
+                    );
+                  }}
+                  strokeDasharray={(revenueForecast[0].type === "forecast") ? "6 3" : undefined}
+                  activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Trends table */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#30363d]">
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Тренды: текущий vs прошлый месяц</h3>
+            <p className="text-[#7d8590] text-sm">Сравнительный анализ ключевых метрик</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#21262d]">
+                  {["Метрика", "Прошлый месяц", "Текущий месяц", "Изменение"].map((h) => (
+                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsTrends.map((row) => {
+                  const diff = row.current - row.previous;
+                  const pct = Math.round((diff / row.previous) * 100);
+                  const isPositive = row.metric === "No-show" ? diff <= 0 : diff >= 0;
+                  const formatVal = (v: number) => {
+                    if (row.unit === "currency") return formatCurrency(v);
+                    if (row.unit === "percent") return `${v}%`;
+                    return String(v);
+                  };
+                  return (
+                    <tr key={row.metric} className="border-b border-[#21262d] last:border-0 hover:bg-[#1c2128] transition-colors">
+                      <td className="px-5 py-3 text-[#e6edf3] text-sm font-medium">{row.metric}</td>
+                      <td className="px-5 py-3 text-[#9198a1] text-sm">{formatVal(row.previous)}</td>
+                      <td className="px-5 py-3 text-[#e6edf3] text-sm font-semibold">{formatVal(row.current)}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-1.5">
+                          {diff === 0 ? (
+                            <Minus size={14} className="text-[#9198a1]" />
+                          ) : isPositive ? (
+                            <TrendingUp size={14} className="text-[#00FF00]" />
+                          ) : (
+                            <TrendingDown size={14} className="text-red-400" />
+                          )}
+                          <span className={`text-sm font-semibold ${diff === 0 ? "text-[#9198a1]" : isPositive ? "text-[#00FF00]" : "text-red-400"}`}>
+                            {diff >= 0 ? "+" : ""}{pct}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {/* Chart: Daily contacts */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
           <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Уникальные обращения по дням</h3>
@@ -165,7 +328,6 @@ export default function AnalyticsPage() {
 
         {/* Charts row: Cancellations + No-show */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {/* Cancellations donut */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
             <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Отмены записей</h3>
             <p className="text-[#7d8590] text-sm mb-4">По категориям за период</p>
@@ -191,15 +353,12 @@ export default function AnalyticsPage() {
                 ))}
                 <div className="pt-2 border-t border-[#21262d] flex justify-between">
                   <span className="text-[#7d8590] text-xs">Итого</span>
-                  <span className="text-[#e6edf3] text-xs font-bold">
-                    {cancellationsData.reduce((s, c) => s + c.count, 0)}
-                  </span>
+                  <span className="text-[#e6edf3] text-xs font-bold">{cancellationsData.reduce((s, c) => s + c.count, 0)}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Came vs no-show */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
             <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Записи: пришли и не пришли</h3>
             <p className="text-[#7d8590] text-sm mb-4">Посещаемость по дням</p>
@@ -221,19 +380,6 @@ export default function AnalyticsPage() {
                 <Bar dataKey="noShow" name="Не пришли" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Revenue by service - placeholder */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Выручка по услугам</h3>
-          <p className="text-[#7d8590] text-sm mb-5">Разбивка по типам услуг</p>
-          <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-[#30363d] rounded-xl">
-            <div className="w-12 h-12 rounded-xl bg-[#21262d] flex items-center justify-center mb-3">
-              <TrendingUp size={20} className="text-[#7d8590]" />
-            </div>
-            <p className="text-[#9198a1] font-medium mb-1">Скоро</p>
-            <p className="text-[#7d8590] text-sm">Данные по услугам появятся после подключения CRM</p>
           </div>
         </div>
 
@@ -274,7 +420,6 @@ export default function AnalyticsPage() {
 
         {/* Top tables */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {/* Top by revenue */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-[#30363d]">
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Топ дней по выручке</h3>
@@ -301,7 +446,6 @@ export default function AnalyticsPage() {
             </table>
           </div>
 
-          {/* Top by appointments */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-[#30363d]">
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Топ дней по записям</h3>
