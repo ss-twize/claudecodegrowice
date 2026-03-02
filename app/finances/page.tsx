@@ -44,7 +44,7 @@ const BarTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
         <p className="text-[#9198a1] mb-1">{label}</p>
-        <p className="text-[#00E378] font-semibold">
+        <p className="text-[#00FF00] font-semibold">
           {new Intl.NumberFormat("ru-RU", {
             style: "currency",
             currency: "RUB",
@@ -58,7 +58,7 @@ const BarTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const serviceColors = ["#00E378", "#88CC00", "#66AA00", "#448800", "#2a5c1a"];
+const serviceColors = ["#00FF00", "#88CC00", "#66AA00", "#448800", "#2a5c1a"];
 
 export default function FinancesPage() {
   return (
@@ -101,12 +101,12 @@ export default function FinancesPage() {
         {/* Profit summary */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Выручка (год)", value: financesKPIs.totalRevenue, color: "#00E378" },
+            { label: "Выручка (год)", value: financesKPIs.totalRevenue, color: "#00FF00" },
             { label: "Расходы (год)", value: financesKPIs.totalExpenses, color: "#f87171" },
             {
               label: "Прибыль (год)",
               value: financesKPIs.totalProfit,
-              color: "#00E378",
+              color: "#00FF00",
               highlight: true,
             },
           ].map((item) => (
@@ -114,7 +114,7 @@ export default function FinancesPage() {
               key={item.label}
               className={`rounded-xl border p-5 ${
                 item.highlight
-                  ? "bg-[#162110] border-[#00E378]/20"
+                  ? "bg-[#162110] border-[#00FF00]/20"
                   : "bg-[#161b22] border-[#30363d]"
               }`}
             >
@@ -123,7 +123,7 @@ export default function FinancesPage() {
                 {formatCurrency(item.value)}
               </p>
               {item.highlight && (
-                <p className="text-[#00E378]/60 text-xs mt-1">
+                <p className="text-[#00FF00]/60 text-xs mt-1">
                   Маржа: {Math.round((item.value / financesKPIs.totalRevenue) * 100)}%
                 </p>
               )}
@@ -140,7 +140,7 @@ export default function FinancesPage() {
             </div>
             <div className="flex items-center gap-4 text-xs">
               {[
-                { color: "#00E378", label: "Выручка" },
+                { color: "#00FF00", label: "Выручка" },
                 { color: "#4a5568", label: "Расходы" },
                 { color: "#88CC00", label: "Прибыль" },
               ].map((l) => (
@@ -172,10 +172,10 @@ export default function FinancesPage() {
                 type="monotone"
                 dataKey="revenue"
                 name="Выручка"
-                stroke="#00E378"
+                stroke="#00FF00"
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: "#00E378", strokeWidth: 0 }}
+                activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }}
               />
               <Line
                 type="monotone"
