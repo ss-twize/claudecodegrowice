@@ -3,13 +3,33 @@
 import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
 import { revenueData, financesKPIs, serviceRevenueData, plRevenue, plExpenses, cashFlowData } from "@/lib/mockData";
+import type { MetricTooltipDef } from "@/components/ui/MetricCard";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { TrendingUp, DollarSign, BarChart2, Receipt } from "lucide-react";
 import {
   LineChart, Line, AreaChart, Area,
   BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
+
+const TOOLTIPS: Record<string, MetricTooltipDef> = {
+  mrr: {
+    formula: "Сумма всех оплат за текущий месяц",
+    description: "Ежемесячная выручка — ключевой индикатор текущей прибыльности. Отслеживайте в динамике для оценки роста бизнеса.",
+  },
+  arr: {
+    formula: "Ежемес. выручка × 12",
+    description: "Годовая выручка — проекция дохода на год на основе текущего месяца. Используется для сравнения с целями и конкурентами.",
+  },
+  mom: {
+    formula: "(Текущий − Прошлый) ÷ Прошлый × 100%",
+    description: "Показывает, ускоряется или замедляется рост бизнеса по сравнению с предыдущим месяцем.",
+  },
+  avgCheck: {
+    formula: "Выручка ÷ Количество визитов",
+    description: "Средняя сумма одного визита. Растёт при допродажах и переходе клиентов к более дорогим услугам.",
+  },
+};
 
 const LineTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -74,26 +94,29 @@ export default function FinancesPage() {
         {/* KPIs */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard
-            title="MRR"
+            title="Ежемес. выручка"
             value={formatCurrency(financesKPIs.mrr)}
             change={financesKPIs.momGrowth}
-            changeLabel="MoM рост"
+            changeLabel="рост за месяц"
             icon={<TrendingUp size={18} />}
             accent
+            tooltip={TOOLTIPS.mrr}
           />
           <MetricCard
-            title="ARR"
+            title="Годовая выручка"
             value={formatCurrency(financesKPIs.arr)}
             change={12.8}
             changeLabel="vs прошлый год"
             icon={<DollarSign size={18} />}
+            tooltip={TOOLTIPS.arr}
           />
           <MetricCard
-            title="MoM рост"
+            title="Рост за месяц"
             value={formatPercent(financesKPIs.momGrowth, true)}
             change={3.2}
             changeLabel="vs прошлый период"
             icon={<BarChart2 size={18} />}
+            tooltip={TOOLTIPS.mom}
           />
           <MetricCard
             title="Средний чек"
@@ -101,6 +124,7 @@ export default function FinancesPage() {
             change={2.8}
             changeLabel="vs прошлый месяц"
             icon={<Receipt size={18} />}
+            tooltip={TOOLTIPS.avgCheck}
           />
         </div>
 
@@ -159,7 +183,7 @@ export default function FinancesPage() {
 
         {/* P&L Table */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">P&L — Доходы и расходы</h3>
+          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Доходы и расходы</h3>
           <p className="text-[#7d8590] text-sm mb-5">Текущий месяц vs предыдущий</p>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Revenue P&L */}
@@ -224,21 +248,11 @@ export default function FinancesPage() {
           </div>
         </div>
 
-        {/* Cash Flow Forecast */}
+        {/* Cash Flow */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Прогноз движения денег</h3>
-              <p className="text-[#7d8590] text-sm">Факт + прогноз до июня 2026</p>
-            </div>
-            <div className="flex items-center gap-4 text-xs">
-              {[{ color: "#00FF00", label: "Факт" }, { color: "#00FF00", label: "Прогноз", dashed: true }].map((l) => (
-                <div key={l.label} className="flex items-center gap-1.5">
-                  <div className="w-6 h-0.5 rounded" style={{ backgroundColor: l.color, opacity: l.dashed ? 0.5 : 1 }} />
-                  <span className="text-[#9198a1]">{l.label}</span>
-                </div>
-              ))}
-            </div>
+          <div className="mb-5">
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Движение средств</h3>
+            <p className="text-[#7d8590] text-sm">Чистая прибыль по месяцам, сентябрь 2025 — февраль 2026</p>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={cashFlowData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
@@ -247,21 +261,14 @@ export default function FinancesPage() {
                   <stop offset="5%" stopColor="#00FF00" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00FF00" stopOpacity={0.08} />
-                  <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
-                </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `${v / 1000}к`} width={45} />
               <Tooltip content={<CashFlowTooltip />} />
-              <Area type="monotone" dataKey="actual" name="Факт" stroke="#00FF00" strokeWidth={2}
-                fill="url(#actualGrad)" dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} connectNulls={false} />
-              <Area type="monotone" dataKey="forecast" name="Прогноз" stroke="#00FF00" strokeWidth={2}
-                strokeDasharray="6 3" fill="url(#forecastGrad)" dot={false}
-                activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} connectNulls={false} />
+              <Area type="monotone" dataKey="actual" name="Прибыль" stroke="#00FF00" strokeWidth={2}
+                fill="url(#actualGrad)" dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

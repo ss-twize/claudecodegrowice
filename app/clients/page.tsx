@@ -70,7 +70,7 @@ function ServicesCell({ services }: { services: string[] }) {
 
 const SEGMENTS = [
   { key: "all", label: "Все клиенты" },
-  { key: "VIP", label: "VIP" },
+  { key: "VIP", label: "Особый" },
   { key: "active", label: "Активные" },
   { key: "atRisk", label: "Под риском" },
   { key: "inactive", label: "Неактивные" },
@@ -84,7 +84,7 @@ const SEGMENT_COLORS: Record<string, { bg: string; text: string; border: string 
 };
 
 const SEGMENT_LABELS: Record<string, string> = {
-  VIP: "VIP", active: "Активный", atRisk: "Под риском", inactive: "Неактивный",
+  VIP: "Особый", active: "Активный", atRisk: "Под риском", inactive: "Неактивный",
 };
 
 const RISK_COLORS: Record<string, { bg: string; text: string }> = {
@@ -133,7 +133,7 @@ export default function ClientsPage() {
         {/* Segment summary cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           {[
-            { key: "VIP",      label: "VIP клиенты",      icon: <UserCheck size={16} />, color: "#00FF00" },
+            { key: "VIP",      label: "Особые клиенты",    icon: <UserCheck size={16} />, color: "#00FF00" },
             { key: "active",   label: "Активные",          icon: <TrendingUp size={16} />, color: "#60a5fa" },
             { key: "atRisk",   label: "Под риском",        icon: <AlertTriangle size={16} />, color: "#fbbf24" },
             { key: "inactive", label: "Неактивные",        icon: <UserX size={16} />, color: "#f87171" },
@@ -320,7 +320,7 @@ export default function ClientsPage() {
                 <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Сегмент аудитории</label>
                 <select value={segment} onChange={(e) => setSegment(e.target.value)}
                   className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none">
-                  {["Все клиенты", "VIP клиенты", "Активные", "Под риском оттока", "Неактивные 30+ дней", "Неактивные 50+ дней"].map((s) => (
+                  {["Все клиенты", "Особые клиенты", "Активные", "Под риском оттока", "Неактивные 30+ дней", "Неактивные 50+ дней"].map((s) => (
                     <option key={s}>{s}</option>
                   ))}
                 </select>

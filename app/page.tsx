@@ -1,10 +1,28 @@
 import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
+import type { MetricTooltipDef } from "@/components/ui/MetricCard";
 import RevenueChart from "@/components/charts/RevenueChart";
 import ServicesChart from "@/components/charts/ServicesChart";
 import AppointmentsChart from "@/components/charts/AppointmentsChart";
 import { dashboardKPIs, recentActivity } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
+
+const TOOLTIPS: Record<string, MetricTooltipDef> = {
+  revenue: {
+    formula: "Сумма всех оплат за текущий месяц",
+    description: "Ключевой показатель дохода. Растёт при увеличении числа записей или среднего чека.",
+  },
+  newClients: {
+    description: "Клиенты, впервые обратившиеся в этом месяце. Отражает эффективность маркетинга и сарафанного радио.",
+  },
+  appointments: {
+    description: "Количество созданных записей за месяц. Прямо влияет на выручку и загрузку мастеров.",
+  },
+  avgCheck: {
+    formula: "Выручка ÷ Количество визитов",
+    description: "Средняя сумма одного визита. Растёт при допродажах и переходе клиентов к более дорогим услугам.",
+  },
+};
 import {
   TrendingUp,
   Users,
@@ -36,6 +54,7 @@ export default function DashboardPage() {
             changeLabel="vs прошлый месяц"
             icon={<TrendingUp size={18} />}
             accent
+            tooltip={TOOLTIPS.revenue}
           />
           <MetricCard
             title="Новые клиенты"
@@ -43,6 +62,7 @@ export default function DashboardPage() {
             change={dashboardKPIs.newClientsGrowth}
             changeLabel="vs прошлый месяц"
             icon={<Users size={18} />}
+            tooltip={TOOLTIPS.newClients}
           />
           <MetricCard
             title="Всего записей"
@@ -50,6 +70,7 @@ export default function DashboardPage() {
             change={dashboardKPIs.appointmentsGrowth}
             changeLabel="vs прошлый месяц"
             icon={<CalendarCheck size={18} />}
+            tooltip={TOOLTIPS.appointments}
           />
           <MetricCard
             title="Средний чек"
@@ -57,6 +78,7 @@ export default function DashboardPage() {
             change={dashboardKPIs.avgCheckGrowth}
             changeLabel="vs прошлый месяц"
             icon={<Receipt size={18} />}
+            tooltip={TOOLTIPS.avgCheck}
           />
         </div>
 

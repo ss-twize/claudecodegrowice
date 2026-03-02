@@ -432,10 +432,10 @@ export const subscriptionData = {
 };
 
 export const pricingPlans = [
-  { id: "text", name: "Text", price: 5900, features: ["Чат-бот и FAQ", "Базовые рассылки", "До 500 сообщений/мес", "Поддержка по email"] },
+  { id: "text", name: "Text", price: 5900, features: ["Чат-бот и частые вопросы", "Базовые рассылки", "До 500 сообщений/мес", "Поддержка по почте"] },
   { id: "voice-start", name: "Voice-Start", price: 9900, features: ["Всё из Text", "Базовые голосовые сценарии", "Входящие звонки", "До 2 000 сообщений/мес"] },
   { id: "voice-pro", name: "Voice-Pro", price: 14900, popular: true, features: ["Всё из Voice-Start", "Расширенная голосовая логика", "CRM-интеграции", "Аналитика звонков"] },
-  { id: "voice-max", name: "Voice-Max", price: 21900, features: ["Всё из Voice-Pro", "Максимальный пакет", "Приоритетная поддержка SLA", "Выделенный менеджер"] },
+  { id: "voice-max", name: "Voice-Max", price: 21900, features: ["Всё из Voice-Pro", "Максимальный пакет", "Приоритетная поддержка", "Выделенный менеджер"] },
 ];
 
 export const systemModules = [
@@ -583,16 +583,12 @@ export const plExpenses = [
 ];
 
 export const cashFlowData = [
-  { month: "Сен", actual: 200000, forecast: null },
-  { month: "Окт", actual: 246000, forecast: null },
-  { month: "Ноя", actual: 217000, forecast: null },
-  { month: "Дек", actual: 273000, forecast: null },
-  { month: "Янв", actual: 205000, forecast: null },
-  { month: "Фев", actual: 235000, forecast: null },
-  { month: "Мар", actual: null,   forecast: 258000 },
-  { month: "Апр", actual: null,   forecast: 274000 },
-  { month: "Май", actual: null,   forecast: 298000 },
-  { month: "Июн", actual: null,   forecast: 315000 },
+  { month: "Сен", actual: 200000 },
+  { month: "Окт", actual: 246000 },
+  { month: "Ноя", actual: 217000 },
+  { month: "Дек", actual: 273000 },
+  { month: "Янв", actual: 205000 },
+  { month: "Фев", actual: 235000 },
 ];
 
 // ─── ANALYTICS: FUNNEL + TRENDS + FORECAST ───────────────────────────────────
@@ -610,20 +606,16 @@ export const analyticsTrends = [
   { metric: "Новые клиенты", current: 38,     previous: 35,     unit: "number"   },
   { metric: "Средний чек",   current: 3750,   previous: 3650,   unit: "currency" },
   { metric: "Конверсия",     current: 32.5,   previous: 29.8,   unit: "percent"  },
-  { metric: "Retention",     current: 78.4,   previous: 76.2,   unit: "percent"  },
-  { metric: "No-show",       current: 8.0,    previous: 9.5,    unit: "percent"  },
+  { metric: "Возвращаемость", current: 78.4,   previous: 76.2,   unit: "percent"  },
+  { metric: "Не явки",        current: 8.0,    previous: 9.5,    unit: "percent"  },
 ];
 
-export const revenueForecast = [
-  { month: "Окт 25", value: 456000, type: "actual"   },
-  { month: "Ноя 25", value: 412000, type: "actual"   },
-  { month: "Дек 25", value: 498000, type: "actual"   },
-  { month: "Янв 26", value: 387000, type: "actual"   },
-  { month: "Фев 26", value: 443000, type: "actual"   },
-  { month: "Мар 26", value: 468000, type: "forecast" },
-  { month: "Апр 26", value: 492000, type: "forecast" },
-  { month: "Май 26", value: 531000, type: "forecast" },
-  { month: "Июн 26", value: 558000, type: "forecast" },
+export const revenueHistory = [
+  { month: "Окт 25", value: 456000 },
+  { month: "Ноя 25", value: 412000 },
+  { month: "Дек 25", value: 498000 },
+  { month: "Янв 26", value: 387000 },
+  { month: "Фев 26", value: 443000 },
 ];
 
 // ─── SYSTEM: CHANNEL MANAGEMENT ──────────────────────────────────────────────

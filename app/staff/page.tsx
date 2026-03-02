@@ -88,14 +88,14 @@ export default function StaffPage() {
           {/* KPI table */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
             <div className="mb-4">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">KPI по мастерам</h3>
-              <p className="text-[#7d8590] text-sm">Конверсия, no-show, время сессии</p>
+              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Показатели по мастерам</h3>
+              <p className="text-[#7d8590] text-sm">Конверсия, не явки, время сессии</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#21262d]">
-                    {["Мастер", "Конверсия", "No-show", "Время сессии"].map((h) => (
+                    {["Мастер", "Конверсия", "Не явки", "Время сессии"].map((h) => (
                       <th key={h} className="text-left text-[#7d8590] text-xs font-medium pb-3 pr-4 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -218,7 +218,7 @@ export default function StaffPage() {
                           <AlertTriangle size={11} className={kpi.noShowPercent > 8 ? "text-red-400" : "text-yellow-400"} />
                           <span className={`text-xs font-bold ${kpi.noShowPercent > 8 ? "text-red-400" : "text-yellow-400"}`}>{kpi.noShowPercent}%</span>
                         </div>
-                        <p className="text-[#7d8590] text-xs">No-show</p>
+                        <p className="text-[#7d8590] text-xs">Не явки</p>
                       </div>
                     </div>
                   )}
