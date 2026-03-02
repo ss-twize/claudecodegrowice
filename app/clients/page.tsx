@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Header from "@/components/layout/Header";
 import { marketingClients, autoSystems, clientPredictive } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
-import { Send, Bot, X, TrendingUp, AlertTriangle, UserCheck, UserX, Smile } from "lucide-react";
+import { Send, Bot, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile } from "lucide-react";
 
 const EMOJIS = [
   "❤️","🔥","✅","⭐","🎁","💰","🎉","💎",
@@ -76,22 +76,22 @@ function ServicesCell({ services }: { services: string[] }) {
 }
 
 const SEGMENTS = [
-  { key: "all", label: "Все клиенты" },
-  { key: "VIP", label: "Особый" },
-  { key: "active", label: "Активные" },
-  { key: "atRisk", label: "Под риском" },
+  { key: "all",      label: "Все клиенты" },
+  { key: "new",      label: "Новые" },
+  { key: "active",   label: "Активные" },
+  { key: "atRisk",   label: "Под риском" },
   { key: "inactive", label: "Неактивные" },
 ];
 
 const SEGMENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  VIP:      { bg: "bg-[#00FF00]/10",   text: "text-[#00FF00]",  border: "border-[#00FF00]/20" },
+  new:      { bg: "bg-[#00FF00]/10",   text: "text-[#00FF00]",  border: "border-[#00FF00]/20" },
   active:   { bg: "bg-blue-500/10",    text: "text-blue-400",   border: "border-blue-500/20" },
   atRisk:   { bg: "bg-yellow-500/10",  text: "text-yellow-400", border: "border-yellow-500/20" },
   inactive: { bg: "bg-red-500/10",     text: "text-red-400",    border: "border-red-500/20" },
 };
 
 const SEGMENT_LABELS: Record<string, string> = {
-  VIP: "Особый", active: "Активный", atRisk: "Под риском", inactive: "Неактивный",
+  new: "Новый", active: "Активный", atRisk: "Под риском", inactive: "Неактивный",
 };
 
 const RISK_COLORS: Record<string, { bg: string; text: string }> = {
@@ -171,10 +171,10 @@ export default function ClientsPage() {
         {/* Segment summary cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           {[
-            { key: "VIP",      label: "Особые клиенты",    icon: <UserCheck size={16} />, color: "#00FF00" },
-            { key: "active",   label: "Активные",          icon: <TrendingUp size={16} />, color: "#60a5fa" },
+            { key: "new",      label: "Новые клиенты",     icon: <UserPlus size={16} />,    color: "#00FF00" },
+            { key: "active",   label: "Активные",          icon: <TrendingUp size={16} />,  color: "#60a5fa" },
             { key: "atRisk",   label: "Под риском",        icon: <AlertTriangle size={16} />, color: "#fbbf24" },
-            { key: "inactive", label: "Неактивные",        icon: <UserX size={16} />, color: "#f87171" },
+            { key: "inactive", label: "Неактивные",        icon: <UserX size={16} />,       color: "#f87171" },
           ].map((s) => (
             <button key={s.key} onClick={() => setActiveSegment(activeSegment === s.key ? "all" : s.key)}
               className={`text-left bg-[#161b22] border rounded-xl p-4 transition-all ${activeSegment === s.key ? "border-[#00FF00]/40" : "border-[#30363d] hover:border-[#3d444d]"}`}>
@@ -375,7 +375,7 @@ export default function ClientsPage() {
                 <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Сегмент аудитории</label>
                 <select value={segment} onChange={(e) => setSegment(e.target.value)}
                   className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none">
-                  {["Все клиенты", "Особые клиенты", "Активные", "Под риском оттока", "Неактивные 30+ дней", "Неактивные 50+ дней"].map((s) => (
+                  {["Все клиенты", "Новые (этот месяц)", "Активные", "Под риском (30+ дней)", "Неактивные (3+ месяца)"].map((s) => (
                     <option key={s}>{s}</option>
                   ))}
                 </select>

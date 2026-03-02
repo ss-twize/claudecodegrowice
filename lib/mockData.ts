@@ -534,14 +534,14 @@ export const serviceAnalyticsData = [
 
 // ─── CLIENTS: SEGMENTS + PREDICTIVE SCORING ──────────────────────────────────
 export const clientPredictive: Record<number, { score: number; segment: string; churnRisk: "low" | "medium" | "high" }> = {
-  1: { score: 92, segment: "VIP",      churnRisk: "low" },
-  2: { score: 74, segment: "active",   churnRisk: "medium" },
+  1: { score: 92, segment: "new",      churnRisk: "low" },
+  2: { score: 74, segment: "active",   churnRisk: "low" },
   3: { score: 61, segment: "active",   churnRisk: "medium" },
   4: { score: 45, segment: "atRisk",   churnRisk: "high" },
-  5: { score: 97, segment: "VIP",      churnRisk: "low" },
+  5: { score: 97, segment: "new",      churnRisk: "low" },
   6: { score: 28, segment: "inactive", churnRisk: "high" },
   7: { score: 55, segment: "active",   churnRisk: "medium" },
-  8: { score: 68, segment: "active",   churnRisk: "medium" },
+  8: { score: 68, segment: "active",   churnRisk: "low" },
   9: { score: 42, segment: "atRisk",   churnRisk: "high" },
   10:{ score: 81, segment: "active",   churnRisk: "low" },
 };
