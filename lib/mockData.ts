@@ -531,3 +531,122 @@ export const serviceAnalyticsData = [
   { name: "Педикюр", revenue: 52000, count: 62, avgCheck: 839 },
   { name: "Брови/Ресницы", revenue: 42600, count: 72, avgCheck: 592 },
 ];
+
+// ─── CLIENTS: SEGMENTS + PREDICTIVE SCORING ──────────────────────────────────
+export const clientPredictive: Record<number, { score: number; segment: string; churnRisk: "low" | "medium" | "high" }> = {
+  1: { score: 92, segment: "VIP",      churnRisk: "low" },
+  2: { score: 74, segment: "active",   churnRisk: "medium" },
+  3: { score: 61, segment: "active",   churnRisk: "medium" },
+  4: { score: 45, segment: "atRisk",   churnRisk: "high" },
+  5: { score: 97, segment: "VIP",      churnRisk: "low" },
+  6: { score: 28, segment: "inactive", churnRisk: "high" },
+  7: { score: 55, segment: "active",   churnRisk: "medium" },
+  8: { score: 68, segment: "active",   churnRisk: "medium" },
+  9: { score: 42, segment: "atRisk",   churnRisk: "high" },
+  10:{ score: 81, segment: "active",   churnRisk: "low" },
+};
+
+// ─── APPOINTMENTS: CONVERSION FUNNEL ─────────────────────────────────────────
+export const appointmentsFunnel = [
+  { stage: "Входящие обращения", count: 695 },
+  { stage: "Создано записей",    count: 226 },
+  { stage: "Подтверждено",       count: 198 },
+  { stage: "Завершено",          count: 183 },
+  { stage: "Оплачено",           count: 176 },
+];
+
+// ─── STAFF: KPI + NO-SHOW ────────────────────────────────────────────────────
+export const staffKPIData = [
+  { masterId: 1, noShowCount: 4, noShowPercent: 6.5,  conversionRate: 82, avgSession: "1ч 48м" },
+  { masterId: 2, noShowCount: 7, noShowPercent: 7.9,  conversionRate: 78, avgSession: "1ч 32м" },
+  { masterId: 3, noShowCount: 3, noShowPercent: 4.2,  conversionRate: 85, avgSession: "1ч 10м" },
+  { masterId: 4, noShowCount: 5, noShowPercent: 10.4, conversionRate: 71, avgSession: "1ч 15м" },
+];
+
+// ─── FINANCES: P&L + CASH FLOW ───────────────────────────────────────────────
+export const plRevenue = [
+  { category: "Стрижки",          current: 124000, prev: 108000 },
+  { category: "Окрашивание",      current: 198000, prev: 171000 },
+  { category: "Маникюр",          current: 78400,  prev: 72100  },
+  { category: "Педикюр",          current: 52000,  prev: 48600  },
+  { category: "Брови / Ресницы",  current: 42600,  prev: 40100  },
+  { category: "Прочие услуги",    current: 12000,  prev: 10200  },
+];
+
+export const plExpenses = [
+  { category: "Зарплата мастеров",    current: 118000, prev: 110000 },
+  { category: "Аренда",               current: 45000,  prev: 45000  },
+  { category: "Материалы",            current: 28000,  prev: 25400  },
+  { category: "Маркетинг",            current: 12000,  prev: 9800   },
+  { category: "Коммунальные услуги",  current: 8000,   prev: 8000   },
+  { category: "Прочее",               current: 7000,   prev: 6400   },
+];
+
+export const cashFlowData = [
+  { month: "Сен", actual: 200000, forecast: null },
+  { month: "Окт", actual: 246000, forecast: null },
+  { month: "Ноя", actual: 217000, forecast: null },
+  { month: "Дек", actual: 273000, forecast: null },
+  { month: "Янв", actual: 205000, forecast: null },
+  { month: "Фев", actual: 235000, forecast: null },
+  { month: "Мар", actual: null,   forecast: 258000 },
+  { month: "Апр", actual: null,   forecast: 274000 },
+  { month: "Май", actual: null,   forecast: 298000 },
+  { month: "Июн", actual: null,   forecast: 315000 },
+];
+
+// ─── ANALYTICS: FUNNEL + TRENDS + FORECAST ───────────────────────────────────
+export const analyticsFunnel = [
+  { stage: "Охват",             value: 2840, desc: "увидели рекламу / пост" },
+  { stage: "Обращения",         value: 695,  desc: "написали в мессенджер" },
+  { stage: "Квалифицировано",   value: 412,  desc: "ответили на вопросы" },
+  { stage: "Записались",        value: 226,  desc: "создали запись" },
+  { stage: "Пришли на визит",   value: 208,  desc: "завершили визит" },
+];
+
+export const analyticsTrends = [
+  { metric: "Выручка",       current: 443000, previous: 387000, unit: "currency" },
+  { metric: "Записи",        current: 226,    previous: 203,    unit: "number"   },
+  { metric: "Новые клиенты", current: 38,     previous: 35,     unit: "number"   },
+  { metric: "Средний чек",   current: 3750,   previous: 3650,   unit: "currency" },
+  { metric: "Конверсия",     current: 32.5,   previous: 29.8,   unit: "percent"  },
+  { metric: "Retention",     current: 78.4,   previous: 76.2,   unit: "percent"  },
+  { metric: "No-show",       current: 8.0,    previous: 9.5,    unit: "percent"  },
+];
+
+export const revenueForecast = [
+  { month: "Окт 25", value: 456000, type: "actual"   },
+  { month: "Ноя 25", value: 412000, type: "actual"   },
+  { month: "Дек 25", value: 498000, type: "actual"   },
+  { month: "Янв 26", value: 387000, type: "actual"   },
+  { month: "Фев 26", value: 443000, type: "actual"   },
+  { month: "Мар 26", value: 468000, type: "forecast" },
+  { month: "Апр 26", value: 492000, type: "forecast" },
+  { month: "Май 26", value: 531000, type: "forecast" },
+  { month: "Июн 26", value: 558000, type: "forecast" },
+];
+
+// ─── SYSTEM: CHANNEL MANAGEMENT ──────────────────────────────────────────────
+export const channelDetails = [
+  { id: "telegram",  name: "Telegram",  icon: "TG", enabled: true,  botName: "@growice_bot", webhookUrl: "https://api.telegram.org/bot.../webhook", workFrom: "08:00", workTo: "22:00", messagesMonth: 847, avgResponse: "1м 23с", connected: true  },
+  { id: "whatsapp",  name: "WhatsApp",  icon: "WA", enabled: false, botName: "",             webhookUrl: "",                                          workFrom: "09:00", workTo: "21:00", messagesMonth: 0,   avgResponse: "—",     connected: false },
+  { id: "max",       name: "Max",       icon: "МХ", enabled: false, botName: "",             webhookUrl: "",                                          workFrom: "09:00", workTo: "20:00", messagesMonth: 0,   avgResponse: "—",     connected: false },
+];
+
+// ─── SETTINGS: ROLES + NOTIFICATIONS ─────────────────────────────────────────
+export const rolesData = [
+  { id: "owner",  name: "Владелец",        color: "#00FF00", permissions: ["Все разделы", "Настройки", "Оплата", "Роли"],                          members: ["Иван Петров"] },
+  { id: "admin",  name: "Администратор",   color: "#60a5fa", permissions: ["Клиенты", "Записи", "Персонал", "Финансы", "Аналитика"],               members: ["Карина Белова", "Дарья Орлова"] },
+  { id: "master", name: "Мастер",          color: "#fbbf24", permissions: ["Свои записи", "Свои клиенты"],                                         members: ["Анна Титова", "Лена Смирнова"] },
+];
+
+export const notificationsConfig = [
+  { id: "new_appointment", label: "Новая запись создана",            telegram: true,  email: false },
+  { id: "cancel",          label: "Запись отменена",                 telegram: true,  email: true  },
+  { id: "no_show",         label: "Клиент не пришёл",               telegram: true,  email: false },
+  { id: "payment",         label: "Оплата получена",                 telegram: false, email: true  },
+  { id: "new_client",      label: "Новый клиент зарегистрирован",    telegram: true,  email: false },
+  { id: "review",          label: "Получен новый отзыв",             telegram: true,  email: true  },
+  { id: "low_balance",     label: "Баланс канала заканчивается",     telegram: true,  email: true  },
+  { id: "system_update",   label: "Обновление системы",              telegram: false, email: true  },
+];

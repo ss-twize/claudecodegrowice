@@ -2,13 +2,43 @@
 
 import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
-import { marketingClients, autoSystems } from "@/lib/mockData";
+import { marketingClients, autoSystems, clientPredictive } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
-import { Send, Bot, X } from "lucide-react";
+import { Send, Bot, X, TrendingUp, AlertTriangle, UserCheck, UserX } from "lucide-react";
 
 const channels = Array.from(new Set(marketingClients.map((c) => c.channel)));
 
+const SEGMENTS = [
+  { key: "all", label: "Все клиенты" },
+  { key: "VIP", label: "VIP" },
+  { key: "active", label: "Активные" },
+  { key: "atRisk", label: "Под риском" },
+  { key: "inactive", label: "Неактивные" },
+];
+
+const SEGMENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  VIP:      { bg: "bg-[#00FF00]/10",   text: "text-[#00FF00]",  border: "border-[#00FF00]/20" },
+  active:   { bg: "bg-blue-500/10",    text: "text-blue-400",   border: "border-blue-500/20" },
+  atRisk:   { bg: "bg-yellow-500/10",  text: "text-yellow-400", border: "border-yellow-500/20" },
+  inactive: { bg: "bg-red-500/10",     text: "text-red-400",    border: "border-red-500/20" },
+};
+
+const SEGMENT_LABELS: Record<string, string> = {
+  VIP: "VIP", active: "Активный", atRisk: "Под риском", inactive: "Неактивный",
+};
+
+const RISK_COLORS: Record<string, { bg: string; text: string }> = {
+  low:    { bg: "bg-[#00FF00]/10",  text: "text-[#00FF00]" },
+  medium: { bg: "bg-yellow-500/10", text: "text-yellow-400" },
+  high:   { bg: "bg-red-500/10",    text: "text-red-400" },
+};
+
+const RISK_LABELS: Record<string, string> = {
+  low: "Низкий", medium: "Средний", high: "Высокий",
+};
+
 export default function ClientsPage() {
+  const [activeSegment, setActiveSegment] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -18,16 +48,48 @@ export default function ClientsPage() {
 
   const filtered = useMemo(() => {
     return marketingClients.filter((c) => {
+      const pred = clientPredictive[c.id];
+      if (activeSegment !== "all" && pred?.segment !== activeSegment) return false;
       if (genderFilter !== "all" && c.gender !== genderFilter) return false;
       if (channelFilter !== "all" && c.channel !== channelFilter) return false;
       return true;
     });
-  }, [genderFilter, channelFilter]);
+  }, [activeSegment, genderFilter, channelFilter]);
+
+  const segmentCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: marketingClients.length };
+    marketingClients.forEach((c) => {
+      const seg = clientPredictive[c.id]?.segment;
+      if (seg) counts[seg] = (counts[seg] || 0) + 1;
+    });
+    return counts;
+  }, []);
 
   return (
     <div>
       <Header title="Клиенты и Рассылка" subtitle="CRM и маркетинговые кампании" />
       <div className="p-6 space-y-6">
+
+        {/* Segment summary cards */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {[
+            { key: "VIP",      label: "VIP клиенты",      icon: <UserCheck size={16} />, color: "#00FF00" },
+            { key: "active",   label: "Активные",          icon: <TrendingUp size={16} />, color: "#60a5fa" },
+            { key: "atRisk",   label: "Под риском",        icon: <AlertTriangle size={16} />, color: "#fbbf24" },
+            { key: "inactive", label: "Неактивные",        icon: <UserX size={16} />, color: "#f87171" },
+          ].map((s) => (
+            <button key={s.key} onClick={() => setActiveSegment(activeSegment === s.key ? "all" : s.key)}
+              className={`text-left bg-[#161b22] border rounded-xl p-4 transition-all ${activeSegment === s.key ? "border-[#00FF00]/40" : "border-[#30363d] hover:border-[#3d444d]"}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${s.color}15`, color: s.color }}>
+                  {s.icon}
+                </div>
+                <span className="text-2xl font-bold" style={{ color: s.color }}>{segmentCounts[s.key] || 0}</span>
+              </div>
+              <p className="text-[#9198a1] text-sm">{s.label}</p>
+            </button>
+          ))}
+        </div>
 
         {/* CRM Table */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
@@ -37,6 +99,18 @@ export default function ClientsPage() {
               <p className="text-[#7d8590] text-sm">{filtered.length} из {marketingClients.length} клиентов</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Segment tabs */}
+              <div className="flex items-center gap-0.5 bg-[#0d1117] border border-[#30363d] rounded-lg p-1">
+                {SEGMENTS.map(({ key, label }) => (
+                  <button key={key} onClick={() => setActiveSegment(key)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeSegment === key ? "bg-[#00FF00] text-black" : "text-[#9198a1] hover:text-[#e6edf3]"}`}>
+                    {label}
+                    {segmentCounts[key] !== undefined && (
+                      <span className="ml-1 opacity-60">({segmentCounts[key]})</span>
+                    )}
+                  </button>
+                ))}
+              </div>
               <div className="flex items-center gap-0.5 bg-[#0d1117] border border-[#30363d] rounded-lg p-1">
                 {[["all", "Все"], ["Ж", "Ж"], ["М", "М"]].map(([val, label]) => (
                   <button key={val} onClick={() => setGenderFilter(val)}
@@ -60,38 +134,66 @@ export default function ClientsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#21262d]">
-                  {["ФИО", "Телефон", "Пол", "Выручка", "Канал", "Telegram", "Последнее обращение", "Услуги"].map((h) => (
+                  {["ФИО", "Телефон", "Пол", "Выручка", "Канал", "Telegram", "AI Сегмент", "Риск оттока", "Скор", "Услуги"].map((h) => (
                     <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((client) => (
-                  <tr key={client.id} className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors">
-                    <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-medium whitespace-nowrap">{client.name}</td>
-                    <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.phone}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-md ${client.gender === "Ж" ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
-                        {client.gender}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-xs px-2 py-1 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{client.channel}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-sm">
-                      {client.telegram ? <span className="text-[#00FF00]">{client.telegram}</span> : <span className="text-[#7d8590]">—</span>}
-                    </td>
-                    <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.lastContact}</td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex flex-wrap gap-1">
-                        {client.services.map((s) => (
-                          <span key={s} className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{s}</span>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((client) => {
+                  const pred = clientPredictive[client.id];
+                  const segColor = pred ? SEGMENT_COLORS[pred.segment] : null;
+                  const riskColor = pred ? RISK_COLORS[pred.churnRisk] : null;
+                  return (
+                    <tr key={client.id} className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors">
+                      <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-medium whitespace-nowrap">{client.name}</td>
+                      <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.phone}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-md ${client.gender === "Ж" ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
+                          {client.gender}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
+                      <td className="px-5 py-3.5">
+                        <span className="text-xs px-2 py-1 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{client.channel}</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-sm">
+                        {client.telegram ? <span className="text-[#00FF00]">{client.telegram}</span> : <span className="text-[#7d8590]">—</span>}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {pred && segColor ? (
+                          <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>
+                            {SEGMENT_LABELS[pred.segment]}
+                          </span>
+                        ) : <span className="text-[#7d8590]">—</span>}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {pred && riskColor ? (
+                          <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>
+                            {RISK_LABELS[pred.churnRisk]}
+                          </span>
+                        ) : <span className="text-[#7d8590]">—</span>}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {pred ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-[#21262d] rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-[#00FF00]" style={{ width: `${pred.score}%` }} />
+                            </div>
+                            <span className="text-[#9198a1] text-xs font-medium">{pred.score}</span>
+                          </div>
+                        ) : <span className="text-[#7d8590]">—</span>}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex flex-wrap gap-1">
+                          {client.services.map((s) => (
+                            <span key={s} className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{s}</span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -162,7 +264,7 @@ export default function ClientsPage() {
                 <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Сегмент аудитории</label>
                 <select value={segment} onChange={(e) => setSegment(e.target.value)}
                   className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none">
-                  {["Все клиенты", "Не приходили 30+ дней", "Не приходили 50+ дней", "VIP клиенты", "Новые клиенты"].map((s) => (
+                  {["Все клиенты", "VIP клиенты", "Активные", "Под риском оттока", "Неактивные 30+ дней", "Неактивные 50+ дней"].map((s) => (
                     <option key={s}>{s}</option>
                   ))}
                 </select>
