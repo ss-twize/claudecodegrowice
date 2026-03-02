@@ -21,8 +21,6 @@ const EMOJIS = [
   "🌟","🎀","💆","🌺","😊","🙏","👍","🆕",
 ];
 
-const channels = Array.from(new Set(marketingClients.map((c) => c.channel)));
-
 function ServicesCell({ services }: { services: string[] }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
@@ -167,6 +165,8 @@ export default function ClientsPage() {
   const handleSystemConfigure = async (systemCode: string) => {
     await callWebhook("sistema_nastroit", { system_code: systemCode }, role);
   };
+
+  const channels = useMemo(() => Array.from(new Set(clients.map((c) => c.channel))).sort(), [clients]);
 
   const { sorted, sortCol, sortDir, onSort } = useSortable(clients);
 
