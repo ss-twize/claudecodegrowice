@@ -18,11 +18,11 @@ const statusConfig: Record<string, { classes: string; dot: string }> = {
 
 export default function AppointmentsTable() {
   return (
-    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#1e1e1e] flex items-center justify-between">
+    <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between">
         <div>
-          <h3 className="text-white font-semibold">Предстоящие записи</h3>
-          <p className="text-[#555555] text-sm">25–27 февраля 2026</p>
+          <h3 className="text-[#e6edf3] font-semibold">Предстоящие записи</h3>
+          <p className="text-[#7d8590] text-sm">25–27 февраля 2026</p>
         </div>
         <button className="text-sm bg-[#00FF00] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#ccff33] transition-colors">
           + Запись
@@ -31,9 +31,9 @@ export default function AppointmentsTable() {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#1a1a1a]">
+            <tr className="border-b border-[#21262d]">
               {["Клиент", "Услуга", "Мастер", "Дата и время", "Длит.", "Сумма", "Статус"].map((h) => (
-                <th key={h} className="text-left text-[#555555] text-xs font-medium px-5 py-3 whitespace-nowrap">
+                <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -45,23 +45,23 @@ export default function AppointmentsTable() {
               return (
                 <tr
                   key={appt.id}
-                  className="border-b border-[#141414] hover:bg-[#141414] transition-colors"
+                  className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors"
                 >
-                  <td className="px-5 py-3.5 text-white text-sm font-medium whitespace-nowrap">
+                  <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-medium whitespace-nowrap">
                     {appt.client}
                   </td>
-                  <td className="px-5 py-3.5 text-[#888888] text-sm whitespace-nowrap">
+                  <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">
                     {appt.service}
                   </td>
-                  <td className="px-5 py-3.5 text-[#888888] text-sm whitespace-nowrap">
+                  <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">
                     {appt.master}
                   </td>
                   <td className="px-5 py-3.5 whitespace-nowrap">
-                    <p className="text-white text-sm">{appt.date}</p>
-                    <p className="text-[#555555] text-xs">{appt.time}</p>
+                    <p className="text-[#e6edf3] text-sm">{appt.date}</p>
+                    <p className="text-[#7d8590] text-xs">{appt.time}</p>
                   </td>
-                  <td className="px-5 py-3.5 text-[#888888] text-sm">{appt.duration}</td>
-                  <td className="px-5 py-3.5 text-white text-sm font-semibold whitespace-nowrap">
+                  <td className="px-5 py-3.5 text-[#9198a1] text-sm">{appt.duration}</td>
+                  <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-semibold whitespace-nowrap">
                     {formatCurrency(appt.price)}
                   </td>
                   <td className="px-5 py-3.5">
