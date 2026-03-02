@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 const mainNav = [
-  { href: "/", label: "Дашборд", icon: LayoutDashboard },
+  { href: "/", label: "Главная", icon: LayoutDashboard },
   { href: "/clients", label: "Клиенты и Рассылка", icon: Megaphone },
   { href: "/appointments", label: "Записи", icon: CalendarDays },
   { href: "/staff", label: "Персонал", icon: UserCog },

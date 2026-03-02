@@ -25,7 +25,7 @@ const activityIcons: Record<string, React.ReactNode> = {
 export default function DashboardPage() {
   return (
     <div>
-      <Header title="Дашборд" subtitle="Обзор ключевых показателей" />
+      <Header title="Главная" subtitle="Обзор ключевых показателей" />
       <div className="p-6 space-y-6">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -69,13 +69,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="xl:col-span-2">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-stretch">
+          <div className="xl:col-span-2 flex flex-col">
             <AppointmentsChart />
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
             <h3 className="text-[#e6edf3] font-semibold mb-4 font-unbounded">Последние события</h3>
             <div className="space-y-3">
               {recentActivity.map((activity) => (
