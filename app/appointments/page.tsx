@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
 import AppointmentsTable from "@/components/appointments/AppointmentsTable";
-import { appointmentsByHour, appointmentsData, appointmentsFunnel } from "@/lib/mockData";
+import { useAppointments } from "@/lib/hooks/useAppointments";
+import { appointmentsFunnel } from "@/lib/mockData";
 import { CalendarCheck, XCircle, Clock, AlertTriangle } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -21,16 +23,37 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const total = appointmentsData.length;
-const confirmed = appointmentsData.filter((a) => a.status === "Подтверждено").length;
-const cancelled = appointmentsData.filter((a) => a.status === "Отменено").length;
-const pending = appointmentsData.filter((a) => a.status === "Ожидание").length;
-const cancelRate = Math.round((cancelled / total) * 100);
-const maxHour = Math.max(...appointmentsByHour.map((h) => h.count));
-
 const funnelMax = appointmentsFunnel[0].count;
 
 export default function AppointmentsPage() {
+  const { appointments, loading } = useAppointments(300);
+
+  // KPIs from real data
+  const total = appointments.length;
+  const confirmed = appointments.filter((a) => a.status === "Подтверждено").length;
+  const cancelled = appointments.filter((a) => a.status === "Отменено").length;
+  const pending = appointments.filter((a) => a.status === "Ожидание").length;
+  const cancelRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
+
+  // Hour heatmap from real appointment times
+  const hourData = useMemo(() => {
+    const counts: Record<number, number> = {};
+    for (let h = 9; h <= 20; h++) counts[h] = 0;
+    appointments.forEach((a) => {
+      if (!a.rawDate) return;
+      const d = new Date(a.rawDate);
+      if (isNaN(d.getTime())) return;
+      const h = d.getHours();
+      if (h >= 9 && h <= 20) counts[h] = (counts[h] || 0) + 1;
+    });
+    return Object.entries(counts).map(([h, count]) => ({
+      hour: `${h}:00`,
+      count,
+    }));
+  }, [appointments]);
+
+  const maxHour = Math.max(...hourData.map((h) => h.count), 1);
+
   return (
     <div>
       <Header title="Записи" subtitle="Управление визитами клиентов" />
@@ -39,31 +62,30 @@ export default function AppointmentsPage() {
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard
             title="Всего записей"
-            value={String(total)}
-            change={11.3}
-            changeLabel="vs прошлый месяц"
+            value={loading ? "—" : String(total)}
             icon={<CalendarCheck size={18} />}
             accent
           />
-          <MetricCard title="Подтверждено" value={String(confirmed)} icon={<Clock size={18} />} />
+          <MetricCard
+            title="Подтверждено"
+            value={loading ? "—" : String(confirmed)}
+            icon={<Clock size={18} />}
+          />
           <MetricCard
             title="Процент отмен"
-            value={`${cancelRate}%`}
-            change={-2.5}
-            changeLabel="улучшение"
+            value={loading ? "—" : `${cancelRate}%`}
             icon={<XCircle size={18} />}
           />
           <MetricCard
             title="Ожидают подтверждения"
-            value={String(pending)}
+            value={loading ? "—" : String(pending)}
             icon={<AlertTriangle size={18} />}
           />
         </div>
 
-        {/* Conversion Funnel + Hour heatmap */}
+        {/* Funnel + Hour heatmap */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-
-          {/* Conversion Funnel */}
+          {/* Funnel (mock) */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
             <div className="mb-5">
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Воронка конверсии</h3>
@@ -116,22 +138,22 @@ export default function AppointmentsPage() {
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
             <div className="mb-5">
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Загрузка по часам</h3>
-              <p className="text-[#7d8590] text-sm">Среднее количество записей по времени суток</p>
+              <p className="text-[#7d8590] text-sm">Количество записей по времени суток</p>
             </div>
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={appointmentsByHour} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <BarChart data={hourData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
                   <XAxis dataKey="hour" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {appointmentsByHour.map((entry, index) => {
+                    {hourData.map((entry, index) => {
                       const intensity = entry.count / maxHour;
                       return (
                         <Cell
                           key={`cell-${index}`}
-                          fill={intensity > 0.8 ? "#00FF00" : intensity > 0.6 ? "#88CC00" : intensity > 0.4 ? "#2d5a1b" : "#1f3a12"}
+                          fill={intensity > 0.8 ? "#00FF00" : intensity > 0.6 ? "#88CC00" : intensity > 0.3 ? "#2d5a1b" : "#1f3a12"}
                         />
                       );
                     })}
@@ -156,8 +178,7 @@ export default function AppointmentsPage() {
           </div>
         </div>
 
-        {/* Appointments Table */}
-        <AppointmentsTable />
+        <AppointmentsTable appointments={appointments} loading={loading} />
       </div>
     </div>
   );

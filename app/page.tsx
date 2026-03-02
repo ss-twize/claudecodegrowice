@@ -6,9 +6,10 @@ import type { MetricTooltipDef } from "@/components/ui/MetricCard";
 import RevenueChart from "@/components/charts/RevenueChart";
 import ServicesChart from "@/components/charts/ServicesChart";
 import AppointmentsChart from "@/components/charts/AppointmentsChart";
-import { dashboardKPIs, recentActivity } from "@/lib/mockData";
+import { recentActivity } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { useDashboardStats } from "@/lib/hooks/useDashboardStats";
 import {
   TrendingUp,
   Users,
@@ -45,6 +46,7 @@ const activityIcons: Record<string, React.ReactNode> = {
 
 export default function DashboardPage() {
   const { isOwner } = useAuth();
+  const { stats, loading } = useDashboardStats();
 
   return (
     <div>
@@ -55,8 +57,8 @@ export default function DashboardPage() {
           {isOwner && (
             <MetricCard
               title="Выручка за месяц"
-              value={formatCurrency(dashboardKPIs.monthlyRevenue)}
-              change={dashboardKPIs.monthlyRevenueGrowth}
+              value={loading ? "—" : formatCurrency(stats.monthlyRevenue)}
+              change={stats.monthlyRevenueGrowth}
               changeLabel="vs прошлый месяц"
               icon={<TrendingUp size={18} />}
               accent
@@ -65,16 +67,16 @@ export default function DashboardPage() {
           )}
           <MetricCard
             title="Новые клиенты"
-            value={String(dashboardKPIs.newClients)}
-            change={dashboardKPIs.newClientsGrowth}
+            value={loading ? "—" : String(stats.newClients)}
+            change={stats.newClientsGrowth}
             changeLabel="vs прошлый месяц"
             icon={<Users size={18} />}
             tooltip={TOOLTIPS.newClients}
           />
           <MetricCard
             title="Всего записей"
-            value={String(dashboardKPIs.totalAppointments)}
-            change={dashboardKPIs.appointmentsGrowth}
+            value={loading ? "—" : String(stats.totalAppointments)}
+            change={stats.appointmentsGrowth}
             changeLabel="vs прошлый месяц"
             icon={<CalendarCheck size={18} />}
             tooltip={TOOLTIPS.appointments}
@@ -82,9 +84,7 @@ export default function DashboardPage() {
           {isOwner && (
             <MetricCard
               title="Средний чек"
-              value={formatCurrency(dashboardKPIs.avgCheck)}
-              change={dashboardKPIs.avgCheckGrowth}
-              changeLabel="vs прошлый месяц"
+              value={loading ? "—" : formatCurrency(stats.avgCheck)}
               icon={<Receipt size={18} />}
               tooltip={TOOLTIPS.avgCheck}
             />
