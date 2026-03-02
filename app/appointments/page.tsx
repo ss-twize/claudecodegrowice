@@ -19,8 +19,8 @@ import {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
-        <p className="text-[#888888] mb-1">{label}</p>
+      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
+        <p className="text-[#9198a1] mb-1">{label}</p>
         <p className="text-[#00FF00] font-semibold">{payload[0].value} записей</p>
       </div>
     );
@@ -71,25 +71,25 @@ export default function AppointmentsPage() {
         </div>
 
         {/* Heatmap bar by hour */}
-        <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
           <div className="mb-5">
-            <h3 className="text-white font-semibold">Загрузка по часам</h3>
-            <p className="text-[#555555] text-sm">Среднее количество записей по времени суток</p>
+            <h3 className="text-[#e6edf3] font-semibold">Загрузка по часам</h3>
+            <p className="text-[#7d8590] text-sm">Среднее количество записей по времени суток</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart
               data={appointmentsByHour}
               margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
               <XAxis
                 dataKey="hour"
-                tick={{ fill: "#555555", fontSize: 12 }}
+                tick={{ fill: "#7d8590", fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: "#555555", fontSize: 12 }}
+                tick={{ fill: "#7d8590", fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
                 width={25}
@@ -107,8 +107,8 @@ export default function AppointmentsPage() {
                           : intensity > 0.6
                           ? "#88CC00"
                           : intensity > 0.4
-                          ? "#3a5c00"
-                          : "#1e2e00"
+                          ? "#2d5a1b"
+                          : "#1f3a12"
                       }
                     />
                   );
@@ -117,16 +117,16 @@ export default function AppointmentsPage() {
             </BarChart>
           </ResponsiveContainer>
           <div className="flex items-center gap-4 mt-3 justify-end">
-            <span className="text-[#555555] text-xs">Загрузка:</span>
+            <span className="text-[#7d8590] text-xs">Загрузка:</span>
             {[
-              { color: "#1e2e00", label: "Низкая" },
-              { color: "#3a5c00", label: "Средняя" },
+              { color: "#1f3a12", label: "Низкая" },
+              { color: "#2d5a1b", label: "Средняя" },
               { color: "#88CC00", label: "Высокая" },
               { color: "#00FF00", label: "Пик" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
-                <span className="text-[#555555] text-xs">{item.label}</span>
+                <span className="text-[#7d8590] text-xs">{item.label}</span>
               </div>
             ))}
           </div>

@@ -14,8 +14,8 @@ import { revenueData } from "@/lib/mockData";
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
-        <p className="text-[#888888] mb-2 font-medium">{label}</p>
+      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
+        <p className="text-[#9198a1] mb-2 font-medium">{label}</p>
         {payload.map((p: any, i: number) => (
           <p key={i} style={{ color: p.color }} className="font-semibold">
             {p.name}:{" "}
@@ -34,20 +34,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function RevenueChart() {
   return (
-    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
+    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-white font-semibold">Выручка за год</h3>
-          <p className="text-[#555555] text-sm">Март 2025 — Февраль 2026</p>
+          <h3 className="text-[#e6edf3] font-semibold">Выручка за год</h3>
+          <p className="text-[#7d8590] text-sm">Март 2025 — Февраль 2026</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-[#00FF00]" />
-            <span className="text-[#888888]">Выручка</span>
+            <span className="text-[#9198a1]">Выручка</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-[#444444]" />
-            <span className="text-[#888888]">Расходы</span>
+            <div className="w-3 h-3 rounded-sm bg-[#4a5568]" />
+            <span className="text-[#9198a1]">Расходы</span>
           </div>
         </div>
       </div>
@@ -59,19 +59,19 @@ export default function RevenueChart() {
               <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="expensesGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#444444" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#444444" stopOpacity={0} />
+              <stop offset="5%" stopColor="#4a5568" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#4a5568" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fill: "#555555", fontSize: 12 }}
+            tick={{ fill: "#7d8590", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: "#555555", fontSize: 12 }}
+            tick={{ fill: "#7d8590", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => `${v / 1000}к`}
@@ -92,11 +92,11 @@ export default function RevenueChart() {
             type="monotone"
             dataKey="expenses"
             name="Расходы"
-            stroke="#444444"
+            stroke="#4a5568"
             strokeWidth={2}
             fill="url(#expensesGrad)"
             dot={false}
-            activeDot={{ r: 4, fill: "#444444", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "#4a5568", strokeWidth: 0 }}
           />
         </AreaChart>
       </ResponsiveContainer>

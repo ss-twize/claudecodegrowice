@@ -75,20 +75,20 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-4">Последние события</h3>
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+            <h3 className="text-[#e6edf3] font-semibold mb-4">Последние события</h3>
             <div className="space-y-3">
               {recentActivity.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-3 pb-3 border-b border-[#1a1a1a] last:border-0 last:pb-0"
+                  className="flex items-start gap-3 pb-3 border-b border-[#21262d] last:border-0 last:pb-0"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#21262d] border border-[#30363d] flex items-center justify-center flex-shrink-0 mt-0.5">
                     {activityIcons[activity.type]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-xs leading-relaxed">{activity.text}</p>
-                    <p className="text-[#555555] text-xs mt-0.5">{activity.time}</p>
+                    <p className="text-[#e6edf3] text-xs leading-relaxed">{activity.text}</p>
+                    <p className="text-[#7d8590] text-xs mt-0.5">{activity.time}</p>
                   </div>
                   {activity.amount !== null && (
                     <span

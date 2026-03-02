@@ -17,8 +17,8 @@ import {
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-sm">
-        <p className="text-white font-semibold">{payload[0].name}</p>
+      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
+        <p className="text-[#e6edf3] font-semibold">{payload[0].name}</p>
         <p className="text-[#00FF00]">{payload[0].value}% клиентов</p>
       </div>
     );
@@ -69,10 +69,10 @@ export default function ClientsPage() {
           </div>
 
           {/* Sources */}
-          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-5">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
             <div className="mb-5">
-              <h3 className="text-white font-semibold">Источники привлечения</h3>
-              <p className="text-[#555555] text-sm">Откуда приходят клиенты</p>
+              <h3 className="text-[#e6edf3] font-semibold">Источники привлечения</h3>
+              <p className="text-[#7d8590] text-sm">Откуда приходят клиенты</p>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -100,9 +100,9 @@ export default function ClientsPage() {
                       className="w-2.5 h-2.5 rounded-sm"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-[#888888] text-xs">{item.name}</span>
+                    <span className="text-[#9198a1] text-xs">{item.name}</span>
                   </div>
-                  <span className="text-white text-xs font-semibold">{item.value}%</span>
+                  <span className="text-[#e6edf3] text-xs font-semibold">{item.value}%</span>
                 </div>
               ))}
             </div>

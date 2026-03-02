@@ -25,13 +25,13 @@ export default function MetricCard({
       className={`rounded-xl border p-5 card-hover ${
         accent
           ? "bg-[#00FF00] border-[#00FF00] accent-glow"
-          : "bg-[#111111] border-[#1e1e1e]"
+          : "bg-[#161b22] border-[#30363d]"
       }`}
     >
       <div className="flex items-start justify-between mb-4">
         <div
           className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-            accent ? "bg-black/20" : "bg-[#1a1a1a] border border-[#2a2a2a]"
+            accent ? "bg-black/20" : "bg-[#21262d] border border-[#30363d]"
           }`}
         >
           <span className={accent ? "text-black" : "text-[#00FF00]"}>
@@ -61,14 +61,14 @@ export default function MetricCard({
 
       <p
         className={`text-sm font-medium mb-1 ${
-          accent ? "text-black/70" : "text-[#888888]"
+          accent ? "text-black/70" : "text-[#9198a1]"
         }`}
       >
         {title}
       </p>
       <p
         className={`text-2xl font-bold ${
-          accent ? "text-black" : "text-white"
+          accent ? "text-black" : "text-[#e6edf3]"
         }`}
       >
         {value}
@@ -76,7 +76,7 @@ export default function MetricCard({
       {changeLabel && (
         <p
           className={`text-xs mt-1 ${
-            accent ? "text-black/60" : "text-[#555555]"
+            accent ? "text-black/60" : "text-[#7d8590]"
           }`}
         >
           {changeLabel}
