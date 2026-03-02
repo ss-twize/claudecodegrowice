@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Header from "@/components/layout/Header";
+import { useAuth } from "@/lib/auth";
+import { Lock } from "lucide-react";
 import {
   analyticsKPIs, dailyContactsData, cancellationsData,
   noShowData, dailyKPITable, topDaysByRevenue,
@@ -87,8 +89,24 @@ function KpiCard({ title, value, sub, icon, accent }: { title: string; value: st
 }
 
 export default function AnalyticsPage() {
+  const { isOwner } = useAuth();
   const [period, setPeriod] = useState<"month" | "quarter" | "half">("month");
   const k = analyticsKPIs;
+
+  if (!isOwner) {
+    return (
+      <div>
+        <Header title="Аналитика" subtitle="Полная аналитика бизнеса и агента" />
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="w-16 h-16 rounded-2xl bg-[#161b22] border border-[#30363d] flex items-center justify-center mb-5">
+            <Lock size={28} className="text-[#30363d]" />
+          </div>
+          <h2 className="text-[#e6edf3] text-xl font-semibold mb-2">Нет доступа</h2>
+          <p className="text-[#7d8590] text-sm">Этот раздел доступен только владельцу</p>
+        </div>
+      </div>
+    );
+  }
 
   const funnelMax = analyticsFunnel[0].value;
 

@@ -1,6 +1,8 @@
 "use client";
 
 import Header from "@/components/layout/Header";
+import { useAuth } from "@/lib/auth";
+import { Lock } from "lucide-react";
 import MetricCard from "@/components/ui/MetricCard";
 import { revenueData, financesKPIs, serviceRevenueData, plRevenue, plExpenses, cashFlowData } from "@/lib/mockData";
 import type { MetricTooltipDef } from "@/components/ui/MetricCard";
@@ -87,6 +89,23 @@ const totalExpPL = plExpenses.reduce((s, r) => s + r.current, 0);
 const profitPL = totalRevPL - totalExpPL;
 
 export default function FinancesPage() {
+  const { isOwner } = useAuth();
+
+  if (!isOwner) {
+    return (
+      <div>
+        <Header title="Финансы" subtitle="Финансовые показатели салона" />
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="w-16 h-16 rounded-2xl bg-[#161b22] border border-[#30363d] flex items-center justify-center mb-5">
+            <Lock size={28} className="text-[#30363d]" />
+          </div>
+          <h2 className="text-[#e6edf3] text-xl font-semibold mb-2">Нет доступа</h2>
+          <p className="text-[#7d8590] text-sm">Этот раздел доступен только владельцу</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Header title="Финансы" subtitle="Финансовые показатели салона" />

@@ -4,6 +4,8 @@ import { useState } from "react";
 import Header from "@/components/layout/Header";
 import { subscriptionData, pricingPlans, systemModules, channelDetails } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
+import { callWebhook } from "@/lib/webhooks";
+import { useAuth } from "@/lib/auth";
 import { CheckCircle2, Shield, Zap, Crown, Star, RefreshCw, Settings2, ExternalLink, Clock, MessageSquare } from "lucide-react";
 
 const PLAN_ICONS: Record<string, React.ReactNode> = {
@@ -21,6 +23,7 @@ const PAYMENT_PERIODS = [
 ];
 
 export default function SystemPage() {
+  const { role } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("voice-pro");
   const [paymentPeriod, setPaymentPeriod] = useState(1);
   const [modules, setModules] = useState(systemModules.map((m) => ({ ...m })));
@@ -33,16 +36,30 @@ export default function SystemPage() {
   const monthlyPrice = Math.round(plan.price * (1 - period.discount / 100));
   const total = monthlyPrice * paymentPeriod;
 
-  const toggleModule = (id: string) => {
-    setModules((prev) => prev.map((m) => m.id === id ? { ...m, enabled: !m.enabled } : m));
+  const toggleModule = async (id: string) => {
+    const current = modules.find((m) => m.id === id);
+    if (!current) return;
+    const newEnabled = !current.enabled;
+    setModules((prev) => prev.map((m) => m.id === id ? { ...m, enabled: newEnabled } : m));
+    await callWebhook("modul_toggle", { module_id: id, enabled: newEnabled }, role);
   };
 
-  const toggleChannel = (id: string) => {
-    setChannels((prev) => prev.map((c) => c.id === id ? { ...c, enabled: !c.enabled } : c));
+  const toggleChannel = async (id: string) => {
+    const current = channels.find((c) => c.id === id);
+    if (!current) return;
+    const newEnabled = !current.enabled;
+    setChannels((prev) => prev.map((c) => c.id === id ? { ...c, enabled: newEnabled } : c));
+    await callWebhook("kanal_toggle", { channel_id: id, enabled: newEnabled }, role);
   };
 
   const updateChannel = (id: string, field: string, value: string) => {
     setChannels((prev) => prev.map((c) => c.id === id ? { ...c, [field]: value } : c));
+  };
+
+  const saveChannelSettings = async (id: string) => {
+    const ch = channels.find((c) => c.id === id);
+    if (!ch) return;
+    await callWebhook("kanal_nastroit", { channel_id: id, bot_name: ch.botName, webhook_url: ch.webhookUrl, work_from: ch.workFrom, work_to: ch.workTo }, role);
   };
 
   const handleCheck = () => {
@@ -289,7 +306,7 @@ export default function SystemPage() {
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <button className="px-5 py-2 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
+                      <button onClick={() => saveChannelSettings(ch.id)} className="px-5 py-2 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
                         Сохранить
                       </button>
                     </div>

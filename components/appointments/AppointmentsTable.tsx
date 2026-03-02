@@ -1,5 +1,8 @@
+'use client'
+
 import { appointmentsData } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
+import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
 
 const statusConfig: Record<string, { classes: string; dot: string }> = {
   Подтверждено: {
@@ -16,7 +19,12 @@ const statusConfig: Record<string, { classes: string; dot: string }> = {
   },
 };
 
+// Normalise to sortable shape: add clientName alias for the client field
+const tableData = appointmentsData.map((a) => ({ ...a, clientName: a.client }));
+
 export default function AppointmentsTable() {
+  const { sorted, sortCol, sortDir, onSort } = useSortable(tableData);
+
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between">
@@ -32,15 +40,17 @@ export default function AppointmentsTable() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#21262d]">
-              {["Клиент", "Услуга", "Мастер", "Дата и время", "Длит.", "Сумма", "Статус"].map((h) => (
-                <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">
-                  {h}
-                </th>
-              ))}
+              <SortableHeader label="Клиент"       col="clientName" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Услуга"        col="service"    sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Мастер"        col="master"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Дата и время"  col="date"       sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+              <th className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">Длит.</th>
+              <SortableHeader label="Сумма"         col="price"      sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Статус"        col="status"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
             </tr>
           </thead>
           <tbody>
-            {appointmentsData.map((appt) => {
+            {sorted.map((appt) => {
               const sc = statusConfig[appt.status];
               return (
                 <tr

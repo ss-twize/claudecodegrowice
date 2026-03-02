@@ -3,9 +3,16 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Header from "@/components/layout/Header";
-import { marketingClients, autoSystems, clientPredictive } from "@/lib/mockData";
+import { marketingClients, clientPredictive } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
-import { Send, Bot, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile } from "lucide-react";
+import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
+import { useSystemStates } from "@/lib/hooks/useSystemStates";
+import { useAuth } from "@/lib/auth";
+import { callWebhook } from "@/lib/webhooks";
+import { supabase, ORG_UID } from "@/lib/supabase";
+import {
+  Send, Bot, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile, Settings, Power,
+} from "lucide-react";
 
 const EMOJIS = [
   "❤️","🔥","✅","⭐","🎁","💰","🎉","💎",
@@ -105,11 +112,14 @@ const RISK_LABELS: Record<string, string> = {
 };
 
 export default function ClientsPage() {
+  const { role, isOwner } = useAuth();
+  const { systems, setSystems } = useSystemStates();
+  const autoSystems = systems.filter(s => s.system_code !== "main_agent");
+
   const [activeSegment, setActiveSegment] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
-  const [msgChannel, setMsgChannel] = useState("Telegram");
   const [msgText, setMsgText] = useState("");
   const [segment, setSegment] = useState("Все клиенты");
   const [campaignName, setCampaignName] = useState("");
@@ -144,15 +154,38 @@ export default function ClientsPage() {
     }, 0);
   };
 
+  const handleSystemToggle = async (systemCode: string, currentEnabled: boolean) => {
+    if (!isOwner) return;
+    const newEnabled = !currentEnabled;
+    setSystems(prev => prev.map(s => s.system_code === systemCode ? { ...s, enabled: newEnabled } : s));
+    await supabase.from("system_states").update({ enabled: newEnabled })
+      .eq("org_uid", ORG_UID).eq("system_code", systemCode);
+    await callWebhook("sistema_toggle", { system_code: systemCode, enabled: newEnabled }, role);
+  };
+
+  const handleSystemConfigure = async (systemCode: string) => {
+    await callWebhook("sistema_nastroit", { system_code: systemCode }, role);
+  };
+
+  // Merge client data for sorting
+  const mergedClients = useMemo(() =>
+    marketingClients.map(c => ({
+      ...c,
+      segment: clientPredictive[c.id]?.segment,
+      churnRisk: clientPredictive[c.id]?.churnRisk,
+      score: clientPredictive[c.id]?.score ?? 0,
+    })), []);
+
+  const { sorted, sortCol, sortDir, onSort } = useSortable(mergedClients);
+
   const filtered = useMemo(() => {
-    return marketingClients.filter((c) => {
-      const pred = clientPredictive[c.id];
-      if (activeSegment !== "all" && pred?.segment !== activeSegment) return false;
+    return sorted.filter((c) => {
+      if (activeSegment !== "all" && c.segment !== activeSegment) return false;
       if (genderFilter !== "all" && c.gender !== genderFilter) return false;
       if (channelFilter !== "all" && c.channel !== channelFilter) return false;
       return true;
     });
-  }, [activeSegment, genderFilter, channelFilter]);
+  }, [sorted, activeSegment, genderFilter, channelFilter]);
 
   const segmentCounts = useMemo(() => {
     const counts: Record<string, number> = { all: marketingClients.length };
@@ -165,16 +198,16 @@ export default function ClientsPage() {
 
   return (
     <div>
-      <Header title="Клиенты и Рассылка" subtitle="CRM и маркетинговые кампании" />
+      <Header title="Клиенты и Рассылка" subtitle="База клиентов и маркетинговые кампании" />
       <div className="p-6 space-y-6">
 
-        {/* Segment summary cards */}
+        {/* Status summary cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           {[
-            { key: "new",      label: "Новые клиенты",     icon: <UserPlus size={16} />,    color: "#00FF00" },
-            { key: "active",   label: "Активные",          icon: <TrendingUp size={16} />,  color: "#60a5fa" },
-            { key: "atRisk",   label: "Под риском",        icon: <AlertTriangle size={16} />, color: "#fbbf24" },
-            { key: "inactive", label: "Неактивные",        icon: <UserX size={16} />,       color: "#f87171" },
+            { key: "new",      label: "Новые клиенты",  icon: <UserPlus size={16} />,     color: "#00FF00" },
+            { key: "active",   label: "Активные",       icon: <TrendingUp size={16} />,   color: "#60a5fa" },
+            { key: "atRisk",   label: "Под риском",     icon: <AlertTriangle size={16} />, color: "#fbbf24" },
+            { key: "inactive", label: "Неактивные",     icon: <UserX size={16} />,        color: "#f87171" },
           ].map((s) => (
             <button key={s.key} onClick={() => setActiveSegment(activeSegment === s.key ? "all" : s.key)}
               className={`text-left bg-[#161b22] border rounded-xl p-4 transition-all ${activeSegment === s.key ? "border-[#00FF00]/40" : "border-[#30363d] hover:border-[#3d444d]"}`}>
@@ -189,7 +222,7 @@ export default function ClientsPage() {
           ))}
         </div>
 
-        {/* CRM Table */}
+        {/* Client Table */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between flex-wrap gap-3">
             <div>
@@ -197,7 +230,7 @@ export default function ClientsPage() {
               <p className="text-[#7d8590] text-sm">{filtered.length} из {marketingClients.length} клиентов</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Segment tabs */}
+              {/* Status tabs */}
               <div className="flex items-center gap-0.5 bg-[#0d1117] border border-[#30363d] rounded-lg p-1">
                 {SEGMENTS.map(({ key, label }) => (
                   <button key={key} onClick={() => setActiveSegment(key)}
@@ -232,16 +265,22 @@ export default function ClientsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#21262d]">
-                  {["ФИО", "Телефон", "Пол", "Выручка", "Канал", "Telegram", "AI Сегмент", "Риск оттока", "Скор", "Услуги"].map((h) => (
-                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
-                  ))}
+                  <SortableHeader label="ФИО"         col="name"      sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Телефон"     col="phone"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">Пол</th>
+                  <SortableHeader label="Выручка"     col="revenue"   sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">Канал</th>
+                  <th className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">Telegram</th>
+                  <SortableHeader label="Статус"      col="segment"   sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Риск оттока" col="churnRisk" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Скор"        col="score"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">Услуги</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((client) => {
-                  const pred = clientPredictive[client.id];
-                  const segColor = pred ? SEGMENT_COLORS[pred.segment] : null;
-                  const riskColor = pred ? RISK_COLORS[pred.churnRisk] : null;
+                  const segColor = client.segment ? SEGMENT_COLORS[client.segment] : null;
+                  const riskColor = client.churnRisk ? RISK_COLORS[client.churnRisk] : null;
                   return (
                     <tr key={client.id} className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors">
                       <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-medium whitespace-nowrap">{client.name}</td>
@@ -259,26 +298,26 @@ export default function ClientsPage() {
                         {client.telegram ? <span className="text-[#00FF00]">{client.telegram}</span> : <span className="text-[#7d8590]">—</span>}
                       </td>
                       <td className="px-5 py-3.5">
-                        {pred && segColor ? (
+                        {client.segment && segColor ? (
                           <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>
-                            {SEGMENT_LABELS[pred.segment]}
+                            {SEGMENT_LABELS[client.segment]}
                           </span>
                         ) : <span className="text-[#7d8590]">—</span>}
                       </td>
                       <td className="px-5 py-3.5">
-                        {pred && riskColor ? (
+                        {client.churnRisk && riskColor ? (
                           <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>
-                            {RISK_LABELS[pred.churnRisk]}
+                            {RISK_LABELS[client.churnRisk]}
                           </span>
                         ) : <span className="text-[#7d8590]">—</span>}
                       </td>
                       <td className="px-5 py-3.5">
-                        {pred ? (
+                        {client.score > 0 ? (
                           <div className="flex items-center gap-2">
                             <div className="w-16 h-1.5 bg-[#21262d] rounded-full overflow-hidden">
-                              <div className="h-full rounded-full bg-[#00FF00]" style={{ width: `${pred.score}%` }} />
+                              <div className="h-full rounded-full bg-[#00FF00]" style={{ width: `${client.score}%` }} />
                             </div>
-                            <span className="text-[#9198a1] text-xs font-medium">{pred.score}</span>
+                            <span className="text-[#9198a1] text-xs font-medium">{client.score}</span>
                           </div>
                         ) : <span className="text-[#7d8590]">—</span>}
                       </td>
@@ -308,39 +347,56 @@ export default function ClientsPage() {
 
         {/* Auto Systems */}
         <div>
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Автосистемы</h3>
-          <p className="text-[#7d8590] text-sm mb-4">Результаты автоматических сценариев</p>
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="mb-4">
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Автосистемы</h3>
+            <p className="text-[#7d8590] text-sm">Автоматические сценарии работы с клиентами</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {autoSystems.map((sys) => (
-              <div key={sys.id} className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 card-hover">
+              <div key={sys.system_code} className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 card-hover flex flex-col">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
                     <Bot size={18} className="text-[#00FF00]" />
                   </div>
-                  <span className="text-xs font-medium px-2 py-1 rounded-md bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/20">Активно</span>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-md border ${
+                    sys.enabled
+                      ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20"
+                      : "bg-[#21262d] text-[#7d8590] border-[#30363d]"
+                  }`}>
+                    {sys.enabled ? "Активно" : "Выключено"}
+                  </span>
                 </div>
-                <p className="text-[#e6edf3] font-semibold mb-1">{sys.name}</p>
-                <p className="text-[#7d8590] text-xs mb-4">{sys.description}</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Отправлено", value: sys.stats.sent, accent: false },
-                    { label: "Ответили", value: sys.stats.responded, accent: false },
-                    { label: "Записались", value: sys.stats.converted, accent: true },
-                  ].map((s) => (
-                    <div key={s.label} className="bg-[#1c2128] rounded-lg p-2 text-center">
-                      <p className={`font-bold text-sm ${s.accent ? "text-[#00FF00]" : "text-[#e6edf3]"}`}>{s.value}</p>
-                      <p className="text-[#7d8590] text-xs">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[#7d8590] text-xs mt-3">Последний запуск: {sys.lastRun}</p>
+                <p className="text-[#e6edf3] font-semibold mb-1 text-sm">{sys.name}</p>
+                <p className="text-[#7d8590] text-xs mb-4 leading-relaxed flex-1">{sys.description}</p>
+                {isOwner && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSystemToggle(sys.system_code, sys.enabled)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                        sys.enabled
+                          ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                          : "border-[#00FF00]/30 text-[#00FF00] hover:bg-[#00FF00]/10"
+                      }`}
+                    >
+                      <Power size={12} />
+                      {sys.enabled ? "Выключить" : "Включить"}
+                    </button>
+                    <button
+                      onClick={() => handleSystemConfigure(sys.system_code)}
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#30363d] text-[#9198a1] hover:text-[#e6edf3] hover:border-[#3d444d] transition-colors"
+                      title="Настроить"
+                    >
+                      <Settings size={12} />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Modal */}
+      {/* New Campaign Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 w-full max-w-xl shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -370,9 +426,9 @@ export default function ClientsPage() {
                 />
               </div>
 
-              {/* Segment */}
+              {/* Audience */}
               <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Сегмент аудитории</label>
+                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Целевая аудитория</label>
                 <select value={segment} onChange={(e) => setSegment(e.target.value)}
                   className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none">
                   {["Все клиенты", "Новые (этот месяц)", "Активные", "Под риском (30+ дней)", "Неактивные (3+ месяца)"].map((s) => (
@@ -385,7 +441,6 @@ export default function ClientsPage() {
               <div>
                 <label className="text-[#9198a1] text-xs font-medium mb-2 block">Дополнительные фильтры</label>
                 <div className="grid grid-cols-3 gap-3">
-                  {/* Gender */}
                   <div>
                     <p className="text-[#7d8590] text-xs mb-1.5">Пол</p>
                     <div className="flex gap-1">
@@ -397,7 +452,6 @@ export default function ClientsPage() {
                       ))}
                     </div>
                   </div>
-                  {/* Revenue from */}
                   <div>
                     <p className="text-[#7d8590] text-xs mb-1.5">Выручка от, ₽</p>
                     <input
@@ -409,9 +463,8 @@ export default function ClientsPage() {
                       className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-xs rounded-md px-2.5 py-1.5 outline-none placeholder-[#7d8590]"
                     />
                   </div>
-                  {/* LTV from */}
                   <div>
-                    <p className="text-[#7d8590] text-xs mb-1.5">LTV от, ₽</p>
+                    <p className="text-[#7d8590] text-xs mb-1.5">Ценность от, ₽</p>
                     <input
                       type="number"
                       value={ltvFrom}
@@ -470,7 +523,18 @@ export default function ClientsPage() {
                 className="flex-1 px-4 py-2.5 rounded-lg border border-[#30363d] text-[#9198a1] text-sm font-medium hover:border-[#3d444d] transition-colors">
                 Отмена
               </button>
-              <button onClick={() => setShowModal(false)}
+              <button
+                onClick={async () => {
+                  await callWebhook("rassylka_zapustit", {
+                    campaign_name: campaignName,
+                    segment,
+                    text: msgText,
+                    gender: genderModalFilter,
+                    revenue_from: revenueFrom,
+                    ltv_from: ltvFrom,
+                  }, role);
+                  setShowModal(false);
+                }}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
                 Запустить рассылку
               </button>
