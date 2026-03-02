@@ -14,7 +14,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const ALLOWED_TYPES = [".pdf", ".txt", ".doc", ".docx"];
 const FILE_TYPE_LABELS: Record<string, string> = {
   pdf: "PDF", txt: "Текст", doc: "Word", docx: "Word",
 };

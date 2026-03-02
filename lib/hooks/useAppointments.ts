@@ -95,7 +95,7 @@ export function useAppointments(limit = 300) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, fetchAppointments)
       .subscribe()
     return () => { supabase.removeChannel(ch) }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { appointments, loading, error }
 }
