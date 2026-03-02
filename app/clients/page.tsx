@@ -424,19 +424,6 @@ export default function ClientsPage() {
                 </div>
               </div>
 
-              {/* Channel */}
-              <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Канал отправки</label>
-                <div className="flex gap-2">
-                  {["Telegram", "WhatsApp", "SMS"].map((ch) => (
-                    <button key={ch} onClick={() => setMsgChannel(ch)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${msgChannel === ch ? "bg-[#00FF00]/10 border-[#00FF00]/30 text-[#00FF00]" : "bg-[#0d1117] border-[#30363d] text-[#9198a1] hover:text-[#e6edf3]"}`}>
-                      {ch}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Message text */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
