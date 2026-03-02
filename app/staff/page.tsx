@@ -64,12 +64,13 @@ export default function StaffPage() {
         {/* Revenue + KPI table */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Revenue chart */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
             <div className="mb-5">
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по мастерам</h3>
               <p className="text-[#7d8590] text-sm">Февраль 2026</p>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
+            <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={staffRevenueData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -83,6 +84,7 @@ export default function StaffPage() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
 
           {/* KPI table */}

@@ -34,7 +34,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function RevenueChart() {
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка за год</h3>
@@ -51,7 +51,8 @@ export default function RevenueChart() {
           </div>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={260}>
+      <div className="flex-1 min-h-0" style={{ minHeight: 220 }}>
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={revenueData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
           <defs>
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -100,6 +101,7 @@ export default function RevenueChart() {
           />
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

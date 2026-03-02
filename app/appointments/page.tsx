@@ -113,30 +113,32 @@ export default function AppointmentsPage() {
           </div>
 
           {/* Heatmap by hour */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
             <div className="mb-5">
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Загрузка по часам</h3>
               <p className="text-[#7d8590] text-sm">Среднее количество записей по времени суток</p>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={appointmentsByHour} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                <XAxis dataKey="hour" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {appointmentsByHour.map((entry, index) => {
-                    const intensity = entry.count / maxHour;
-                    return (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={intensity > 0.8 ? "#00FF00" : intensity > 0.6 ? "#88CC00" : intensity > 0.4 ? "#2d5a1b" : "#1f3a12"}
-                      />
-                    );
-                  })}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={appointmentsByHour} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
+                  <XAxis dataKey="hour" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {appointmentsByHour.map((entry, index) => {
+                      const intensity = entry.count / maxHour;
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={intensity > 0.8 ? "#00FF00" : intensity > 0.6 ? "#88CC00" : intensity > 0.4 ? "#2d5a1b" : "#1f3a12"}
+                        />
+                      );
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
             <div className="flex items-center gap-4 mt-3 justify-end">
               <span className="text-[#7d8590] text-xs">Загрузка:</span>
               {[
