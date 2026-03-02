@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Header from "@/components/layout/Header";
 import { marketingClients, autoSystems, clientPredictive } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
@@ -10,9 +11,23 @@ const channels = Array.from(new Set(marketingClients.map((c) => c.channel)));
 
 function ServicesCell({ services }: { services: string[] }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [mounted, setMounted] = useState(false);
+  const badgeRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
+
   const first = services[0];
   const rest = services.slice(1);
+
+  const handleMouseEnter = () => {
+    if (badgeRef.current) {
+      const rect = badgeRef.current.getBoundingClientRect();
+      setPos({ top: rect.top, left: rect.left });
+    }
+    setOpen(true);
+  };
+
   return (
     <div className="flex items-center gap-1 whitespace-nowrap">
       {first && (
@@ -21,25 +36,33 @@ function ServicesCell({ services }: { services: string[] }) {
         </span>
       )}
       {rest.length > 0 && (
-        <div
-          ref={ref}
-          className="relative"
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
-        >
-          <span className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#00FF00] border border-[#00FF00]/20 cursor-default select-none">
+        <>
+          <span
+            ref={badgeRef}
+            className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#00FF00] border border-[#00FF00]/20 cursor-default select-none"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setOpen(false)}
+          >
             +{rest.length}
           </span>
-          {open && (
-            <div className="absolute bottom-full left-0 mb-2 z-50 bg-[#1c2128] border border-[#30363d] rounded-lg p-2 shadow-xl flex flex-col gap-1 min-w-max">
+          {mounted && open && createPortal(
+            <div
+              className="fixed z-[9999] bg-[#1c2128] border border-[#30363d] rounded-lg p-2 shadow-xl flex flex-col gap-1 pointer-events-none"
+              style={{
+                top: pos.top,
+                left: pos.left,
+                transform: "translate(-100%, -100%) translateX(-8px) translateY(-4px)",
+              }}
+            >
               {services.map((s) => (
                 <span key={s} className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">
                   {s}
                 </span>
               ))}
-            </div>
+            </div>,
+            document.body
           )}
-        </div>
+        </>
       )}
     </div>
   );
