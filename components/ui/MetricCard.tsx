@@ -31,7 +31,12 @@ function TooltipPopup({ tooltip, accent }: { tooltip: MetricTooltipDef; accent: 
   const handleMouseEnter = () => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
-      setPos({ top: rect.top, left: rect.left + rect.width / 2 });
+      const tooltipWidth = 256;
+      const left = Math.min(
+        Math.max(tooltipWidth / 2, rect.left + rect.width / 2),
+        window.innerWidth - tooltipWidth / 2
+      );
+      setPos({ top: rect.bottom, left });
     }
     setOpen(true);
   };
@@ -50,7 +55,7 @@ function TooltipPopup({ tooltip, accent }: { tooltip: MetricTooltipDef; accent: 
       {mounted && open && createPortal(
         <div
           className="fixed z-[9999] w-64 bg-[#1c2128] border border-[#30363d] rounded-xl shadow-2xl pointer-events-none overflow-hidden"
-          style={{ top: pos.top, left: pos.left, transform: "translate(-50%, calc(-100% - 10px))" }}
+          style={{ top: pos.top + 8, left: pos.left, transform: "translateX(-50%)" }}
         >
           {tooltip.formula && (
             <div className="px-4 pt-3.5 pb-3 border-b border-[#30363d]">
