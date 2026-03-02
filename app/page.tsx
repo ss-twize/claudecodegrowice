@@ -76,7 +76,7 @@ export default function DashboardPage() {
 
           {/* Recent Activity */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <h3 className="text-[#e6edf3] font-semibold mb-4">Последние события</h3>
+            <h3 className="text-[#e6edf3] font-semibold mb-4 font-unbounded">Последние события</h3>
             <div className="space-y-3">
               {recentActivity.map((activity) => (
                 <div

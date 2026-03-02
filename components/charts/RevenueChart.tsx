@@ -37,7 +37,7 @@ export default function RevenueChart() {
     <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h3 className="text-[#e6edf3] font-semibold">Выручка за год</h3>
+          <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка за год</h3>
           <p className="text-[#7d8590] text-sm">Март 2025 — Февраль 2026</p>
         </div>
         <div className="flex items-center gap-4 text-xs">

@@ -29,7 +29,7 @@ export default function Sidebar() {
         <div className="w-8 h-8 rounded-lg bg-[#00FF00] flex items-center justify-center">
           <Scissors size={16} className="text-black" />
         </div>
-        <span className="text-[#e6edf3] font-bold text-xl tracking-tight">
+        <span className="text-[#e6edf3] font-bold text-xl tracking-tight font-unbounded">
           GROW<span className="text-[#00FF00]">ICE</span>
         </span>
       </div>

@@ -81,7 +81,7 @@ export default function StaffPage() {
         {/* Revenue by master */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
           <div className="mb-5">
-            <h3 className="text-[#e6edf3] font-semibold">Выручка по мастерам</h3>
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по мастерам</h3>
             <p className="text-[#7d8590] text-sm">Февраль 2026</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
@@ -113,7 +113,7 @@ export default function StaffPage() {
         {/* Staff cards */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[#e6edf3] font-semibold">Карточки мастеров</h3>
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Карточки мастеров</h3>
             <div className="flex items-center gap-2 text-sm text-[#9198a1]">
               Средняя загрузка:{" "}
               <span className="text-[#00FF00] font-semibold">{avgWorkload}%</span>

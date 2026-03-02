@@ -25,7 +25,7 @@ export default function ServicesChart() {
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
       <div className="mb-5">
-        <h3 className="text-[#e6edf3] font-semibold">Популярные услуги</h3>
+        <h3 className="text-[#e6edf3] font-semibold font-unbounded">Популярные услуги</h3>
         <p className="text-[#7d8590] text-sm">Распределение по записям</p>
       </div>
       <div className="flex items-center gap-4">

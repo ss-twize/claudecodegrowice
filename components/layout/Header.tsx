@@ -11,7 +11,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
   return (
     <header className="h-16 border-b border-[#30363d] bg-[#0d1117] flex items-center justify-between px-6 sticky top-0 z-40">
       <div>
-        <h1 className="text-[#e6edf3] font-semibold text-lg">{title}</h1>
+        <h1 className="text-[#e6edf3] font-semibold text-lg font-unbounded">{title}</h1>
         {subtitle && (
           <p className="text-[#7d8590] text-xs">{subtitle}</p>
         )}
