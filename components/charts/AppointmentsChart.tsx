@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
         <p className="text-[#9198a1] mb-1">{label}</p>
-        <p className="text-[#00FF00] font-semibold">
+        <p className="text-[#00E378] font-semibold">
           {payload[0].value} записей
         </p>
       </div>
@@ -55,7 +55,7 @@ export default function AppointmentsChart() {
             {appointmentsByDay.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={entry.appointments === maxVal ? "#00FF00" : "#1f3a2a"}
+                fill={entry.appointments === maxVal ? "#00E378" : "#1f3a2a"}
               />
             ))}
           </Bar>

@@ -42,7 +42,7 @@ export default function RevenueChart() {
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-[#00FF00]" />
+            <div className="w-3 h-3 rounded-sm bg-[#00E378]" />
             <span className="text-[#9198a1]">Выручка</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -55,8 +55,8 @@ export default function RevenueChart() {
         <AreaChart data={revenueData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
           <defs>
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
+              <stop offset="5%" stopColor="#00E378" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#00E378" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="expensesGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#4a5568" stopOpacity={0.3} />
@@ -82,11 +82,11 @@ export default function RevenueChart() {
             type="monotone"
             dataKey="revenue"
             name="Выручка"
-            stroke="#00FF00"
+            stroke="#00E378"
             strokeWidth={2}
             fill="url(#revenueGrad)"
             dot={false}
-            activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: "#00E378", strokeWidth: 0 }}
           />
           <Area
             type="monotone"

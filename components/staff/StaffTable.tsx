@@ -21,12 +21,12 @@ export default function StaffTable() {
               <p className="text-[#e6edf3] font-semibold">{master.name}</p>
               <p className="text-[#9198a1] text-sm">{master.role}</p>
               <div className="flex items-center gap-1 mt-1">
-                <Star size={12} className="text-[#00FF00] fill-[#00FF00]" />
-                <span className="text-[#00FF00] text-sm font-semibold">{master.rating}</span>
+                <Star size={12} className="text-[#00E378] fill-[#00E378]" />
+                <span className="text-[#00E378] text-sm font-semibold">{master.rating}</span>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-[#00FF00] font-bold text-sm">{formatCurrency(master.revenue)}</p>
+              <p className="text-[#00E378] font-bold text-sm">{formatCurrency(master.revenue)}</p>
               <p className="text-[#7d8590] text-xs">за месяц</p>
             </div>
           </div>

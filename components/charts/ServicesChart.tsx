@@ -14,7 +14,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
         <p className="text-[#e6edf3] font-semibold">{payload[0].name}</p>
-        <p className="text-[#00FF00]">{payload[0].value}% клиентов</p>
+        <p className="text-[#00E378]">{payload[0].value}% клиентов</p>
       </div>
     );
   }

@@ -3,8 +3,8 @@ import { formatCurrency } from "@/lib/utils";
 
 const statusConfig: Record<string, { classes: string; dot: string }> = {
   Подтверждено: {
-    classes: "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/20",
-    dot: "bg-[#00FF00]",
+    classes: "bg-[#00E378]/10 text-[#00E378] border border-[#00E378]/20",
+    dot: "bg-[#00E378]",
   },
   Ожидание: {
     classes: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
@@ -24,7 +24,7 @@ export default function AppointmentsTable() {
           <h3 className="text-[#e6edf3] font-semibold">Предстоящие записи</h3>
           <p className="text-[#7d8590] text-sm">25–27 февраля 2026</p>
         </div>
-        <button className="text-sm bg-[#00FF00] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#ccff33] transition-colors">
+        <button className="text-sm bg-[#00E378] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#00c96c] transition-colors">
           + Запись
         </button>
       </div>
