@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Header from "@/components/layout/Header";
-import { marketingClients, clientPredictive } from "@/lib/mockData";
+import { useClients } from "@/lib/hooks/useClients";
 import { formatCurrency } from "@/lib/utils";
 import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
 import { useSystemStates } from "@/lib/hooks/useSystemStates";
@@ -113,6 +113,7 @@ const RISK_LABELS: Record<string, string> = {
 
 export default function ClientsPage() {
   const { role, isOwner } = useAuth();
+  const { clients, loading: clientsLoading } = useClients();
   const { systems, setSystems } = useSystemStates();
   const autoSystems = systems.filter(s => s.system_code !== "main_agent");
 
@@ -167,16 +168,7 @@ export default function ClientsPage() {
     await callWebhook("sistema_nastroit", { system_code: systemCode }, role);
   };
 
-  // Merge client data for sorting
-  const mergedClients = useMemo(() =>
-    marketingClients.map(c => ({
-      ...c,
-      segment: clientPredictive[c.id]?.segment,
-      churnRisk: clientPredictive[c.id]?.churnRisk,
-      score: clientPredictive[c.id]?.score ?? 0,
-    })), []);
-
-  const { sorted, sortCol, sortDir, onSort } = useSortable(mergedClients);
+  const { sorted, sortCol, sortDir, onSort } = useSortable(clients);
 
   const filtered = useMemo(() => {
     return sorted.filter((c) => {
@@ -188,13 +180,12 @@ export default function ClientsPage() {
   }, [sorted, activeSegment, genderFilter, channelFilter]);
 
   const segmentCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: marketingClients.length };
-    marketingClients.forEach((c) => {
-      const seg = clientPredictive[c.id]?.segment;
-      if (seg) counts[seg] = (counts[seg] || 0) + 1;
+    const counts: Record<string, number> = { all: clients.length };
+    clients.forEach((c) => {
+      if (c.segment) counts[c.segment] = (counts[c.segment] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [clients]);
 
   return (
     <div>
@@ -227,7 +218,9 @@ export default function ClientsPage() {
           <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between flex-wrap gap-3">
             <div>
               <h3 className="text-[#e6edf3] font-semibold font-unbounded">Клиенты</h3>
-              <p className="text-[#7d8590] text-sm">{filtered.length} из {marketingClients.length} клиентов</p>
+              <p className="text-[#7d8590] text-sm">
+                {clientsLoading ? "Загрузка..." : `${filtered.length} из ${clients.length} клиентов`}
+              </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Status tabs */}
