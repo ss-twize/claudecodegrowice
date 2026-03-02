@@ -5,7 +5,7 @@ import MetricCard from "@/components/ui/MetricCard";
 import { staffData, staffRevenueData, staffKPIData } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
-import { UserCog, TrendingUp, Star, Users, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { UserCog, TrendingUp, Star, Users, AlertTriangle, CheckCircle2 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
@@ -167,7 +167,7 @@ export default function StaffPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {staffData.map((master, i) => {
+            {staffData.map((master) => {
               const kpi = staffKPIData.find((k) => k.masterId === master.id);
               return (
                 <div key={master.id} className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 card-hover">

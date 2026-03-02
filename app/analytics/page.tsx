@@ -8,7 +8,7 @@ import {
   analyticsKPIs, dailyContactsData, cancellationsData,
   noShowData, dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
-  analyticsFunnel, analyticsTrends, revenueHistory,
+  analyticsTrends, revenueHistory,
 } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -107,8 +107,6 @@ export default function AnalyticsPage() {
       </div>
     );
   }
-
-  const funnelMax = analyticsFunnel[0].value;
 
   return (
     <div>
