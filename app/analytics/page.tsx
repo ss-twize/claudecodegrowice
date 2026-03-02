@@ -159,24 +159,22 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Revenue History — full width */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col" style={{ minHeight: 320 }}>
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
           <div className="mb-5">
             <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по месяцам</h3>
             <p className="text-[#7d8590] text-sm">Октябрь 2025 — февраль 2026</p>
           </div>
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => `${v / 1000}к`} width={45} />
-                <Tooltip content={<ForecastTooltip />} />
-                <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
-                  dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false}
+                tickFormatter={(v) => `${v / 1000}к`} width={45} />
+              <Tooltip content={<ForecastTooltip />} />
+              <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
+                dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
         {/* Trends table */}
