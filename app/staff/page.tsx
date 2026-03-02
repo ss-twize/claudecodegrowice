@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
 import { staffData, staffRevenueData, staffKPIData } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
+import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
 import { UserCog, TrendingUp, Star, Users, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -29,7 +30,14 @@ const avgRating = (staffData.reduce((s, m) => s + m.rating, 0) / staffData.lengt
 const avgWorkload = Math.round(staffData.reduce((s, m) => s + m.workload, 0) / staffData.length);
 const colors = ["#00FF00", "#88CC00", "#66AA00", "#448800"];
 
+const mergedStaffData = staffData.map((m) => ({
+  ...m,
+  ...staffKPIData.find((k) => k.masterId === m.id),
+}));
+
 export default function StaffPage() {
+  const { sorted: sortedKPI, sortCol: kpiSortCol, sortDir: kpiSortDir, onSort: kpiOnSort } = useSortable(mergedStaffData);
+
   return (
     <div>
       <Header title="Персонал" subtitle="Показатели работы мастеров" />
@@ -97,47 +105,48 @@ export default function StaffPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#21262d]">
-                    {["Мастер", "Конверсия", "Не явки", "Время сессии"].map((h) => (
-                      <th key={h} className="text-left text-[#7d8590] text-xs font-medium pb-3 pr-4 whitespace-nowrap">{h}</th>
-                    ))}
+                    <SortableHeader label="Мастер"        col="name"           sortCol={kpiSortCol} sortDir={kpiSortDir} onSort={kpiOnSort} className="pl-0 pr-4 py-3" />
+                    <SortableHeader label="Конверсия"     col="conversionRate"  sortCol={kpiSortCol} sortDir={kpiSortDir} onSort={kpiOnSort} className="pl-0 pr-4 py-3" />
+                    <SortableHeader label="Не явки"       col="noShowPercent"   sortCol={kpiSortCol} sortDir={kpiSortDir} onSort={kpiOnSort} className="pl-0 pr-4 py-3" />
+                    <SortableHeader label="Время сессии"  col="avgSession"      sortCol={kpiSortCol} sortDir={kpiSortDir} onSort={kpiOnSort} className="pl-0 py-3" />
                   </tr>
                 </thead>
                 <tbody>
-                  {staffData.map((master, i) => {
-                    const kpi = staffKPIData.find((k) => k.masterId === master.id);
+                  {sortedKPI.map((master, i) => {
+                    const colorIdx = staffData.findIndex((s) => s.id === master.id);
                     return (
                       <tr key={master.id} className="border-b border-[#21262d] last:border-0">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-black flex-shrink-0"
-                              style={{ backgroundColor: colors[i] }}>
+                              style={{ backgroundColor: colors[colorIdx >= 0 ? colorIdx : i] }}>
                               {master.avatar}
                             </div>
                             <span className="text-[#e6edf3] text-sm font-medium whitespace-nowrap">{master.name.split(" ")[0]}</span>
                           </div>
                         </td>
                         <td className="py-3 pr-4">
-                          {kpi && (
+                          {master.conversionRate != null && (
                             <div className="flex items-center gap-2">
                               <div className="w-16 h-1.5 bg-[#21262d] rounded-full overflow-hidden">
-                                <div className="h-full rounded-full bg-[#00FF00]" style={{ width: `${kpi.conversionRate}%` }} />
+                                <div className="h-full rounded-full bg-[#00FF00]" style={{ width: `${master.conversionRate}%` }} />
                               </div>
-                              <span className="text-[#00FF00] text-sm font-semibold">{kpi.conversionRate}%</span>
+                              <span className="text-[#00FF00] text-sm font-semibold">{master.conversionRate}%</span>
                             </div>
                           )}
                         </td>
                         <td className="py-3 pr-4">
-                          {kpi && (
+                          {master.noShowPercent != null && (
                             <div>
-                              <span className={`text-sm font-medium ${kpi.noShowPercent > 8 ? "text-red-400" : kpi.noShowPercent > 5 ? "text-yellow-400" : "text-[#00FF00]"}`}>
-                                {kpi.noShowPercent}%
+                              <span className={`text-sm font-medium ${master.noShowPercent > 8 ? "text-red-400" : master.noShowPercent > 5 ? "text-yellow-400" : "text-[#00FF00]"}`}>
+                                {master.noShowPercent}%
                               </span>
-                              <span className="text-[#7d8590] text-xs ml-1">({kpi.noShowCount} раз)</span>
+                              <span className="text-[#7d8590] text-xs ml-1">({master.noShowCount} раз)</span>
                             </div>
                           )}
                         </td>
                         <td className="py-3">
-                          <span className="text-[#9198a1] text-sm">{kpi?.avgSession || "—"}</span>
+                          <span className="text-[#9198a1] text-sm">{master.avgSession || "—"}</span>
                         </td>
                       </tr>
                     );

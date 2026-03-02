@@ -1,3 +1,5 @@
+"use client";
+
 import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
 import type { MetricTooltipDef } from "@/components/ui/MetricCard";
@@ -6,6 +8,16 @@ import ServicesChart from "@/components/charts/ServicesChart";
 import AppointmentsChart from "@/components/charts/AppointmentsChart";
 import { dashboardKPIs, recentActivity } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import {
+  TrendingUp,
+  Users,
+  CalendarCheck,
+  Receipt,
+  UserPlus,
+  CreditCard,
+  XCircle,
+} from "lucide-react";
 
 const TOOLTIPS: Record<string, MetricTooltipDef> = {
   revenue: {
@@ -23,15 +35,6 @@ const TOOLTIPS: Record<string, MetricTooltipDef> = {
     description: "Средняя сумма одного визита. Растёт при допродажах и переходе клиентов к более дорогим услугам.",
   },
 };
-import {
-  TrendingUp,
-  Users,
-  CalendarCheck,
-  Receipt,
-  UserPlus,
-  CreditCard,
-  XCircle,
-} from "lucide-react";
 
 const activityIcons: Record<string, React.ReactNode> = {
   appointment: <CalendarCheck size={14} className="text-[#00FF00]" />,
@@ -41,21 +44,25 @@ const activityIcons: Record<string, React.ReactNode> = {
 };
 
 export default function DashboardPage() {
+  const { isOwner } = useAuth();
+
   return (
     <div>
       <Header title="Главная" subtitle="Обзор ключевых показателей" />
       <div className="p-6 space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <MetricCard
-            title="Выручка за месяц"
-            value={formatCurrency(dashboardKPIs.monthlyRevenue)}
-            change={dashboardKPIs.monthlyRevenueGrowth}
-            changeLabel="vs прошлый месяц"
-            icon={<TrendingUp size={18} />}
-            accent
-            tooltip={TOOLTIPS.revenue}
-          />
+        <div className={`grid gap-4 ${isOwner ? "grid-cols-2 xl:grid-cols-4" : "grid-cols-2"}`}>
+          {isOwner && (
+            <MetricCard
+              title="Выручка за месяц"
+              value={formatCurrency(dashboardKPIs.monthlyRevenue)}
+              change={dashboardKPIs.monthlyRevenueGrowth}
+              changeLabel="vs прошлый месяц"
+              icon={<TrendingUp size={18} />}
+              accent
+              tooltip={TOOLTIPS.revenue}
+            />
+          )}
           <MetricCard
             title="Новые клиенты"
             value={String(dashboardKPIs.newClients)}
@@ -72,14 +79,16 @@ export default function DashboardPage() {
             icon={<CalendarCheck size={18} />}
             tooltip={TOOLTIPS.appointments}
           />
-          <MetricCard
-            title="Средний чек"
-            value={formatCurrency(dashboardKPIs.avgCheck)}
-            change={dashboardKPIs.avgCheckGrowth}
-            changeLabel="vs прошлый месяц"
-            icon={<Receipt size={18} />}
-            tooltip={TOOLTIPS.avgCheck}
-          />
+          {isOwner && (
+            <MetricCard
+              title="Средний чек"
+              value={formatCurrency(dashboardKPIs.avgCheck)}
+              change={dashboardKPIs.avgCheckGrowth}
+              changeLabel="vs прошлый месяц"
+              icon={<Receipt size={18} />}
+              tooltip={TOOLTIPS.avgCheck}
+            />
+          )}
         </div>
 
         {/* Charts row */}
@@ -112,7 +121,7 @@ export default function DashboardPage() {
                     <p className="text-[#e6edf3] text-xs leading-relaxed">{activity.text}</p>
                     <p className="text-[#7d8590] text-xs mt-0.5">{activity.time}</p>
                   </div>
-                  {activity.amount !== null && (
+                  {isOwner && activity.amount !== null && (
                     <span
                       className={`text-xs font-bold flex-shrink-0 ${
                         activity.amount > 0 ? "text-[#00FF00]" : "text-red-400"
