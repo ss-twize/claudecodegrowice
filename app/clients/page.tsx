@@ -5,7 +5,14 @@ import { createPortal } from "react-dom";
 import Header from "@/components/layout/Header";
 import { marketingClients, autoSystems, clientPredictive } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
-import { Send, Bot, X, TrendingUp, AlertTriangle, UserCheck, UserX } from "lucide-react";
+import { Send, Bot, X, TrendingUp, AlertTriangle, UserCheck, UserX, Smile } from "lucide-react";
+
+const EMOJIS = [
+  "❤️","🔥","✅","⭐","🎁","💰","🎉","💎",
+  "✨","👋","💅","🌸","💄","👑","🙌","🤩",
+  "😍","🥰","💪","⚡","🎊","🏷️","📅","💌",
+  "🌟","🎀","💆","🌺","😊","🙏","👍","🆕",
+];
 
 const channels = Array.from(new Set(marketingClients.map((c) => c.channel)));
 
@@ -105,6 +112,37 @@ export default function ClientsPage() {
   const [msgChannel, setMsgChannel] = useState("Telegram");
   const [msgText, setMsgText] = useState("");
   const [segment, setSegment] = useState("Все клиенты");
+  const [campaignName, setCampaignName] = useState("");
+  const [genderModalFilter, setGenderModalFilter] = useState("all");
+  const [revenueFrom, setRevenueFrom] = useState("");
+  const [ltvFrom, setLtvFrom] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showEmojiPicker]);
+
+  const insertEmoji = (emoji: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? msgText.length;
+    const end = ta.selectionEnd ?? msgText.length;
+    const next = msgText.slice(0, start) + emoji + msgText.slice(end);
+    setMsgText(next);
+    setTimeout(() => {
+      ta.focus();
+      ta.setSelectionRange(start + emoji.length, start + emoji.length);
+    }, 0);
+  };
 
   const filtered = useMemo(() => {
     return marketingClients.filter((c) => {
@@ -304,18 +342,35 @@ export default function ClientsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 w-full max-w-lg mx-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 w-full max-w-xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h3 className="text-[#e6edf3] font-semibold font-unbounded">Новая рассылка</h3>
                 <p className="text-[#7d8590] text-sm mt-0.5">Настройте маркетинговую кампанию</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="text-[#7d8590] hover:text-[#e6edf3] transition-colors ml-4">
+              <button onClick={() => setShowModal(false)} className="text-[#7d8590] hover:text-[#e6edf3] transition-colors ml-4 flex-shrink-0">
                 <X size={18} />
               </button>
             </div>
+
             <div className="space-y-4">
+              {/* Campaign name */}
+              <div>
+                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">
+                  Название кампании
+                  <span className="ml-2 text-[#7d8590] font-normal">— только для администраторов</span>
+                </label>
+                <input
+                  type="text"
+                  value={campaignName}
+                  onChange={(e) => setCampaignName(e.target.value)}
+                  placeholder="Например: Февральская акция — неактивные клиенты"
+                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none placeholder-[#7d8590]"
+                />
+              </div>
+
+              {/* Segment */}
               <div>
                 <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Сегмент аудитории</label>
                 <select value={segment} onChange={(e) => setSegment(e.target.value)}
@@ -325,6 +380,51 @@ export default function ClientsPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Filters */}
+              <div>
+                <label className="text-[#9198a1] text-xs font-medium mb-2 block">Дополнительные фильтры</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Gender */}
+                  <div>
+                    <p className="text-[#7d8590] text-xs mb-1.5">Пол</p>
+                    <div className="flex gap-1">
+                      {[["all","Все"],["Ж","Ж"],["М","М"]].map(([val, lbl]) => (
+                        <button key={val} onClick={() => setGenderModalFilter(val)}
+                          className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ${genderModalFilter === val ? "bg-[#00FF00]/10 border-[#00FF00]/30 text-[#00FF00]" : "bg-[#0d1117] border-[#30363d] text-[#9198a1] hover:text-[#e6edf3]"}`}>
+                          {lbl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Revenue from */}
+                  <div>
+                    <p className="text-[#7d8590] text-xs mb-1.5">Выручка от, ₽</p>
+                    <input
+                      type="number"
+                      value={revenueFrom}
+                      onChange={(e) => setRevenueFrom(e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-xs rounded-md px-2.5 py-1.5 outline-none placeholder-[#7d8590]"
+                    />
+                  </div>
+                  {/* LTV from */}
+                  <div>
+                    <p className="text-[#7d8590] text-xs mb-1.5">LTV от, ₽</p>
+                    <input
+                      type="number"
+                      value={ltvFrom}
+                      onChange={(e) => setLtvFrom(e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-xs rounded-md px-2.5 py-1.5 outline-none placeholder-[#7d8590]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Channel */}
               <div>
                 <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Канал отправки</label>
                 <div className="flex gap-2">
@@ -336,14 +436,48 @@ export default function ClientsPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Message text */}
               <div>
-                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Текст сообщения</label>
-                <textarea rows={4} value={msgText} onChange={(e) => setMsgText(e.target.value)}
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[#9198a1] text-xs font-medium">Текст сообщения</label>
+                  <div className="relative" ref={emojiPickerRef}>
+                    <button
+                      onClick={() => setShowEmojiPicker((v) => !v)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${showEmojiPicker ? "bg-[#00FF00]/10 border-[#00FF00]/30 text-[#00FF00]" : "bg-[#0d1117] border-[#30363d] text-[#9198a1] hover:text-[#e6edf3]"}`}
+                    >
+                      <Smile size={13} />
+                      <span>Эмоджи</span>
+                    </button>
+                    {showEmojiPicker && (
+                      <div className="absolute right-0 top-full mt-1 z-10 bg-[#1c2128] border border-[#30363d] rounded-xl p-2 shadow-2xl w-56">
+                        <div className="grid grid-cols-8 gap-0.5">
+                          {EMOJIS.map((em) => (
+                            <button
+                              key={em}
+                              onClick={() => insertEmoji(em)}
+                              className="text-base w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#30363d] transition-colors"
+                            >
+                              {em}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  rows={4}
+                  value={msgText}
+                  onChange={(e) => setMsgText(e.target.value)}
                   placeholder="Введите текст рассылки..."
-                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none placeholder-[#7d8590] resize-none" />
+                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none placeholder-[#7d8590] resize-none"
+                />
                 <p className="text-[#7d8590] text-xs mt-1">{msgText.length} символов</p>
               </div>
             </div>
+
             <div className="flex gap-3 mt-5">
               <button onClick={() => setShowModal(false)}
                 className="flex-1 px-4 py-2.5 rounded-lg border border-[#30363d] text-[#9198a1] text-sm font-medium hover:border-[#3d444d] transition-colors">
