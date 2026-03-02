@@ -285,7 +285,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
             <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Записи: пришли и не пришли</h3>
             <p className="text-[#7d8590] text-sm mb-4">Посещаемость по дням</p>
             <div className="flex items-center gap-4 mb-3 text-xs">
@@ -296,16 +296,18 @@ export default function AnalyticsPage() {
                 </div>
               ))}
             </div>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={noShowData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
-                <Tooltip content={<StackTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
-                <Bar dataKey="came" name="Пришли" stackId="a" fill="#00FF00" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="noShow" name="Не пришли" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={noShowData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
+                  <Tooltip content={<StackTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
+                  <Bar dataKey="came" name="Пришли" stackId="a" fill="#00FF00" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="noShow" name="Не пришли" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
