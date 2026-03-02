@@ -388,3 +388,146 @@ export const clientsKPIs = {
   retentionRate: 78.4,
   avgLTV: 52400,
 };
+
+// ─── MARKETING / CRM ─────────────────────────────────────────────────────────
+
+export const marketingClients = [
+  { id: 1, name: "Алина Соколова", phone: "+7 (916) 234-56-78", gender: "Ж", revenue: 84600, channel: "Instagram", telegram: "@a_sokolova", lastContact: "12.02.2026", services: ["Окрашивание", "Стрижка"] },
+  { id: 2, name: "Мария Иванова", phone: "+7 (903) 456-78-90", gender: "Ж", revenue: 56400, channel: "WhatsApp", telegram: "@m_ivanova", lastContact: "18.02.2026", services: ["Маникюр"] },
+  { id: 3, name: "Дмитрий Волков", phone: "+7 (926) 789-01-23", gender: "М", revenue: 22300, channel: "2ГИС", telegram: null, lastContact: "20.02.2026", services: ["Стрижка"] },
+  { id: 4, name: "Ольга Сидорова", phone: "+7 (967) 012-34-56", gender: "Ж", revenue: 23500, channel: "Telegram", telegram: "@o_sidorova", lastContact: "15.02.2026", services: ["Педикюр"] },
+  { id: 5, name: "Наталья Козлова", phone: "+7 (977) 345-67-89", gender: "Ж", revenue: 103400, channel: "Instagram", telegram: "@nat_kozlova", lastContact: "22.02.2026", services: ["Окрашивание", "Маникюр", "Стрижка"] },
+  { id: 6, name: "Анастасия Новикова", phone: "+7 (916) 678-90-12", gender: "Ж", revenue: 12600, channel: "Google", telegram: null, lastContact: "08.02.2026", services: ["Брови"] },
+  { id: 7, name: "Алексей Морозов", phone: "+7 (903) 901-23-45", gender: "М", revenue: 31250, channel: "Рекомендация", telegram: "@alex_m", lastContact: "19.02.2026", services: ["Стрижка"] },
+  { id: 8, name: "Юлия Волкова", phone: "+7 (926) 234-56-78", gender: "Ж", revenue: 32900, channel: "ВКонтакте", telegram: "@y_volkova", lastContact: "23.02.2026", services: ["Маникюр", "Педикюр"] },
+  { id: 9, name: "Сергей Петров", phone: "+7 (916) 555-44-33", gender: "М", revenue: 18700, channel: "WhatsApp", telegram: "@s_petrov", lastContact: "21.02.2026", services: ["Стрижка"] },
+  { id: 10, name: "Татьяна Морозова", phone: "+7 (903) 901-23-45", gender: "Ж", revenue: 71250, channel: "Рекомендация", telegram: null, lastContact: "19.02.2026", services: ["Окрашивание", "Стрижка"] },
+];
+
+export const autoSystems = [
+  {
+    id: 1, name: "Не дозвонились",
+    description: "Сообщение клиентам, которым не удалось дозвониться",
+    status: "active", trigger: "call_failed",
+    stats: { sent: 43, responded: 18, converted: 12 }, lastRun: "25.02.2026",
+  },
+  {
+    id: 2, name: "Не был 50 дней",
+    description: "Напоминание клиентам, не посещавшим салон 50+ дней",
+    status: "active", trigger: "inactive_50_days",
+    stats: { sent: 87, responded: 31, converted: 24 }, lastRun: "24.02.2026",
+  },
+  {
+    id: 3, name: "После визита",
+    description: "Запрос отзыва через 24 часа после визита",
+    status: "active", trigger: "after_visit",
+    stats: { sent: 226, responded: 142, converted: 98 }, lastRun: "25.02.2026",
+  },
+];
+
+// ─── SYSTEM & PAYMENT ────────────────────────────────────────────────────────
+
+export const subscriptionData = {
+  plan: "Voice-Pro", status: "Активна", paidUntil: "01.04.2026", daysLeft: 35,
+};
+
+export const pricingPlans = [
+  { id: "text", name: "Text", price: 5900, features: ["Чат-бот и FAQ", "Базовые рассылки", "До 500 сообщений/мес", "Поддержка по email"] },
+  { id: "voice-start", name: "Voice-Start", price: 9900, features: ["Всё из Text", "Базовые голосовые сценарии", "Входящие звонки", "До 2 000 сообщений/мес"] },
+  { id: "voice-pro", name: "Voice-Pro", price: 14900, popular: true, features: ["Всё из Voice-Start", "Расширенная голосовая логика", "CRM-интеграции", "Аналитика звонков"] },
+  { id: "voice-max", name: "Voice-Max", price: 21900, features: ["Всё из Voice-Pro", "Максимальный пакет", "Приоритетная поддержка SLA", "Выделенный менеджер"] },
+];
+
+export const systemModules = [
+  { id: "reminders", name: "Автоматические напоминания", enabled: true, group: "auto" },
+  { id: "telegram-mod", name: "Модератор Telegram-канала", enabled: false, group: "auto" },
+  { id: "telegram", name: "Telegram", enabled: true, group: "channel" },
+  { id: "whatsapp", name: "WhatsApp", enabled: false, group: "channel" },
+  { id: "max", name: "Max", enabled: false, group: "channel" },
+];
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+
+export const profileSettings = { name: "Иван Петров", phone: "+7 (999) 123-45-67", role: "Владелец" };
+
+export const orgSettings = {
+  name: "Салон красоты GROWICE",
+  address: "г. Москва, ул. Тверская, 1",
+  yandexMapsUrl: "https://yandex.ru/maps",
+  dgisUrl: "https://2gis.ru",
+  admins: ["Карина Белова", "Дарья Орлова", ""],
+};
+
+// ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+export const analyticsKPIs = {
+  revenue: 443000, revenueAvgDay: 15821,
+  appointments: 226, appointmentsAvgDay: 8,
+  conversionRate: 32.5, avgCheck: 3750,
+  noShowCount: 18, noShowPercent: 8.0,
+  messagesPerContact: 4.2, retention: 78.4,
+  incomingMessages: 847, outgoingMessages: 1124,
+  offHoursAppointments: 42, timeSaved: 118,
+  reactivated: 24, avgResponseTime: "1м 23с",
+};
+
+export const dailyContactsData = [
+  { date: "1 фев", contacts: 18 }, { date: "2 фев", contacts: 22 }, { date: "3 фев", contacts: 15 },
+  { date: "4 фев", contacts: 28 }, { date: "5 фев", contacts: 31 }, { date: "6 фев", contacts: 24 },
+  { date: "7 фев", contacts: 19 }, { date: "8 фев", contacts: 33 }, { date: "9 фев", contacts: 29 },
+  { date: "10 фев", contacts: 26 }, { date: "11 фев", contacts: 21 }, { date: "12 фев", contacts: 34 },
+  { date: "13 фев", contacts: 27 }, { date: "14 фев", contacts: 52 }, { date: "15 фев", contacts: 42 },
+  { date: "16 фев", contacts: 35 }, { date: "17 фев", contacts: 28 }, { date: "18 фев", contacts: 31 },
+  { date: "19 фев", contacts: 24 }, { date: "20 фев", contacts: 36 }, { date: "21 фев", contacts: 29 },
+  { date: "22 фев", contacts: 41 }, { date: "23 фев", contacts: 22 }, { date: "24 фев", contacts: 38 },
+  { date: "25 фев", contacts: 44 }, { date: "26 фев", contacts: 37 }, { date: "27 фев", contacts: 30 },
+  { date: "28 фев", contacts: 33 },
+];
+
+export const cancellationsData = [
+  { type: "Отмена за день", count: 24, color: "#f87171" },
+  { type: "Отмена за час", count: 18, color: "#fb923c" },
+  { type: "Не пришёл", count: 18, color: "#fbbf24" },
+  { type: "Позвонил и отменил", count: 11, color: "#a78bfa" },
+];
+
+export const noShowData = [
+  { date: "19/02", came: 7, noShow: 1 }, { date: "20/02", came: 10, noShow: 1 },
+  { date: "21/02", came: 8, noShow: 1 }, { date: "22/02", came: 12, noShow: 1 },
+  { date: "23/02", came: 6, noShow: 1 }, { date: "24/02", came: 10, noShow: 2 },
+  { date: "25/02", came: 13, noShow: 1 },
+];
+
+export const dailyKPITable = [
+  { date: "25.02.2026", contacts: 44, messages: 187, appointments: 14, revenue: 52400, noShow: 1 },
+  { date: "24.02.2026", contacts: 38, messages: 162, appointments: 12, revenue: 44800, noShow: 2 },
+  { date: "23.02.2026", contacts: 22, messages: 94, appointments: 7, revenue: 26200, noShow: 0 },
+  { date: "22.02.2026", contacts: 41, messages: 174, appointments: 13, revenue: 48600, noShow: 1 },
+  { date: "21.02.2026", contacts: 29, messages: 123, appointments: 9, revenue: 33700, noShow: 2 },
+  { date: "20.02.2026", contacts: 36, messages: 153, appointments: 11, revenue: 41200, noShow: 0 },
+  { date: "19.02.2026", contacts: 24, messages: 102, appointments: 8, revenue: 29900, noShow: 1 },
+];
+
+export const topDaysByRevenue = [
+  { date: "14.02.2026", revenue: 68400, appointments: 18, contacts: 52 },
+  { date: "08.02.2026", revenue: 61200, appointments: 16, contacts: 47 },
+  { date: "25.02.2026", revenue: 52400, appointments: 14, contacts: 44 },
+  { date: "01.02.2026", revenue: 49800, appointments: 13, contacts: 41 },
+  { date: "22.02.2026", revenue: 48600, appointments: 13, contacts: 41 },
+];
+
+export const topDaysByAppointments = [
+  { date: "15.02.2026", appointments: 19, revenue: 71200, noShow: 2 },
+  { date: "14.02.2026", appointments: 18, revenue: 68400, noShow: 1 },
+  { date: "08.02.2026", appointments: 16, revenue: 61200, noShow: 0 },
+  { date: "25.02.2026", appointments: 14, revenue: 52400, noShow: 1 },
+  { date: "22.02.2026", appointments: 13, revenue: 48600, noShow: 1 },
+];
+
+export const serviceAnalyticsData = [
+  { name: "Окрашивание", revenue: 198000, count: 58, avgCheck: 3414 },
+  { name: "Стрижка", revenue: 124000, count: 112, avgCheck: 1107 },
+  { name: "Маникюр", revenue: 78400, count: 98, avgCheck: 800 },
+  { name: "Педикюр", revenue: 52000, count: 62, avgCheck: 839 },
+  { name: "Брови/Ресницы", revenue: 42600, count: 72, avgCheck: 592 },
+];

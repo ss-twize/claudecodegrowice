@@ -3,25 +3,45 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Users,
-  CalendarDays,
-  UserCog,
-  DollarSign,
-  Scissors,
+  LayoutDashboard, Users, CalendarDays, UserCog, DollarSign,
+  Scissors, BarChart3, CreditCard, Settings, Megaphone,
 } from "lucide-react";
 
-const navItems = [
+const mainNav = [
   { href: "/", label: "Дашборд", icon: LayoutDashboard },
-  { href: "/clients", label: "Клиенты", icon: Users },
+  { href: "/clients", label: "Клиенты и Рассылка", icon: Megaphone },
   { href: "/appointments", label: "Записи", icon: CalendarDays },
   { href: "/staff", label: "Персонал", icon: UserCog },
   { href: "/finances", label: "Финансы", icon: DollarSign },
 ];
 
-export default function Sidebar() {
-  const pathname = usePathname();
+const utilNav = [
+  { href: "/analytics", label: "Аналитика", icon: BarChart3 },
+  { href: "/system", label: "Система и оплата", icon: CreditCard },
+  { href: "/settings", label: "Настройки", icon: Settings },
+];
 
+function NavItem({ href, label, icon: Icon }: { href: string; label: string; icon: any }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+  return (
+    <li>
+      <Link
+        href={href}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+          isActive
+            ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/20"
+            : "text-[#9198a1] hover:text-[#e6edf3] hover:bg-[#1c2128]"
+        }`}
+      >
+        <Icon size={18} className={isActive ? "text-[#00FF00]" : ""} />
+        <span className="truncate">{label}</span>
+      </Link>
+    </li>
+  );
+}
+
+export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-full w-60 bg-[#111318] border-r border-[#30363d] flex flex-col z-50">
       {/* Logo */}
@@ -35,34 +55,24 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4">
-        <p className="text-[#7d8590] text-xs font-medium uppercase tracking-wider px-3 mb-3">
-          Навигация
-        </p>
-        <ul className="space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                    isActive
-                      ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/20"
-                      : "text-[#9198a1] hover:text-[#e6edf3] hover:bg-[#1c2128]"
-                  }`}
-                >
-                  <Icon
-                    size={18}
-                    className={isActive ? "text-[#00FF00]" : ""}
-                  />
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-5">
+        <div>
+          <p className="text-[#7d8590] text-xs font-medium uppercase tracking-wider px-3 mb-2">
+            Основное
+          </p>
+          <ul className="space-y-1">
+            {mainNav.map((item) => <NavItem key={item.href} {...item} />)}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-[#7d8590] text-xs font-medium uppercase tracking-wider px-3 mb-2">
+            Управление
+          </p>
+          <ul className="space-y-1">
+            {utilNav.map((item) => <NavItem key={item.href} {...item} />)}
+          </ul>
+        </div>
       </nav>
 
       {/* Bottom */}

@@ -1,114 +1,204 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
-import MetricCard from "@/components/ui/MetricCard";
-import ClientsTable from "@/components/clients/ClientsTable";
-import { clientsKPIs, clientSourcesData } from "@/lib/mockData";
-import { formatCurrency, formatPercent } from "@/lib/utils";
-import { Users, UserPlus, Heart, TrendingUp } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { marketingClients, autoSystems } from "@/lib/mockData";
+import { formatCurrency } from "@/lib/utils";
+import { Send, Bot, X } from "lucide-react";
 
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-        <p className="text-[#e6edf3] font-semibold">{payload[0].name}</p>
-        <p className="text-[#00FF00]">{payload[0].value}% клиентов</p>
-      </div>
-    );
-  }
-  return null;
-};
+const channels = [...new Set(marketingClients.map((c) => c.channel))];
 
 export default function ClientsPage() {
+  const [genderFilter, setGenderFilter] = useState("all");
+  const [channelFilter, setChannelFilter] = useState("all");
+  const [showModal, setShowModal] = useState(false);
+  const [msgChannel, setMsgChannel] = useState("Telegram");
+  const [msgText, setMsgText] = useState("");
+  const [segment, setSegment] = useState("Все клиенты");
+
+  const filtered = useMemo(() => {
+    return marketingClients.filter((c) => {
+      if (genderFilter !== "all" && c.gender !== genderFilter) return false;
+      if (channelFilter !== "all" && c.channel !== channelFilter) return false;
+      return true;
+    });
+  }, [genderFilter, channelFilter]);
+
   return (
     <div>
-      <Header title="Клиенты" subtitle="Управление клиентской базой" />
+      <Header title="Клиенты и Рассылка" subtitle="CRM и маркетинговые кампании" />
       <div className="p-6 space-y-6">
-        {/* KPIs */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <MetricCard
-            title="Всего клиентов"
-            value={String(clientsKPIs.total)}
-            icon={<Users size={18} />}
-            accent
-          />
-          <MetricCard
-            title="Новых за месяц"
-            value={String(clientsKPIs.newThisMonth)}
-            change={8.2}
-            changeLabel="vs прошлый месяц"
-            icon={<UserPlus size={18} />}
-          />
-          <MetricCard
-            title="Retention Rate"
-            value={formatPercent(clientsKPIs.retentionRate)}
-            change={2.1}
-            changeLabel="vs прошлый месяц"
-            icon={<Heart size={18} />}
-          />
-          <MetricCard
-            title="Средний LTV"
-            value={formatCurrency(clientsKPIs.avgLTV)}
-            change={5.4}
-            changeLabel="vs прошлый квартал"
-            icon={<TrendingUp size={18} />}
-          />
+
+        {/* CRM Table */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Клиенты</h3>
+              <p className="text-[#7d8590] text-sm">{filtered.length} из {marketingClients.length} клиентов</p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-0.5 bg-[#0d1117] border border-[#30363d] rounded-lg p-1">
+                {[["all", "Все"], ["Ж", "Ж"], ["М", "М"]].map(([val, label]) => (
+                  <button key={val} onClick={() => setGenderFilter(val)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${genderFilter === val ? "bg-[#00FF00] text-black" : "text-[#9198a1] hover:text-[#e6edf3]"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)}
+                className="bg-[#0d1117] border border-[#30363d] text-[#9198a1] text-xs rounded-lg px-3 py-2 outline-none">
+                <option value="all">Все каналы</option>
+                {channels.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
+              </select>
+              <button onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 bg-[#00FF00] text-black font-semibold text-sm px-4 py-2 rounded-lg hover:bg-[#ccff33] transition-colors">
+                <Send size={14} />Новая рассылка
+              </button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#21262d]">
+                  {["ФИО", "Телефон", "Пол", "Выручка", "Канал", "Telegram", "Последнее обращение", "Услуги"].map((h) => (
+                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((client) => (
+                  <tr key={client.id} className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors">
+                    <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-medium whitespace-nowrap">{client.name}</td>
+                    <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.phone}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-md ${client.gender === "Ж" ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
+                        {client.gender}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-xs px-2 py-1 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{client.channel}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-sm">
+                      {client.telegram ? <span className="text-[#00FF00]">{client.telegram}</span> : <span className="text-[#7d8590]">—</span>}
+                    </td>
+                    <td className="px-5 py-3.5 text-[#9198a1] text-sm whitespace-nowrap">{client.lastContact}</td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex flex-wrap gap-1">
+                        {client.services.map((s) => (
+                          <span key={s} className="text-xs px-2 py-0.5 rounded-md bg-[#21262d] text-[#9198a1] border border-[#30363d] whitespace-nowrap">{s}</span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Table + Sources */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="xl:col-span-2">
-            <ClientsTable />
+        {/* Campaign Results */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Результаты кампаний</h3>
+          <p className="text-[#7d8590] text-sm mb-6">История отправленных рассылок</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-14 h-14 rounded-xl bg-[#21262d] border border-[#30363d] flex items-center justify-center mb-4">
+              <Send size={22} className="text-[#7d8590]" />
+            </div>
+            <p className="text-[#e6edf3] font-medium mb-1">Кампаний пока нет</p>
+            <p className="text-[#7d8590] text-sm max-w-xs">Создайте первую рассылку, нажав кнопку «Новая рассылка»</p>
           </div>
+        </div>
 
-          {/* Sources */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <div className="mb-5">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Источники привлечения</h3>
-              <p className="text-[#7d8590] text-sm">Откуда приходят клиенты</p>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={clientSourcesData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={85}
-                  innerRadius={50}
-                  dataKey="value"
-                  strokeWidth={0}
-                >
-                  {clientSourcesData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2 mt-4">
-              {clientSourcesData.map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-sm"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-[#9198a1] text-xs">{item.name}</span>
+        {/* Auto Systems */}
+        <div>
+          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Автосистемы</h3>
+          <p className="text-[#7d8590] text-sm mb-4">Результаты автоматических сценариев</p>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            {autoSystems.map((sys) => (
+              <div key={sys.id} className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 card-hover">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center">
+                    <Bot size={18} className="text-[#00FF00]" />
                   </div>
-                  <span className="text-[#e6edf3] text-xs font-semibold">{item.value}%</span>
+                  <span className="text-xs font-medium px-2 py-1 rounded-md bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/20">Активно</span>
                 </div>
-              ))}
-            </div>
+                <p className="text-[#e6edf3] font-semibold mb-1">{sys.name}</p>
+                <p className="text-[#7d8590] text-xs mb-4">{sys.description}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "Отправлено", value: sys.stats.sent, accent: false },
+                    { label: "Ответили", value: sys.stats.responded, accent: false },
+                    { label: "Записались", value: sys.stats.converted, accent: true },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-[#1c2128] rounded-lg p-2 text-center">
+                      <p className={`font-bold text-sm ${s.accent ? "text-[#00FF00]" : "text-[#e6edf3]"}`}>{s.value}</p>
+                      <p className="text-[#7d8590] text-xs">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[#7d8590] text-xs mt-3">Последний запуск: {sys.lastRun}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 w-full max-w-lg mx-4 shadow-2xl">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h3 className="text-[#e6edf3] font-semibold font-unbounded">Новая рассылка</h3>
+                <p className="text-[#7d8590] text-sm mt-0.5">Настройте маркетинговую кампанию</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="text-[#7d8590] hover:text-[#e6edf3] transition-colors ml-4">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Сегмент аудитории</label>
+                <select value={segment} onChange={(e) => setSegment(e.target.value)}
+                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none">
+                  {["Все клиенты", "Не приходили 30+ дней", "Не приходили 50+ дней", "VIP клиенты", "Новые клиенты"].map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Канал отправки</label>
+                <div className="flex gap-2">
+                  {["Telegram", "WhatsApp", "SMS"].map((ch) => (
+                    <button key={ch} onClick={() => setMsgChannel(ch)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${msgChannel === ch ? "bg-[#00FF00]/10 border-[#00FF00]/30 text-[#00FF00]" : "bg-[#0d1117] border-[#30363d] text-[#9198a1] hover:text-[#e6edf3]"}`}>
+                      {ch}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-[#9198a1] text-xs font-medium mb-1.5 block">Текст сообщения</label>
+                <textarea rows={4} value={msgText} onChange={(e) => setMsgText(e.target.value)}
+                  placeholder="Введите текст рассылки..."
+                  className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] text-sm rounded-lg px-3 py-2.5 outline-none placeholder-[#7d8590] resize-none" />
+                <p className="text-[#7d8590] text-xs mt-1">{msgText.length} символов</p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-[#30363d] text-[#9198a1] text-sm font-medium hover:border-[#3d444d] transition-colors">
+                Отмена
+              </button>
+              <button onClick={() => setShowModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
+                Запустить рассылку
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
