@@ -8,7 +8,7 @@ export default function StaffTable() {
       {staffData.map((master) => (
         <div
           key={master.id}
-          className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 card-hover"
+          className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 card-hover"
         >
           <div className="flex items-start gap-4 mb-5">
             <div
@@ -18,8 +18,8 @@ export default function StaffTable() {
               {master.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[#e6edf3] font-semibold">{master.name}</p>
-              <p className="text-[#9198a1] text-sm">{master.role}</p>
+              <p className="text-[#EDF2FA] font-semibold">{master.name}</p>
+              <p className="text-[#8299B4] text-sm">{master.role}</p>
               <div className="flex items-center gap-1 mt-1">
                 <Star size={12} className="text-[#00FF00] fill-[#00FF00]" />
                 <span className="text-[#00FF00] text-sm font-semibold">{master.rating}</span>
@@ -27,7 +27,7 @@ export default function StaffTable() {
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-[#00FF00] font-bold text-sm">{formatCurrency(master.revenue)}</p>
-              <p className="text-[#7d8590] text-xs">за месяц</p>
+              <p className="text-[#5E7488] text-xs">за месяц</p>
             </div>
           </div>
 
@@ -38,9 +38,9 @@ export default function StaffTable() {
               { label: "Записей", value: master.appointments },
               { label: "Ср. чек", value: `${(master.avgCheck / 1000).toFixed(1)}к` },
             ].map((stat) => (
-              <div key={stat.label} className="bg-[#1c2128] rounded-lg p-3 text-center">
-                <p className="text-[#e6edf3] font-bold text-sm">{stat.value}</p>
-                <p className="text-[#7d8590] text-xs">{stat.label}</p>
+              <div key={stat.label} className="bg-[#141E2B] rounded-lg p-3 text-center">
+                <p className="text-[#EDF2FA] font-bold text-sm">{stat.value}</p>
+                <p className="text-[#5E7488] text-xs">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -48,10 +48,10 @@ export default function StaffTable() {
           {/* Workload bar */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[#7d8590] text-xs">Загрузка</span>
-              <span className="text-[#e6edf3] text-xs font-semibold">{master.workload}%</span>
+              <span className="text-[#5E7488] text-xs">Загрузка</span>
+              <span className="text-[#EDF2FA] text-xs font-semibold">{master.workload}%</span>
             </div>
-            <div className="h-1.5 bg-[#21262d] rounded-full overflow-hidden">
+            <div className="h-1.5 bg-[#1A2535] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{

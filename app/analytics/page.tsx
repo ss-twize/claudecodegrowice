@@ -29,8 +29,8 @@ const PERIOD_LABELS: Record<string, string> = {
 const AreaTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-      <p className="text-[#9198a1] mb-1">{label}</p>
+    <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+      <p className="text-[#8299B4] mb-1">{label}</p>
       <p className="text-[#00FF00] font-semibold">{payload[0].value} обращений</p>
     </div>
   );
@@ -39,8 +39,8 @@ const AreaTooltip = ({ active, payload, label }: any) => {
 const ForecastTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-      <p className="text-[#9198a1] mb-1">{label}</p>
+    <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+      <p className="text-[#8299B4] mb-1">{label}</p>
       {payload.map((p: any, i: number) => p.value != null && (
         <p key={i} style={{ color: p.color }} className="font-semibold">
           {p.name}:{" "}
@@ -54,8 +54,8 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
 const StackTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-      <p className="text-[#9198a1] mb-1">{label}</p>
+    <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+      <p className="text-[#8299B4] mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ color: p.color }} className="font-semibold">{p.name}: {p.value}</p>
       ))}
@@ -66,8 +66,8 @@ const StackTooltip = ({ active, payload, label }: any) => {
 const PieTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
-      <p className="text-[#e6edf3] font-semibold">{payload[0].name}</p>
+    <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
+      <p className="text-[#EDF2FA] font-semibold">{payload[0].name}</p>
       <p className="text-[#00FF00]">{payload[0].value} отмен</p>
     </div>
   );
@@ -75,15 +75,15 @@ const PieTooltip = ({ active, payload }: any) => {
 
 function KpiCard({ title, value, sub, icon, accent }: { title: string; value: string; sub?: string; icon: React.ReactNode; accent?: boolean }) {
   return (
-    <div className={`rounded-xl border p-4 ${accent ? "bg-[#00FF00] border-[#00FF00]" : "bg-[#161b22] border-[#30363d]"}`}>
+    <div className={`rounded-xl border p-4 ${accent ? "bg-[#00FF00] border-[#00FF00]" : "bg-[#0F1622] border-[#223444]"}`}>
       <div className="flex items-center justify-between mb-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent ? "bg-black/20" : "bg-[#21262d] border border-[#30363d]"}`}>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent ? "bg-black/20" : "bg-[#1A2535] border border-[#223444]"}`}>
           <span className={accent ? "text-black" : "text-[#00FF00]"}>{icon}</span>
         </div>
       </div>
-      <p className={`text-xs font-medium mb-1 ${accent ? "text-black/70" : "text-[#9198a1]"}`}>{title}</p>
-      <p className={`text-xl font-bold ${accent ? "text-black" : "text-[#e6edf3]"}`}>{value}</p>
-      {sub && <p className={`text-xs mt-0.5 ${accent ? "text-black/60" : "text-[#7d8590]"}`}>{sub}</p>}
+      <p className={`text-xs font-medium mb-1 ${accent ? "text-black/70" : "text-[#8299B4]"}`}>{title}</p>
+      <p className={`text-xl font-bold ${accent ? "text-black" : "text-[#EDF2FA]"}`}>{value}</p>
+      {sub && <p className={`text-xs mt-0.5 ${accent ? "text-black/60" : "text-[#5E7488]"}`}>{sub}</p>}
     </div>
   );
 }
@@ -98,11 +98,11 @@ export default function AnalyticsPage() {
       <div>
         <Header title="Аналитика" subtitle="Полная аналитика бизнеса и агента" />
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="w-16 h-16 rounded-2xl bg-[#161b22] border border-[#30363d] flex items-center justify-center mb-5">
-            <Lock size={28} className="text-[#30363d]" />
+          <div className="w-16 h-16 rounded-2xl bg-[#0F1622] border border-[#223444] flex items-center justify-center mb-5">
+            <Lock size={28} className="text-[#223444]" />
           </div>
-          <h2 className="text-[#e6edf3] text-xl font-semibold mb-2">Нет доступа</h2>
-          <p className="text-[#7d8590] text-sm">Этот раздел доступен только владельцу</p>
+          <h2 className="text-[#EDF2FA] text-xl font-semibold mb-2">Нет доступа</h2>
+          <p className="text-[#5E7488] text-sm">Этот раздел доступен только владельцу</p>
         </div>
       </div>
     );
@@ -115,17 +115,17 @@ export default function AnalyticsPage() {
 
         {/* Period selector */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-0.5 bg-[#161b22] border border-[#30363d] rounded-lg p-1">
+          <div className="flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
             {(["month", "quarter", "half"] as const).map((p) => (
               <button key={p} onClick={() => setPeriod(p)}
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${period === p ? "bg-[#00FF00] text-black" : "text-[#9198a1] hover:text-[#e6edf3]"}`}>
+                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${period === p ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
                 {p === "month" ? "Месяц" : p === "quarter" ? "Квартал" : "Полгода"}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2">
-            <CalendarCheck size={14} className="text-[#7d8590]" />
-            <span className="text-[#e6edf3] text-sm font-medium">{PERIOD_LABELS[period]}</span>
+          <div className="flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 py-2">
+            <CalendarCheck size={14} className="text-[#5E7488]" />
+            <span className="text-[#EDF2FA] text-sm font-medium">{PERIOD_LABELS[period]}</span>
           </div>
         </div>
 
@@ -145,22 +145,22 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Messages banner */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
-          <p className="text-[#9198a1] text-sm font-medium">Объём коммуникаций за период</p>
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
+          <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <ArrowDownLeft size={16} className="text-[#00FF00]" />
               <div>
-                <p className="text-[#e6edf3] font-bold text-lg">{k.incomingMessages.toLocaleString("ru")}</p>
-                <p className="text-[#7d8590] text-xs">Входящих</p>
+                <p className="text-[#EDF2FA] font-bold text-lg">{k.incomingMessages.toLocaleString("ru")}</p>
+                <p className="text-[#5E7488] text-xs">Входящих</p>
               </div>
             </div>
-            <div className="w-px h-8 bg-[#30363d]" />
+            <div className="w-px h-8 bg-[#223444]" />
             <div className="flex items-center gap-2">
-              <ArrowUpRight size={16} className="text-[#9198a1]" />
+              <ArrowUpRight size={16} className="text-[#8299B4]" />
               <div>
-                <p className="text-[#e6edf3] font-bold text-lg">{k.outgoingMessages.toLocaleString("ru")}</p>
-                <p className="text-[#7d8590] text-xs">Исходящих</p>
+                <p className="text-[#EDF2FA] font-bold text-lg">{k.outgoingMessages.toLocaleString("ru")}</p>
+                <p className="text-[#5E7488] text-xs">Исходящих</p>
               </div>
             </div>
           </div>
@@ -175,16 +175,16 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Revenue History — full width */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="mb-5">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по месяцам</h3>
-            <p className="text-[#7d8590] text-sm">Октябрь 2025 — февраль 2026</p>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка по месяцам</h3>
+            <p className="text-[#5E7488] text-sm">Октябрь 2025 — февраль 2026</p>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false}
+              <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `${v / 1000}к`} width={45} />
               <Tooltip content={<ForecastTooltip />} />
               <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
@@ -194,17 +194,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Trends table */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#30363d]">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Тренды: текущий vs прошлый месяц</h3>
-            <p className="text-[#7d8590] text-sm">Сравнительный анализ ключевых метрик</p>
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#223444]">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Тренды: текущий vs прошлый месяц</h3>
+            <p className="text-[#5E7488] text-sm">Сравнительный анализ ключевых метрик</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
+                <tr className="border-b border-[#1A2535]">
                   {["Метрика", "Прошлый месяц", "Текущий месяц", "Изменение"].map((h) => (
-                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                    <th key={h} className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -219,20 +219,20 @@ export default function AnalyticsPage() {
                     return String(v);
                   };
                   return (
-                    <tr key={row.metric} className="border-b border-[#21262d] last:border-0 hover:bg-[#1c2128] transition-colors">
-                      <td className="px-5 py-3 text-[#e6edf3] text-sm font-medium">{row.metric}</td>
-                      <td className="px-5 py-3 text-[#9198a1] text-sm">{formatVal(row.previous)}</td>
-                      <td className="px-5 py-3 text-[#e6edf3] text-sm font-semibold">{formatVal(row.current)}</td>
+                    <tr key={row.metric} className="border-b border-[#1A2535] last:border-0 hover:bg-[#141E2B] transition-colors">
+                      <td className="px-5 py-3 text-[#EDF2FA] text-sm font-medium">{row.metric}</td>
+                      <td className="px-5 py-3 text-[#8299B4] text-sm">{formatVal(row.previous)}</td>
+                      <td className="px-5 py-3 text-[#EDF2FA] text-sm font-semibold">{formatVal(row.current)}</td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-1.5">
                           {diff === 0 ? (
-                            <Minus size={14} className="text-[#9198a1]" />
+                            <Minus size={14} className="text-[#8299B4]" />
                           ) : isPositive ? (
                             <TrendingUp size={14} className="text-[#00FF00]" />
                           ) : (
                             <TrendingDown size={14} className="text-red-400" />
                           )}
-                          <span className={`text-sm font-semibold ${diff === 0 ? "text-[#9198a1]" : isPositive ? "text-[#00FF00]" : "text-red-400"}`}>
+                          <span className={`text-sm font-semibold ${diff === 0 ? "text-[#8299B4]" : isPositive ? "text-[#00FF00]" : "text-red-400"}`}>
                             {diff >= 0 ? "+" : ""}{pct}%
                           </span>
                         </div>
@@ -246,9 +246,9 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Chart: Daily contacts */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Уникальные обращения по дням</h3>
-          <p className="text-[#7d8590] text-sm mb-5">Динамика входящих контактов</p>
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Уникальные обращения по дням</h3>
+          <p className="text-[#5E7488] text-sm mb-5">Динамика входящих контактов</p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={dailyContactsData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
               <defs>
@@ -257,10 +257,10 @@ export default function AnalyticsPage() {
                   <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-              <XAxis dataKey="date" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false}
+              <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
+              <XAxis dataKey="date" tick={{ fill: "#5E7488", fontSize: 11 }} axisLine={false} tickLine={false}
                 interval={Math.floor(dailyContactsData.length / 7)} />
-              <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={30} />
+              <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} width={30} />
               <Tooltip content={<AreaTooltip />} />
               <Area type="monotone" dataKey="contacts" stroke="#00FF00" strokeWidth={2}
                 fill="url(#contactsGrad)" dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
@@ -270,9 +270,9 @@ export default function AnalyticsPage() {
 
         {/* Charts row: Cancellations + No-show */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Отмены записей</h3>
-            <p className="text-[#7d8590] text-sm mb-4">По категориям за период</p>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Отмены записей</h3>
+            <p className="text-[#5E7488] text-sm mb-4">По категориям за период</p>
             <div className="flex items-center gap-4">
               <ResponsiveContainer width={160} height={160}>
                 <PieChart>
@@ -288,36 +288,36 @@ export default function AnalyticsPage() {
                   <div key={item.type} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-[#9198a1] text-xs">{item.type}</span>
+                      <span className="text-[#8299B4] text-xs">{item.type}</span>
                     </div>
-                    <span className="text-[#e6edf3] text-xs font-semibold">{item.count}</span>
+                    <span className="text-[#EDF2FA] text-xs font-semibold">{item.count}</span>
                   </div>
                 ))}
-                <div className="pt-2 border-t border-[#21262d] flex justify-between">
-                  <span className="text-[#7d8590] text-xs">Итого</span>
-                  <span className="text-[#e6edf3] text-xs font-bold">{cancellationsData.reduce((s, c) => s + c.count, 0)}</span>
+                <div className="pt-2 border-t border-[#1A2535] flex justify-between">
+                  <span className="text-[#5E7488] text-xs">Итого</span>
+                  <span className="text-[#EDF2FA] text-xs font-bold">{cancellationsData.reduce((s, c) => s + c.count, 0)}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Записи: пришли и не пришли</h3>
-            <p className="text-[#7d8590] text-sm mb-4">Посещаемость по дням</p>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Записи: пришли и не пришли</h3>
+            <p className="text-[#5E7488] text-sm mb-4">Посещаемость по дням</p>
             <div className="flex items-center gap-4 mb-3 text-xs">
               {[{ color: "#00FF00", label: "Пришли" }, { color: "#f87171", label: "Не пришли" }].map((l) => (
                 <div key={l.label} className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: l.color }} />
-                  <span className="text-[#9198a1]">{l.label}</span>
+                  <span className="text-[#8299B4]">{l.label}</span>
                 </div>
               ))}
             </div>
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={noShowData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: "#5E7488", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
                   <Tooltip content={<StackTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
                   <Bar dataKey="came" name="Пришли" stackId="a" fill="#00FF00" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="noShow" name="Не пришли" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
@@ -328,30 +328,30 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Daily KPI Table */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#30363d]">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Ежедневная статистика</h3>
-            <p className="text-[#7d8590] text-sm">Последние {dailyKPITable.length} дней</p>
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#223444]">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Ежедневная статистика</h3>
+            <p className="text-[#5E7488] text-sm">Последние {dailyKPITable.length} дней</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
+                <tr className="border-b border-[#1A2535]">
                   {["День", "Обращения", "Сообщения", "Записи", "Выручка", "Не пришли"].map((h) => (
-                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                    <th key={h} className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {dailyKPITable.map((row) => (
-                  <tr key={row.date} className="border-b border-[#21262d] hover:bg-[#1c2128] transition-colors">
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm font-medium">{row.date}</td>
-                    <td className="px-5 py-3 text-[#9198a1] text-sm">{row.contacts}</td>
-                    <td className="px-5 py-3 text-[#9198a1] text-sm">{row.messages}</td>
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm font-semibold">{row.appointments}</td>
+                  <tr key={row.date} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors">
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm font-medium">{row.date}</td>
+                    <td className="px-5 py-3 text-[#8299B4] text-sm">{row.contacts}</td>
+                    <td className="px-5 py-3 text-[#8299B4] text-sm">{row.messages}</td>
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm font-semibold">{row.appointments}</td>
                     <td className="px-5 py-3 text-[#00FF00] text-sm font-semibold">{formatCurrency(row.revenue)}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-sm font-semibold ${row.noShow > 0 ? "text-red-400" : "text-[#9198a1]"}`}>
+                      <span className={`text-sm font-semibold ${row.noShow > 0 ? "text-red-400" : "text-[#8299B4]"}`}>
                         {row.noShow > 0 ? row.noShow : "—"}
                       </span>
                     </td>
@@ -364,53 +364,53 @@ export default function AnalyticsPage() {
 
         {/* Top tables */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#30363d]">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Топ дней по выручке</h3>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#223444]">
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Топ дней по выручке</h3>
             </div>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
+                <tr className="border-b border-[#1A2535]">
                   {["#", "День", "Выручка", "Записи", "Обращения"].map((h) => (
-                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                    <th key={h} className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {topDaysByRevenue.map((row, i) => (
-                  <tr key={row.date} className="border-b border-[#21262d] last:border-0 hover:bg-[#1c2128] transition-colors">
-                    <td className="px-5 py-3 text-[#7d8590] text-sm">{i + 1}</td>
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm">{row.date}</td>
+                  <tr key={row.date} className="border-b border-[#1A2535] last:border-0 hover:bg-[#141E2B] transition-colors">
+                    <td className="px-5 py-3 text-[#5E7488] text-sm">{i + 1}</td>
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm">{row.date}</td>
                     <td className="px-5 py-3 text-[#00FF00] text-sm font-semibold">{formatCurrency(row.revenue)}</td>
-                    <td className="px-5 py-3 text-[#9198a1] text-sm">{row.appointments}</td>
-                    <td className="px-5 py-3 text-[#9198a1] text-sm">{row.contacts}</td>
+                    <td className="px-5 py-3 text-[#8299B4] text-sm">{row.appointments}</td>
+                    <td className="px-5 py-3 text-[#8299B4] text-sm">{row.contacts}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#30363d]">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Топ дней по записям</h3>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#223444]">
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Топ дней по записям</h3>
             </div>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
+                <tr className="border-b border-[#1A2535]">
                   {["#", "День", "Записи", "Выручка", "Не пришли"].map((h) => (
-                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                    <th key={h} className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {topDaysByAppointments.map((row, i) => (
-                  <tr key={row.date} className="border-b border-[#21262d] last:border-0 hover:bg-[#1c2128] transition-colors">
-                    <td className="px-5 py-3 text-[#7d8590] text-sm">{i + 1}</td>
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm">{row.date}</td>
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm font-semibold">{row.appointments}</td>
+                  <tr key={row.date} className="border-b border-[#1A2535] last:border-0 hover:bg-[#141E2B] transition-colors">
+                    <td className="px-5 py-3 text-[#5E7488] text-sm">{i + 1}</td>
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm">{row.date}</td>
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm font-semibold">{row.appointments}</td>
                     <td className="px-5 py-3 text-[#00FF00] text-sm font-semibold">{formatCurrency(row.revenue)}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-sm font-semibold ${row.noShow > 0 ? "text-red-400" : "text-[#9198a1]"}`}>
+                      <span className={`text-sm font-semibold ${row.noShow > 0 ? "text-red-400" : "text-[#8299B4]"}`}>
                         {row.noShow > 0 ? row.noShow : "—"}
                       </span>
                     </td>
@@ -422,28 +422,28 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Service analytics */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#30363d]">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Аналитика услуг</h3>
-            <p className="text-[#7d8590] text-sm">Топ услуг по выручке и количеству</p>
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#223444]">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Аналитика услуг</h3>
+            <p className="text-[#5E7488] text-sm">Топ услуг по выручке и количеству</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
+                <tr className="border-b border-[#1A2535]">
                   {["#", "Услуга", "Выручка", "Количество", "Средний чек"].map((h) => (
-                    <th key={h} className="text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
+                    <th key={h} className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {serviceAnalyticsData.map((row, i) => (
-                  <tr key={row.name} className="border-b border-[#21262d] last:border-0 hover:bg-[#1c2128] transition-colors">
-                    <td className="px-5 py-3 text-[#7d8590] text-sm">{i + 1}</td>
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm font-medium">{row.name}</td>
+                  <tr key={row.name} className="border-b border-[#1A2535] last:border-0 hover:bg-[#141E2B] transition-colors">
+                    <td className="px-5 py-3 text-[#5E7488] text-sm">{i + 1}</td>
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm font-medium">{row.name}</td>
                     <td className="px-5 py-3 text-[#00FF00] text-sm font-semibold">{formatCurrency(row.revenue)}</td>
-                    <td className="px-5 py-3 text-[#9198a1] text-sm">{row.count} визитов</td>
-                    <td className="px-5 py-3 text-[#e6edf3] text-sm font-semibold">{formatCurrency(row.avgCheck)}</td>
+                    <td className="px-5 py-3 text-[#8299B4] text-sm">{row.count} визитов</td>
+                    <td className="px-5 py-3 text-[#EDF2FA] text-sm font-semibold">{formatCurrency(row.avgCheck)}</td>
                   </tr>
                 ))}
               </tbody>

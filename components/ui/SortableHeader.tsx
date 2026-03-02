@@ -18,7 +18,7 @@ export function SortableHeader({ label, col, sortCol, sortDir, onSort, className
   const active = sortCol === col
   return (
     <th
-      className={`text-left text-[#7d8590] text-xs font-medium px-5 py-3 whitespace-nowrap cursor-pointer select-none hover:text-[#e6edf3] transition-colors group ${className}`}
+      className={`text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap cursor-pointer select-none hover:text-[#EDF2FA] transition-colors group ${className}`}
       onClick={() => onSort(col)}
     >
       <div className="flex items-center gap-1">
