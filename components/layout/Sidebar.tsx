@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Users, CalendarDays, UserCog, DollarSign,
+  LayoutDashboard, CalendarDays, UserCog, DollarSign,
   Scissors, BarChart3, CreditCard, Settings, Megaphone,
 } from "lucide-react";
 

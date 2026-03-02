@@ -6,7 +6,7 @@ import { marketingClients, autoSystems } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { Send, Bot, X } from "lucide-react";
 
-const channels = [...new Set(marketingClients.map((c) => c.channel))];
+const channels = Array.from(new Set(marketingClients.map((c) => c.channel)));
 
 export default function ClientsPage() {
   const [genderFilter, setGenderFilter] = useState("all");
