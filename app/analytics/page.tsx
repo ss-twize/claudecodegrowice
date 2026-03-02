@@ -158,63 +158,19 @@ export default function AnalyticsPage() {
           <KpiCard title="Обращений всего" value={String(k.incomingMessages)} sub="уникальных контактов" icon={<MessageSquare size={16} />} />
         </div>
 
-        {/* Marketing Funnel + Revenue Forecast */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-
-          {/* Analytics Funnel */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <h3 className="text-[#e6edf3] font-semibold font-unbounded mb-1">Маркетинговая воронка</h3>
-            <p className="text-[#7d8590] text-sm mb-5">От охвата до визита</p>
-            <div className="space-y-3">
-              {analyticsFunnel.map((stage, i) => {
-                const pct = Math.round((stage.value / funnelMax) * 100);
-                const convFromPrev = i > 0
-                  ? Math.round((stage.value / analyticsFunnel[i - 1].value) * 100)
-                  : 100;
-                const colors = ["#00FF00", "#66CC00", "#44AA00", "#2a7a00", "#1a5200"];
-                return (
-                  <div key={stage.stage}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div>
-                        <span className="text-[#e6edf3] text-sm">{stage.stage}</span>
-                        <span className="text-[#7d8590] text-xs ml-2">{stage.desc}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {i > 0 && (
-                          <span className={`text-xs font-medium ${convFromPrev >= 60 ? "text-[#00FF00]" : convFromPrev >= 40 ? "text-yellow-400" : "text-red-400"}`}>
-                            ↓ {convFromPrev}%
-                          </span>
-                        )}
-                        <span className="text-[#e6edf3] font-bold text-sm w-12 text-right">{stage.value.toLocaleString("ru")}</span>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-[#21262d] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: colors[i] }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-5 pt-4 border-t border-[#21262d] flex justify-between">
-              <span className="text-[#7d8590] text-sm">Охват → Визит</span>
-              <span className="text-[#00FF00] font-bold text-xl">
-                {Math.round((analyticsFunnel[analyticsFunnel.length - 1].value / funnelMax) * 100)}%
-              </span>
-            </div>
+        {/* Revenue History — full width */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex flex-col" style={{ minHeight: 320 }}>
+          <div className="mb-5">
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по месяцам</h3>
+            <p className="text-[#7d8590] text-sm">Октябрь 2025 — февраль 2026</p>
           </div>
-
-          {/* Revenue History */}
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-            <div className="mb-5">
-              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Выручка по месяцам</h3>
-              <p className="text-[#7d8590] text-sm">Октябрь 2025 — февраль 2026</p>
-            </div>
-            <ResponsiveContainer width="100%" height={220}>
+          <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#7d8590", fontSize: 11 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => `${v / 1000}к`} width={42} />
+                <XAxis dataKey="month" tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#7d8590", fontSize: 12 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => `${v / 1000}к`} width={45} />
                 <Tooltip content={<ForecastTooltip />} />
                 <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
                   dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
