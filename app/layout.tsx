@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
+import { Unbounded, Montserrat } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
+
+const unbounded = Unbounded({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-unbounded",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "GROWICE — Dashboard",
@@ -14,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className="bg-[#0d1117] text-[#e6edf3] antialiased">
+      <body className={`${unbounded.variable} ${montserrat.variable} font-montserrat bg-[#0d1117] text-[#e6edf3] antialiased`}>
         <Sidebar />
         <main className="ml-60 min-h-screen">
           {children}

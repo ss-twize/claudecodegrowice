@@ -12,7 +12,7 @@ export default function ClientsTable() {
     <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-[#30363d] flex items-center justify-between">
         <div>
-          <h3 className="text-[#e6edf3] font-semibold">База клиентов</h3>
+          <h3 className="text-[#e6edf3] font-semibold font-unbounded">База клиентов</h3>
           <p className="text-[#7d8590] text-sm">{clientsData.length} клиентов показано</p>
         </div>
         <button className="text-sm bg-[#00FF00] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#ccff33] transition-colors">

@@ -32,7 +32,7 @@ export default function AppointmentsChart() {
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
       <div className="mb-5">
-        <h3 className="text-[#e6edf3] font-semibold">Записи по дням</h3>
+        <h3 className="text-[#e6edf3] font-semibold font-unbounded">Записи по дням</h3>
         <p className="text-[#7d8590] text-sm">Средние показатели за неделю</p>
       </div>
       <ResponsiveContainer width="100%" height={200}>

@@ -21,7 +21,9 @@ const config: Config = {
         "text-muted": "#7d8590",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-montserrat)", "system-ui", "sans-serif"],
+        montserrat: ["var(--font-montserrat)", "system-ui", "sans-serif"],
+        unbounded: ["var(--font-unbounded)", "sans-serif"],
       },
     },
   },

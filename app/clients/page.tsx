@@ -71,7 +71,7 @@ export default function ClientsPage() {
           {/* Sources */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
             <div className="mb-5">
-              <h3 className="text-[#e6edf3] font-semibold">Источники привлечения</h3>
+              <h3 className="text-[#e6edf3] font-semibold font-unbounded">Источники привлечения</h3>
               <p className="text-[#7d8590] text-sm">Откуда приходят клиенты</p>
             </div>
             <ResponsiveContainer width="100%" height={200}>

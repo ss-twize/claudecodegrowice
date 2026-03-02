@@ -73,7 +73,7 @@ export default function AppointmentsPage() {
         {/* Heatmap bar by hour */}
         <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
           <div className="mb-5">
-            <h3 className="text-[#e6edf3] font-semibold">Загрузка по часам</h3>
+            <h3 className="text-[#e6edf3] font-semibold font-unbounded">Загрузка по часам</h3>
             <p className="text-[#7d8590] text-sm">Среднее количество записей по времени суток</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
