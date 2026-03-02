@@ -30,7 +30,7 @@ export default function AppointmentsChart() {
   const maxVal = Math.max(...appointmentsByDay.map((d) => d.appointments));
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 flex-1">
       <div className="mb-5">
         <h3 className="text-[#e6edf3] font-semibold font-unbounded">Записи по дням</h3>
         <p className="text-[#7d8590] text-sm">Средние показатели за неделю</p>
