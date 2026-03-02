@@ -157,15 +157,22 @@ ALTER TABLE metrics_day ENABLE ROW LEVEL SECURITY;
 ALTER TABLE metrics_month ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
 
--- Allow anon read on non-sensitive tables (for demo - in production use proper auth)
-CREATE POLICY IF NOT EXISTS "anon_read_map_ratings" ON map_ratings FOR SELECT TO anon USING (true);
-CREATE POLICY IF NOT EXISTS "anon_read_system_states" ON system_states FOR SELECT TO anon USING (true);
-CREATE POLICY IF NOT EXISTS "anon_read_org_settings" ON org_settings FOR SELECT TO anon USING (true);
-CREATE POLICY IF NOT EXISTS "anon_read_knowledge_files" ON knowledge_files FOR SELECT TO anon USING (true);
-CREATE POLICY IF NOT EXISTS "anon_all_action_log" ON action_log FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "anon_all_metrics_day" ON metrics_day FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "anon_all_metrics_month" ON metrics_month FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "anon_read_webhooks" ON webhooks FOR SELECT TO anon USING (true);
-CREATE POLICY IF NOT EXISTS "anon_all_system_states" ON system_states FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "anon_all_org_settings" ON org_settings FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "anon_all_knowledge_files" ON knowledge_files FOR ALL TO anon USING (true) WITH CHECK (true);
+-- Allow anon access (for demo - in production use proper auth)
+-- Drop first to make the script re-runnable
+DROP POLICY IF EXISTS "anon_read_map_ratings"       ON map_ratings;
+DROP POLICY IF EXISTS "anon_all_system_states"       ON system_states;
+DROP POLICY IF EXISTS "anon_all_org_settings"        ON org_settings;
+DROP POLICY IF EXISTS "anon_all_knowledge_files"     ON knowledge_files;
+DROP POLICY IF EXISTS "anon_all_action_log"          ON action_log;
+DROP POLICY IF EXISTS "anon_all_metrics_day"         ON metrics_day;
+DROP POLICY IF EXISTS "anon_all_metrics_month"       ON metrics_month;
+DROP POLICY IF EXISTS "anon_read_webhooks"           ON webhooks;
+
+CREATE POLICY "anon_read_map_ratings"    ON map_ratings    FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_all_system_states"   ON system_states  FOR ALL    TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_org_settings"    ON org_settings   FOR ALL    TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_knowledge_files" ON knowledge_files FOR ALL   TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_action_log"      ON action_log     FOR ALL    TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_metrics_day"     ON metrics_day    FOR ALL    TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_metrics_month"   ON metrics_month  FOR ALL    TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_read_webhooks"       ON webhooks       FOR SELECT TO anon USING (true);
