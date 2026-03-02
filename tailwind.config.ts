@@ -15,7 +15,7 @@ const config: Config = {
         "card-icon": "#21262d",
         border: "#30363d",
         "border-subtle": "#21262d",
-        accent: "#00E378",
+        accent: "#00FF00",
         "text-primary": "#e6edf3",
         "text-secondary": "#9198a1",
         "text-muted": "#7d8590",

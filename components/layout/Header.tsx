@@ -31,7 +31,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
         {/* Notifications */}
         <button className="relative w-9 h-9 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-center hover:border-[#3d444d] transition-colors">
           <Bell size={16} className="text-[#9198a1]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#00E378] rounded-full" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#00FF00] rounded-full" />
         </button>
 
         {/* Date */}
