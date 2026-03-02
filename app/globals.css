@@ -44,6 +44,16 @@ body {
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.15);
 }
 
+/* Prevent chart selection highlight on click */
+.recharts-wrapper,
+.recharts-wrapper svg,
+.recharts-surface,
+.recharts-wrapper * {
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+}
+
 .card-hover {
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
