@@ -2,7 +2,7 @@ import { clientsData } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
-  VIP: "bg-[#00FF00]/15 text-[#00FF00] border border-[#00FF00]/25",
+  VIP: "bg-[#00E378]/15 text-[#00E378] border border-[#00E378]/25",
   Постоянный: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
   Новый: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
 };
@@ -15,7 +15,7 @@ export default function ClientsTable() {
           <h3 className="text-[#e6edf3] font-semibold">База клиентов</h3>
           <p className="text-[#7d8590] text-sm">{clientsData.length} клиентов показано</p>
         </div>
-        <button className="text-sm bg-[#00FF00] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#ccff33] transition-colors">
+        <button className="text-sm bg-[#00E378] text-black font-semibold px-4 py-1.5 rounded-lg hover:bg-[#00c96c] transition-colors">
           + Добавить
         </button>
       </div>
@@ -38,8 +38,8 @@ export default function ClientsTable() {
               >
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-[#00FF00] text-xs font-bold">{client.avatar}</span>
+                    <div className="w-8 h-8 rounded-full bg-[#00E378]/10 border border-[#00E378]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[#00E378] text-xs font-bold">{client.avatar}</span>
                     </div>
                     <span className="text-[#e6edf3] text-sm font-medium whitespace-nowrap">{client.name}</span>
                   </div>
@@ -53,7 +53,7 @@ export default function ClientsTable() {
                 <td className="px-5 py-3.5 text-[#e6edf3] text-sm font-semibold whitespace-nowrap">
                   {formatCurrency(client.totalSpent)}
                 </td>
-                <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">
+                <td className="px-5 py-3.5 text-[#00E378] text-sm font-semibold whitespace-nowrap">
                   {formatCurrency(client.ltv)}
                 </td>
                 <td className="px-5 py-3.5">

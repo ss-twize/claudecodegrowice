@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
         <p className="text-[#9198a1] mb-1">{label}</p>
-        <p className="text-[#00FF00] font-semibold">
+        <p className="text-[#00E378] font-semibold">
           {new Intl.NumberFormat("ru-RU", {
             style: "currency",
             currency: "RUB",
@@ -40,7 +40,7 @@ const totalClients = staffData.reduce((s, m) => s + m.clients, 0);
 const avgRating = (staffData.reduce((s, m) => s + m.rating, 0) / staffData.length).toFixed(1);
 const avgWorkload = Math.round(staffData.reduce((s, m) => s + m.workload, 0) / staffData.length);
 
-const colors = ["#00FF00", "#88CC00", "#66AA00", "#448800"];
+const colors = ["#00E378", "#88CC00", "#66AA00", "#448800"];
 
 export default function StaffPage() {
   return (
@@ -116,7 +116,7 @@ export default function StaffPage() {
             <h3 className="text-[#e6edf3] font-semibold">Карточки мастеров</h3>
             <div className="flex items-center gap-2 text-sm text-[#9198a1]">
               Средняя загрузка:{" "}
-              <span className="text-[#00FF00] font-semibold">{avgWorkload}%</span>
+              <span className="text-[#00E378] font-semibold">{avgWorkload}%</span>
             </div>
           </div>
           <StaffTable />

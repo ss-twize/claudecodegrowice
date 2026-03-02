@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1c2128] border border-[#30363d] rounded-lg p-3 text-sm">
         <p className="text-[#9198a1] mb-1">{label}</p>
-        <p className="text-[#00FF00] font-semibold">{payload[0].value} записей</p>
+        <p className="text-[#00E378] font-semibold">{payload[0].value} записей</p>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export default function AppointmentsPage() {
                       key={`cell-${index}`}
                       fill={
                         intensity > 0.8
-                          ? "#00FF00"
+                          ? "#00E378"
                           : intensity > 0.6
                           ? "#88CC00"
                           : intensity > 0.4
@@ -122,7 +122,7 @@ export default function AppointmentsPage() {
               { color: "#1f3a12", label: "Низкая" },
               { color: "#2d5a1b", label: "Средняя" },
               { color: "#88CC00", label: "Высокая" },
-              { color: "#00FF00", label: "Пик" },
+              { color: "#00E378", label: "Пик" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
