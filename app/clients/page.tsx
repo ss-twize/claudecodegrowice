@@ -33,6 +33,8 @@ type ClientFilterOptions = {
   minRevenue: number | null;
   maxRevenue: number | null;
   minScore: number | null;
+  minLtv: number | null;
+  minVisits: number | null;
 };
 
 function ServicesCell({ services }: { services: string[] }) {
@@ -146,6 +148,8 @@ function matchesClientFilter(client: {
   name: string;
   phone: string;
   revenue: number;
+  ltv: number;
+  visits: number;
   score: number;
 }, options: ClientFilterOptions): boolean {
   const normalizedQuery = options.query.trim().toLowerCase();
@@ -159,6 +163,8 @@ function matchesClientFilter(client: {
   if (options.minRevenue !== null && client.revenue < options.minRevenue) return false;
   if (options.maxRevenue !== null && client.revenue > options.maxRevenue) return false;
   if (options.minScore !== null && client.score < options.minScore) return false;
+  if (options.minLtv !== null && client.ltv < options.minLtv) return false;
+  if (options.minVisits !== null && client.visits < options.minVisits) return false;
   if (normalizedQuery) {
     const searchable = [client.name, client.phone, client.telegram || ""].join(" ").toLowerCase();
     if (!searchable.includes(normalizedQuery)) return false;
@@ -182,6 +188,8 @@ export default function ClientsPage() {
   const [revenueFromFilter, setRevenueFromFilter] = useState("");
   const [revenueToFilter, setRevenueToFilter] = useState("");
   const [scoreFromFilter, setScoreFromFilter] = useState("");
+  const [ltvFromFilter, setLtvFromFilter] = useState("");
+  const [visitsFromFilter, setVisitsFromFilter] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [msgText, setMsgText] = useState("");
@@ -195,6 +203,8 @@ export default function ClientsPage() {
   const [revenueFrom, setRevenueFrom] = useState("");
   const [revenueTo, setRevenueTo] = useState("");
   const [scoreFrom, setScoreFrom] = useState("");
+  const [ltvFrom, setLtvFrom] = useState("");
+  const [visitsFrom, setVisitsFrom] = useState("");
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -252,6 +262,8 @@ export default function ClientsPage() {
       minRevenue: toNumberOrNull(revenueFromFilter),
       maxRevenue: toNumberOrNull(revenueToFilter),
       minScore: toNumberOrNull(scoreFromFilter),
+      minLtv: toNumberOrNull(ltvFromFilter),
+      minVisits: toNumberOrNull(visitsFromFilter),
     };
 
     return sorted.filter((c) => matchesClientFilter(c, options));
@@ -266,6 +278,8 @@ export default function ClientsPage() {
     revenueFromFilter,
     revenueToFilter,
     scoreFromFilter,
+    ltvFromFilter,
+    visitsFromFilter,
   ]);
 
   const campaignRecipients = useMemo(() => {
@@ -279,6 +293,8 @@ export default function ClientsPage() {
       minRevenue: toNumberOrNull(revenueFrom),
       maxRevenue: toNumberOrNull(revenueTo),
       minScore: toNumberOrNull(scoreFrom),
+      minLtv: toNumberOrNull(ltvFrom),
+      minVisits: toNumberOrNull(visitsFrom),
     };
 
     return clients.filter((c) => matchesClientFilter(c, options));
@@ -293,6 +309,8 @@ export default function ClientsPage() {
     revenueFrom,
     revenueTo,
     scoreFrom,
+    ltvFrom,
+    visitsFrom,
   ]);
 
   const segmentCounts = useMemo(() => {
@@ -343,7 +361,7 @@ export default function ClientsPage() {
           </div>
 
           <div className="px-5 py-4 border-b border-[#1A2535]">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2">
               <input
                 type="text"
                 value={query}
@@ -394,6 +412,22 @@ export default function ClientsPage() {
                 placeholder="Скор от"
                 className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
               />
+              <input
+                type="number"
+                min="0"
+                value={ltvFromFilter}
+                onChange={(e) => setLtvFromFilter(e.target.value)}
+                placeholder="LTV от"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
+              />
+              <input
+                type="number"
+                min="0"
+                value={visitsFromFilter}
+                onChange={(e) => setVisitsFromFilter(e.target.value)}
+                placeholder="Визитов от"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
+              />
               <div className="flex items-center gap-0.5 bg-[#0A0D14] border border-[#223444] rounded-lg p-1 overflow-x-auto">
                 {[["all", "Пол: все"], ["Ж", "Ж"], ["М", "М"]].map(([val, label]) => (
                   <button key={val} onClick={() => setGenderFilter(val)}
@@ -425,8 +459,12 @@ export default function ClientsPage() {
                   <SortableHeader label="Телефон"     col="phone"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Пол</th>
                   <SortableHeader label="Выручка"     col="revenue"   sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="LTV"         col="ltv"       sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Визиты"      col="visits"    sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Канал</th>
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Telegram</th>
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Источник</th>
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Город</th>
                   <SortableHeader label="Статус"      col="segment"   sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Риск оттока" col="churnRisk" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Скор"        col="score"     sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
@@ -447,12 +485,16 @@ export default function ClientsPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
+                      <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.ltv)}</td>
+                      <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">{client.visits}</td>
                       <td className="px-5 py-3.5">
                         <span className="text-xs px-2 py-1 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444] whitespace-nowrap">{client.channel}</span>
                       </td>
                       <td className="px-5 py-3.5 text-sm">
                         {client.telegram ? <span className="text-[#00FF00]">{client.telegram}</span> : <span className="text-[#5E7488]">—</span>}
                       </td>
+                      <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.source}</td>
+                      <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.city}</td>
                       <td className="px-5 py-3.5">
                         {client.segment && segColor ? (
                           <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>
@@ -653,6 +695,22 @@ export default function ClientsPage() {
                     max="100"
                     className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none placeholder-[#5E7488]"
                   />
+                  <input
+                    type="number"
+                    value={ltvFrom}
+                    onChange={(e) => setLtvFrom(e.target.value)}
+                    placeholder="LTV от, ₽"
+                    min="0"
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none placeholder-[#5E7488]"
+                  />
+                  <input
+                    type="number"
+                    value={visitsFrom}
+                    onChange={(e) => setVisitsFrom(e.target.value)}
+                    placeholder="Визитов от"
+                    min="0"
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none placeholder-[#5E7488]"
+                  />
                   <div className="flex items-center text-xs text-[#8299B4] px-2.5 py-2 rounded-md border border-[#223444] bg-[#0A0D14]">
                     Получатели: <span className="ml-1 text-[#00FF00] font-semibold">{campaignRecipients.length}</span>
                   </div>
@@ -719,6 +777,8 @@ export default function ClientsPage() {
                       revenue_from: revenueFrom,
                       revenue_to: revenueTo,
                       score_from: scoreFrom,
+                      ltv_from: ltvFrom,
+                      visits_from: visitsFrom,
                     },
                     recipients_count: campaignRecipients.length,
                     recipient_ids: campaignRecipients.map((c) => c.id),
