@@ -109,6 +109,20 @@ const RISK_LABELS: Record<string, string> = {
   low: "Низкий", medium: "Средний", high: "Высокий",
 };
 
+const CAMPAIGN_SEGMENT_TO_KEY: Record<string, string> = {
+  "Все клиенты": "all",
+  "Новые (этот месяц)": "new",
+  "Активные": "active",
+  "Под риском (30+ дней)": "atRisk",
+  "Неактивные (3+ месяца)": "inactive",
+};
+
+function toNumberOrNull(value: string): number | null {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default function ClientsPage() {
   const { role, isOwner } = useAuth();
   const { clients, loading: clientsLoading } = useClients();
@@ -118,6 +132,7 @@ export default function ClientsPage() {
   const [activeSegment, setActiveSegment] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [msgText, setMsgText] = useState("");
   const [segment, setSegment] = useState("Все клиенты");
@@ -171,13 +186,32 @@ export default function ClientsPage() {
   const { sorted, sortCol, sortDir, onSort } = useSortable(clients);
 
   const filtered = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
     return sorted.filter((c) => {
       if (activeSegment !== "all" && c.segment !== activeSegment) return false;
       if (genderFilter !== "all" && c.gender !== genderFilter) return false;
       if (channelFilter !== "all" && c.channel !== channelFilter) return false;
+      if (normalizedQuery) {
+        const searchable = [c.name, c.phone, c.telegram || ""].join(" ").toLowerCase();
+        if (!searchable.includes(normalizedQuery)) return false;
+      }
       return true;
     });
-  }, [sorted, activeSegment, genderFilter, channelFilter]);
+  }, [sorted, activeSegment, genderFilter, channelFilter, query]);
+
+  const campaignRecipients = useMemo(() => {
+    const segmentKey = CAMPAIGN_SEGMENT_TO_KEY[segment] || "all";
+    const minRevenue = toNumberOrNull(revenueFrom);
+    const minLtv = toNumberOrNull(ltvFrom);
+
+    return clients.filter((c) => {
+      if (segmentKey !== "all" && c.segment !== segmentKey) return false;
+      if (genderModalFilter !== "all" && c.gender !== genderModalFilter) return false;
+      if (minRevenue !== null && c.revenue < minRevenue) return false;
+      if (minLtv !== null && c.revenue < minLtv) return false;
+      return true;
+    });
+  }, [clients, segment, genderModalFilter, revenueFrom, ltvFrom]);
 
   const segmentCounts = useMemo(() => {
     const counts: Record<string, number> = { all: clients.length };
@@ -222,7 +256,14 @@ export default function ClientsPage() {
                 {clientsLoading ? "Загрузка..." : `${filtered.length} из ${clients.length} клиентов`}
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Поиск: имя, телефон, @username"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488] min-w-[220px]"
+              />
               {/* Status tabs */}
               <div className="flex items-center gap-0.5 bg-[#0A0D14] border border-[#223444] rounded-lg p-1">
                 {SEGMENTS.map(({ key, label }) => (
@@ -468,6 +509,9 @@ export default function ClientsPage() {
                     />
                   </div>
                 </div>
+                <p className="text-[#5E7488] text-xs mt-2">
+                  Под фильтры попадают: <span className="text-[#00FF00] font-semibold">{campaignRecipients.length}</span> из {clients.length} клиентов
+                </p>
               </div>
 
               {/* Message text */}
@@ -525,6 +569,8 @@ export default function ClientsPage() {
                     gender: genderModalFilter,
                     revenue_from: revenueFrom,
                     ltv_from: ltvFrom,
+                    recipients_count: campaignRecipients.length,
+                    recipient_ids: campaignRecipients.map((c) => c.id),
                   }, role);
                   setShowModal(false);
                 }}
