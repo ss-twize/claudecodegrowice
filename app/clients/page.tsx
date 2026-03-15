@@ -21,6 +21,20 @@ const EMOJIS = [
   "🌟","🎀","💆","🌺","😊","🙏","👍","🆕",
 ];
 
+type TelegramFilter = "all" | "yes" | "no";
+
+type ClientFilterOptions = {
+  segment: string;
+  gender: string;
+  channel: string;
+  churnRisk: string;
+  telegram: TelegramFilter;
+  query: string;
+  minRevenue: number | null;
+  maxRevenue: number | null;
+  minScore: number | null;
+};
+
 function ServicesCell({ services }: { services: string[] }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
@@ -123,6 +137,36 @@ function toNumberOrNull(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function matchesClientFilter(client: {
+  segment: string;
+  gender: string;
+  channel: string;
+  churnRisk: string;
+  telegram: string | null;
+  name: string;
+  phone: string;
+  revenue: number;
+  score: number;
+}, options: ClientFilterOptions): boolean {
+  const normalizedQuery = options.query.trim().toLowerCase();
+
+  if (options.segment !== "all" && client.segment !== options.segment) return false;
+  if (options.gender !== "all" && client.gender !== options.gender) return false;
+  if (options.channel !== "all" && client.channel !== options.channel) return false;
+  if (options.churnRisk !== "all" && client.churnRisk !== options.churnRisk) return false;
+  if (options.telegram === "yes" && !client.telegram) return false;
+  if (options.telegram === "no" && client.telegram) return false;
+  if (options.minRevenue !== null && client.revenue < options.minRevenue) return false;
+  if (options.maxRevenue !== null && client.revenue > options.maxRevenue) return false;
+  if (options.minScore !== null && client.score < options.minScore) return false;
+  if (normalizedQuery) {
+    const searchable = [client.name, client.phone, client.telegram || ""].join(" ").toLowerCase();
+    if (!searchable.includes(normalizedQuery)) return false;
+  }
+
+  return true;
+}
+
 export default function ClientsPage() {
   const { role, isOwner } = useAuth();
   const { clients, loading: clientsLoading } = useClients();
@@ -132,14 +176,26 @@ export default function ClientsPage() {
   const [activeSegment, setActiveSegment] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [riskFilter, setRiskFilter] = useState("all");
+  const [telegramFilter, setTelegramFilter] = useState<TelegramFilter>("all");
   const [query, setQuery] = useState("");
+  const [revenueFromFilter, setRevenueFromFilter] = useState("");
+  const [revenueToFilter, setRevenueToFilter] = useState("");
+  const [scoreFromFilter, setScoreFromFilter] = useState("");
+
   const [showModal, setShowModal] = useState(false);
   const [msgText, setMsgText] = useState("");
   const [segment, setSegment] = useState("Все клиенты");
   const [campaignName, setCampaignName] = useState("");
+  const [campaignQuery, setCampaignQuery] = useState("");
   const [genderModalFilter, setGenderModalFilter] = useState("all");
+  const [campaignChannelFilter, setCampaignChannelFilter] = useState("all");
+  const [campaignRiskFilter, setCampaignRiskFilter] = useState("all");
+  const [campaignTelegramFilter, setCampaignTelegramFilter] = useState<TelegramFilter>("all");
   const [revenueFrom, setRevenueFrom] = useState("");
-  const [ltvFrom, setLtvFrom] = useState("");
+  const [revenueTo, setRevenueTo] = useState("");
+  const [scoreFrom, setScoreFrom] = useState("");
+
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -186,32 +242,58 @@ export default function ClientsPage() {
   const { sorted, sortCol, sortDir, onSort } = useSortable(clients);
 
   const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return sorted.filter((c) => {
-      if (activeSegment !== "all" && c.segment !== activeSegment) return false;
-      if (genderFilter !== "all" && c.gender !== genderFilter) return false;
-      if (channelFilter !== "all" && c.channel !== channelFilter) return false;
-      if (normalizedQuery) {
-        const searchable = [c.name, c.phone, c.telegram || ""].join(" ").toLowerCase();
-        if (!searchable.includes(normalizedQuery)) return false;
-      }
-      return true;
-    });
-  }, [sorted, activeSegment, genderFilter, channelFilter, query]);
+    const options: ClientFilterOptions = {
+      segment: activeSegment,
+      gender: genderFilter,
+      channel: channelFilter,
+      churnRisk: riskFilter,
+      telegram: telegramFilter,
+      query,
+      minRevenue: toNumberOrNull(revenueFromFilter),
+      maxRevenue: toNumberOrNull(revenueToFilter),
+      minScore: toNumberOrNull(scoreFromFilter),
+    };
+
+    return sorted.filter((c) => matchesClientFilter(c, options));
+  }, [
+    sorted,
+    activeSegment,
+    genderFilter,
+    channelFilter,
+    riskFilter,
+    telegramFilter,
+    query,
+    revenueFromFilter,
+    revenueToFilter,
+    scoreFromFilter,
+  ]);
 
   const campaignRecipients = useMemo(() => {
-    const segmentKey = CAMPAIGN_SEGMENT_TO_KEY[segment] || "all";
-    const minRevenue = toNumberOrNull(revenueFrom);
-    const minLtv = toNumberOrNull(ltvFrom);
+    const options: ClientFilterOptions = {
+      segment: CAMPAIGN_SEGMENT_TO_KEY[segment] || "all",
+      gender: genderModalFilter,
+      channel: campaignChannelFilter,
+      churnRisk: campaignRiskFilter,
+      telegram: campaignTelegramFilter,
+      query: campaignQuery,
+      minRevenue: toNumberOrNull(revenueFrom),
+      maxRevenue: toNumberOrNull(revenueTo),
+      minScore: toNumberOrNull(scoreFrom),
+    };
 
-    return clients.filter((c) => {
-      if (segmentKey !== "all" && c.segment !== segmentKey) return false;
-      if (genderModalFilter !== "all" && c.gender !== genderModalFilter) return false;
-      if (minRevenue !== null && c.revenue < minRevenue) return false;
-      if (minLtv !== null && c.revenue < minLtv) return false;
-      return true;
-    });
-  }, [clients, segment, genderModalFilter, revenueFrom, ltvFrom]);
+    return clients.filter((c) => matchesClientFilter(c, options));
+  }, [
+    clients,
+    segment,
+    genderModalFilter,
+    campaignChannelFilter,
+    campaignRiskFilter,
+    campaignTelegramFilter,
+    campaignQuery,
+    revenueFrom,
+    revenueTo,
+    scoreFrom,
+  ]);
 
   const segmentCounts = useMemo(() => {
     const counts: Record<string, number> = { all: clients.length };
@@ -226,7 +308,6 @@ export default function ClientsPage() {
       <Header title="Клиенты и Рассылка" subtitle="База клиентов и маркетинговые кампании" />
       <div className="p-6 space-y-6">
 
-        {/* Status summary cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             { key: "new",      label: "Новые клиенты",  icon: <UserPlus size={16} />,     color: "#00FF00" },
@@ -247,7 +328,6 @@ export default function ClientsPage() {
           ))}
         </div>
 
-        {/* Client Table */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[#223444] flex items-center justify-between flex-wrap gap-3">
             <div>
@@ -256,45 +336,87 @@ export default function ClientsPage() {
                 {clientsLoading ? "Загрузка..." : `${filtered.length} из ${clients.length} клиентов`}
               </p>
             </div>
-              <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 bg-[#00FF00] text-black font-semibold text-sm px-4 py-2 rounded-lg hover:bg-[#ccff33] transition-colors">
+              <Send size={14} />Новая рассылка
+            </button>
+          </div>
+
+          <div className="px-5 py-4 border-b border-[#1A2535]">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Поиск: имя, телефон, @username"
-                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488] min-w-[220px]"
+                placeholder="ФИО, телефон, @username"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
               />
-              {/* Status tabs */}
-              <div className="flex items-center gap-0.5 bg-[#0A0D14] border border-[#223444] rounded-lg p-1">
-                {SEGMENTS.map(({ key, label }) => (
-                  <button key={key} onClick={() => setActiveSegment(key)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeSegment === key ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
-                    {label}
-                    {segmentCounts[key] !== undefined && (
-                      <span className="ml-1 opacity-60">({segmentCounts[key]})</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-0.5 bg-[#0A0D14] border border-[#223444] rounded-lg p-1">
-                {[["all", "Все"], ["Ж", "Ж"], ["М", "М"]].map(([val, label]) => (
-                  <button key={val} onClick={() => setGenderFilter(val)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${genderFilter === val ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
               <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)}
                 className="bg-[#0A0D14] border border-[#223444] text-[#8299B4] text-xs rounded-lg px-3 py-2 outline-none">
-                <option value="all">Все каналы</option>
-                {channels.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
+                <option value="all">Канал: все</option>
+                {channels.map((ch) => <option key={ch} value={ch}>{`Канал: ${ch}`}</option>)}
               </select>
-              <button onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 bg-[#00FF00] text-black font-semibold text-sm px-4 py-2 rounded-lg hover:bg-[#ccff33] transition-colors">
-                <Send size={14} />Новая рассылка
-              </button>
+              <select value={riskFilter} onChange={(e) => setRiskFilter(e.target.value)}
+                className="bg-[#0A0D14] border border-[#223444] text-[#8299B4] text-xs rounded-lg px-3 py-2 outline-none">
+                <option value="all">Риск: любой</option>
+                <option value="low">Риск: низкий</option>
+                <option value="medium">Риск: средний</option>
+                <option value="high">Риск: высокий</option>
+              </select>
+              <select value={telegramFilter} onChange={(e) => setTelegramFilter(e.target.value as TelegramFilter)}
+                className="bg-[#0A0D14] border border-[#223444] text-[#8299B4] text-xs rounded-lg px-3 py-2 outline-none">
+                <option value="all">Telegram: любой</option>
+                <option value="yes">Telegram: есть</option>
+                <option value="no">Telegram: нет</option>
+              </select>
+              <input
+                type="number"
+                min="0"
+                value={revenueFromFilter}
+                onChange={(e) => setRevenueFromFilter(e.target.value)}
+                placeholder="Выручка от"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
+              />
+              <input
+                type="number"
+                min="0"
+                value={revenueToFilter}
+                onChange={(e) => setRevenueToFilter(e.target.value)}
+                placeholder="Выручка до"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
+              />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={scoreFromFilter}
+                onChange={(e) => setScoreFromFilter(e.target.value)}
+                placeholder="Скор от"
+                className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-lg px-3 py-2 outline-none placeholder-[#5E7488]"
+              />
+              <div className="flex items-center gap-0.5 bg-[#0A0D14] border border-[#223444] rounded-lg p-1 overflow-x-auto">
+                {[["all", "Пол: все"], ["Ж", "Ж"], ["М", "М"]].map(([val, label]) => (
+                  <button key={val} onClick={() => setGenderFilter(val)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${genderFilter === val ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-0.5 bg-[#0A0D14] border border-[#223444] rounded-lg p-1 mt-2 overflow-x-auto">
+              {SEGMENTS.map(({ key, label }) => (
+                <button key={key} onClick={() => setActiveSegment(key)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${activeSegment === key ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
+                  {label}
+                  {segmentCounts[key] !== undefined && (
+                    <span className="ml-1 opacity-60">({segmentCounts[key]})</span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -366,7 +488,6 @@ export default function ClientsPage() {
           </div>
         </div>
 
-        {/* Campaign Results */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Результаты кампаний</h3>
           <p className="text-[#5E7488] text-sm mb-6">История отправленных рассылок</p>
@@ -379,7 +500,6 @@ export default function ClientsPage() {
           </div>
         </div>
 
-        {/* Auto Systems */}
         <div>
           <div className="mb-4">
             <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автосистемы</h3>
@@ -430,14 +550,13 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      {/* New Campaign Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-6 w-full max-w-xl shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Новая рассылка</h3>
-                <p className="text-[#5E7488] text-sm mt-0.5">Настройте маркетинговую кампанию</p>
+                <p className="text-[#5E7488] text-sm mt-0.5">Настройте подробную сегментацию и сообщение</p>
               </div>
               <button onClick={() => setShowModal(false)} className="text-[#5E7488] hover:text-[#EDF2FA] transition-colors ml-4 flex-shrink-0">
                 <X size={18} />
@@ -445,7 +564,6 @@ export default function ClientsPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Campaign name */}
               <div>
                 <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">
                   Название кампании
@@ -455,66 +573,92 @@ export default function ClientsPage() {
                   type="text"
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value)}
-                  placeholder="Например: Февральская акция — неактивные клиенты"
+                  placeholder="Например: Реактивация неактивных клиентов"
                   className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none placeholder-[#5E7488]"
                 />
               </div>
 
-              {/* Audience */}
-              <div>
-                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Целевая аудитория</label>
-                <select value={segment} onChange={(e) => setSegment(e.target.value)}
-                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none">
-                  {["Все клиенты", "Новые (этот месяц)", "Активные", "Под риском (30+ дней)", "Неактивные (3+ месяца)"].map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Сегмент</label>
+                  <select value={segment} onChange={(e) => setSegment(e.target.value)}
+                    className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none">
+                    {["Все клиенты", "Новые (этот месяц)", "Активные", "Под риском (30+ дней)", "Неактивные (3+ месяца)"].map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Поиск в аудитории</label>
+                  <input
+                    type="text"
+                    value={campaignQuery}
+                    onChange={(e) => setCampaignQuery(e.target.value)}
+                    placeholder="ФИО, телефон, @username"
+                    className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none placeholder-[#5E7488]"
+                  />
+                </div>
               </div>
 
-              {/* Filters */}
               <div>
-                <label className="text-[#8299B4] text-xs font-medium mb-2 block">Дополнительные фильтры</label>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-[#5E7488] text-xs mb-1.5">Пол</p>
-                    <div className="flex gap-1">
-                      {[["all","Все"],["Ж","Ж"],["М","М"]].map(([val, lbl]) => (
-                        <button key={val} onClick={() => setGenderModalFilter(val)}
-                          className={`flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ${genderModalFilter === val ? "bg-[#00FF00]/10 border-[#00FF00]/30 text-[#00FF00]" : "bg-[#0A0D14] border-[#223444] text-[#8299B4] hover:text-[#EDF2FA]"}`}>
-                          {lbl}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[#5E7488] text-xs mb-1.5">Выручка от, ₽</p>
-                    <input
-                      type="number"
-                      value={revenueFrom}
-                      onChange={(e) => setRevenueFrom(e.target.value)}
-                      placeholder="0"
-                      min="0"
-                      className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-1.5 outline-none placeholder-[#5E7488]"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[#5E7488] text-xs mb-1.5">Ценность от, ₽</p>
-                    <input
-                      type="number"
-                      value={ltvFrom}
-                      onChange={(e) => setLtvFrom(e.target.value)}
-                      placeholder="0"
-                      min="0"
-                      className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-1.5 outline-none placeholder-[#5E7488]"
-                    />
+                <label className="text-[#8299B4] text-xs font-medium mb-2 block">Подробные фильтры аудитории</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <select value={genderModalFilter} onChange={(e) => setGenderModalFilter(e.target.value)}
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
+                    <option value="all">Пол: все</option>
+                    <option value="Ж">Пол: Ж</option>
+                    <option value="М">Пол: М</option>
+                  </select>
+                  <select value={campaignChannelFilter} onChange={(e) => setCampaignChannelFilter(e.target.value)}
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
+                    <option value="all">Канал: все</option>
+                    {channels.map((ch) => <option key={ch} value={ch}>{`Канал: ${ch}`}</option>)}
+                  </select>
+                  <select value={campaignRiskFilter} onChange={(e) => setCampaignRiskFilter(e.target.value)}
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
+                    <option value="all">Риск: любой</option>
+                    <option value="low">Риск: низкий</option>
+                    <option value="medium">Риск: средний</option>
+                    <option value="high">Риск: высокий</option>
+                  </select>
+                  <select value={campaignTelegramFilter} onChange={(e) => setCampaignTelegramFilter(e.target.value as TelegramFilter)}
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
+                    <option value="all">Telegram: любой</option>
+                    <option value="yes">Telegram: есть</option>
+                    <option value="no">Telegram: нет</option>
+                  </select>
+
+                  <input
+                    type="number"
+                    value={revenueFrom}
+                    onChange={(e) => setRevenueFrom(e.target.value)}
+                    placeholder="Выручка от, ₽"
+                    min="0"
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none placeholder-[#5E7488]"
+                  />
+                  <input
+                    type="number"
+                    value={revenueTo}
+                    onChange={(e) => setRevenueTo(e.target.value)}
+                    placeholder="Выручка до, ₽"
+                    min="0"
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none placeholder-[#5E7488]"
+                  />
+                  <input
+                    type="number"
+                    value={scoreFrom}
+                    onChange={(e) => setScoreFrom(e.target.value)}
+                    placeholder="Скор от"
+                    min="0"
+                    max="100"
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none placeholder-[#5E7488]"
+                  />
+                  <div className="flex items-center text-xs text-[#8299B4] px-2.5 py-2 rounded-md border border-[#223444] bg-[#0A0D14]">
+                    Получатели: <span className="ml-1 text-[#00FF00] font-semibold">{campaignRecipients.length}</span>
                   </div>
                 </div>
-                <p className="text-[#5E7488] text-xs mt-2">
-                  Под фильтры попадают: <span className="text-[#00FF00] font-semibold">{campaignRecipients.length}</span> из {clients.length} клиентов
-                </p>
               </div>
 
-              {/* Message text */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[#8299B4] text-xs font-medium">Текст сообщения</label>
@@ -566,9 +710,16 @@ export default function ClientsPage() {
                     campaign_name: campaignName,
                     segment,
                     text: msgText,
-                    gender: genderModalFilter,
-                    revenue_from: revenueFrom,
-                    ltv_from: ltvFrom,
+                    filters: {
+                      query: campaignQuery,
+                      gender: genderModalFilter,
+                      channel: campaignChannelFilter,
+                      churn_risk: campaignRiskFilter,
+                      telegram: campaignTelegramFilter,
+                      revenue_from: revenueFrom,
+                      revenue_to: revenueTo,
+                      score_from: scoreFrom,
+                    },
                     recipients_count: campaignRecipients.length,
                     recipient_ids: campaignRecipients.map((c) => c.id),
                   }, role);
