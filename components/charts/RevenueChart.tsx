@@ -9,7 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { revenueData } from "@/lib/mockData";
+
+type RevenuePoint = { month: string; revenue: number; expenses: number };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -32,13 +33,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function RevenueChart() {
+export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
   return (
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка за год</h3>
-          <p className="text-[#5E7488] text-sm">Март 2025 — Февраль 2026</p>
+          <p className="text-[#5E7488] text-sm">Последние 12 месяцев (real-time)</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
@@ -52,55 +53,26 @@ export default function RevenueChart() {
         </div>
       </div>
       <div className="flex-1 min-h-0" style={{ minHeight: 220 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={revenueData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-          <defs>
-            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="expensesGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4a5568" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#4a5568" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
-          <XAxis
-            dataKey="month"
-            tick={{ fill: "#5E7488", fontSize: 12 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fill: "#5E7488", fontSize: 12 }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => `${v / 1000}к`}
-            width={45}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="revenue"
-            name="Выручка"
-            stroke="#00FF00"
-            strokeWidth={2}
-            fill="url(#revenueGrad)"
-            dot={false}
-            activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }}
-          />
-          <Area
-            type="monotone"
-            dataKey="expenses"
-            name="Расходы"
-            stroke="#4a5568"
-            strokeWidth={2}
-            fill="url(#expensesGrad)"
-            dot={false}
-            activeDot={{ r: 4, fill: "#4a5568", strokeWidth: 0 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="expensesGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#4a5568" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#4a5568" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
+            <XAxis dataKey="month" tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}к`} width={45} />
+            <Tooltip content={<CustomTooltip />} />
+            <Area type="monotone" dataKey="revenue" name="Выручка" stroke="#00FF00" strokeWidth={2} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
+            <Area type="monotone" dataKey="expenses" name="Расходы" stroke="#4a5568" strokeWidth={2} fill="url(#expensesGrad)" dot={false} activeDot={{ r: 4, fill: "#4a5568", strokeWidth: 0 }} />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
