@@ -197,9 +197,9 @@ export default function ClientsPage() {
   const [campaignName, setCampaignName] = useState("");
   const [campaignQuery, setCampaignQuery] = useState("");
   const [genderModalFilter, setGenderModalFilter] = useState("all");
-  const [campaignChannelFilter, setCampaignChannelFilter] = useState("all");
+  const [campaignChannelFilter, setCampaignChannelFilter] = useState("Telegram");
   const [campaignRiskFilter, setCampaignRiskFilter] = useState("all");
-  const [campaignTelegramFilter, setCampaignTelegramFilter] = useState<TelegramFilter>("all");
+  const [campaignTelegramFilter, setCampaignTelegramFilter] = useState<TelegramFilter>("yes");
   const [revenueFrom, setRevenueFrom] = useState("");
   const [revenueTo, setRevenueTo] = useState("");
   const [scoreFrom, setScoreFrom] = useState("");
@@ -286,9 +286,9 @@ export default function ClientsPage() {
     const options: ClientFilterOptions = {
       segment: CAMPAIGN_SEGMENT_TO_KEY[segment] || "all",
       gender: genderModalFilter,
-      channel: campaignChannelFilter,
+      channel: "Telegram",
       churnRisk: campaignRiskFilter,
-      telegram: campaignTelegramFilter,
+      telegram: "yes",
       query: campaignQuery,
       minRevenue: toNumberOrNull(revenueFrom),
       maxRevenue: toNumberOrNull(revenueTo),
@@ -302,9 +302,7 @@ export default function ClientsPage() {
     clients,
     segment,
     genderModalFilter,
-    campaignChannelFilter,
     campaignRiskFilter,
-    campaignTelegramFilter,
     campaignQuery,
     revenueFrom,
     revenueTo,
@@ -644,6 +642,7 @@ export default function ClientsPage() {
 
               <div>
                 <label className="text-[#8299B4] text-xs font-medium mb-2 block">Подробные фильтры аудитории</label>
+                <p className="text-[#5E7488] text-xs mb-3">Рассылка отправляется только в Telegram клиентам с доступным Telegram-контактом.</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <select value={genderModalFilter} onChange={(e) => setGenderModalFilter(e.target.value)}
                     className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
@@ -652,9 +651,9 @@ export default function ClientsPage() {
                     <option value="М">Пол: М</option>
                   </select>
                   <select value={campaignChannelFilter} onChange={(e) => setCampaignChannelFilter(e.target.value)}
-                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
-                    <option value="all">Канал: все</option>
-                    {channels.map((ch) => <option key={ch} value={ch}>{`Канал: ${ch}`}</option>)}
+                    disabled
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none opacity-70 cursor-not-allowed">
+                    <option value="Telegram">Канал: Telegram</option>
                   </select>
                   <select value={campaignRiskFilter} onChange={(e) => setCampaignRiskFilter(e.target.value)}
                     className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
@@ -664,10 +663,9 @@ export default function ClientsPage() {
                     <option value="high">Риск: высокий</option>
                   </select>
                   <select value={campaignTelegramFilter} onChange={(e) => setCampaignTelegramFilter(e.target.value as TelegramFilter)}
-                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none">
-                    <option value="all">Telegram: любой</option>
+                    disabled
+                    className="bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-xs rounded-md px-2.5 py-2 outline-none opacity-70 cursor-not-allowed">
                     <option value="yes">Telegram: есть</option>
-                    <option value="no">Telegram: нет</option>
                   </select>
 
                   <input
@@ -767,13 +765,14 @@ export default function ClientsPage() {
                   await callWebhook("rassylka_zapustit", {
                     campaign_name: campaignName,
                     segment,
+                    transport: "telegram",
                     text: msgText,
                     filters: {
                       query: campaignQuery,
                       gender: genderModalFilter,
-                      channel: campaignChannelFilter,
+                      channel: "Telegram",
                       churn_risk: campaignRiskFilter,
-                      telegram: campaignTelegramFilter,
+                      telegram: "yes",
                       revenue_from: revenueFrom,
                       revenue_to: revenueTo,
                       score_from: scoreFrom,

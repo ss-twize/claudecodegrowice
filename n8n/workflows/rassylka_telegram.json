@@ -1,0 +1,214 @@
+{
+  "name": "Growice Telegram Campaign Launcher",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "growice/rassylka_zapustit",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "Webhook_Trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1160,
+        80
+      ],
+      "webhookId": "growice-rassylka-zapustit"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst params = body.params ?? {};\nconst recipientIds = Array.isArray(params.recipient_ids) ? params.recipient_ids.map(String).filter(Boolean) : [];\nif (!recipientIds.length) {\n  throw new Error('recipient_ids is empty');\n}\nreturn [{\n  json: {\n    org_uid: body.org_uid,\n    action_code: body.action_code,\n    role: body.role ?? null,\n    client_time: body.client_time ?? null,\n    campaign_name: params.campaign_name || 'Telegram campaign',\n    segment: params.segment || 'Все клиенты',\n    text: params.text || '',\n    filters: params.filters || {},\n    recipients_count: Number(params.recipients_count || recipientIds.length),\n    recipient_ids: recipientIds,\n    transport: params.transport || 'telegram'\n  }\n}];"
+      },
+      "id": "Normalize_Request",
+      "name": "Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "clients_tg",
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "in",
+              "keyValue": "={{ $json.recipient_ids.join(',') }}"
+            },
+            {
+              "keyName": "tg_username",
+              "condition": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "Load_Recipients",
+      "name": "Load Telegram Recipients",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        80
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Growice Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const campaign = $('Normalize Request').first().json;\nconst rows = items.map(item => item.json);\nconst valid = rows.filter(row => row.tg_username);\nif (!valid.length) {\n  return [{ json: { ...campaign, sent: 0, skipped: campaign.recipient_ids.length, recipients: [] } }];\n}\nreturn valid.map((row) => ({\n  json: {\n    ...campaign,\n    tg_id: String(row.tg_id),\n    tg_username: row.tg_username.startsWith('@') ? row.tg_username : `@${row.tg_username}`,\n    telegram_chat_id: row.tg_id,\n    client_name: row.name || [row.first_name, row.last_name].filter(Boolean).join(' ') || 'Клиент'\n  }\n}));"
+      },
+      "id": "Prepare_Messages",
+      "name": "Prepare Telegram Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "disableWebPagePreview": true
+        }
+      },
+      "id": "Send_Telegram",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -120,
+        80
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Growice Telegram Bot"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const campaign = $('Normalize Request').first().json;\nconst sentItems = items.filter(item => !item.json.error);\nconst failedItems = items.filter(item => item.json.error);\nreturn [{\n  json: {\n    ok: failedItems.length === 0,\n    action_code: campaign.action_code,\n    campaign_name: campaign.campaign_name,\n    transport: 'telegram',\n    requested_recipients: campaign.recipients_count,\n    resolved_recipients: items.length,\n    sent_count: sentItems.length,\n    failed_count: failedItems.length,\n    failed: failedItems.map(item => ({ recipient: item.json.tg_username || item.json.telegram_chat_id, error: item.json.error }))\n  }\n}];"
+      },
+      "id": "Build_Result",
+      "name": "Build Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Webhook_Response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        80
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Load Telegram Recipients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Telegram Recipients": {
+      "main": [
+        [
+          {
+            "node": "Prepare Telegram Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Telegram Messages": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Build Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Result": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "growice-telegram-campaign"
+}
