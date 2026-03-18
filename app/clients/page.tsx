@@ -665,7 +665,6 @@ export default function ClientsPage() {
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Канал</th>
                   <SortableHeader label="Статус" col="segment" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Риск оттока" col="churnRisk" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <SortableHeader label="Скор" col="score" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Услуги</th>
                 </tr>
               </thead>
@@ -687,7 +686,6 @@ export default function ClientsPage() {
                       <td className="px-5 py-3.5 text-sm whitespace-nowrap"><span className="text-xs px-2 py-1 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">{client.communicationChannel}</span></td>
                       <td className="px-5 py-3.5">{client.segment && segColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>{SEGMENT_LABELS[client.segment]}</span> : <span className="text-[#5E7488]">—</span>}</td>
                       <td className="px-5 py-3.5">{client.churnRisk && riskColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>{RISK_LABELS[client.churnRisk]}</span> : <span className="text-[#5E7488]">—</span>}</td>
-                      <td className="px-5 py-3.5">{client.score > 0 ? <div className="flex items-center gap-2"><div className="w-16 h-1.5 bg-[#1A2535] rounded-full overflow-hidden"><div className="h-full rounded-full bg-[#00FF00]" style={{ width: `${client.score}%` }} /></div><span className="text-[#8299B4] text-xs font-medium">{client.score}</span></div> : <span className="text-[#5E7488]">—</span>}</td>
                       <td className="px-5 py-3.5"><ServicesCell services={client.services} /></td>
                     </tr>
                   );
