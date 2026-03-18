@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Header from "@/components/layout/Header";
 import { useClients } from "@/lib/hooks/useClients";
+import { useCampaignLogs } from "@/lib/hooks/useCampaignLogs";
 import { formatCurrency } from "@/lib/utils";
 import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
 import { useSystemStates } from "@/lib/hooks/useSystemStates";
@@ -11,7 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { callWebhook } from "@/lib/webhooks";
 import { supabase, ORG_UID } from "@/lib/supabase";
 import {
-  Send, Bot, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile, Settings, Power,
+  Send, Bot, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile, Settings, Power, CheckCircle2, AlertCircle,
 } from "lucide-react";
 
 const EMOJIS = [
@@ -176,6 +177,7 @@ function matchesClientFilter(client: {
 export default function ClientsPage() {
   const { role, isOwner } = useAuth();
   const { clients, loading: clientsLoading } = useClients();
+  const { logs: campaignLogs, loading: campaignLogsLoading } = useCampaignLogs();
   const { systems, setSystems } = useSystemStates();
   const autoSystems = systems.filter(s => s.system_code !== "main_agent");
 
@@ -207,8 +209,16 @@ export default function ClientsPage() {
   const [visitsFrom, setVisitsFrom] = useState("");
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [campaignToast, setCampaignToast] = useState<{ type: "success" | "error"; title: string; message: string } | null>(null);
+  const [campaignSending, setCampaignSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!campaignToast) return;
+    const timeoutId = window.setTimeout(() => setCampaignToast(null), 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, [campaignToast]);
 
   useEffect(() => {
     if (!showEmojiPicker) return;
@@ -530,14 +540,71 @@ export default function ClientsPage() {
 
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Результаты кампаний</h3>
-          <p className="text-[#5E7488] text-sm mb-6">История отправленных рассылок</p>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-14 h-14 rounded-xl bg-[#1A2535] border border-[#223444] flex items-center justify-center mb-4">
-              <Send size={22} className="text-[#5E7488]" />
+          <p className="text-[#5E7488] text-sm mb-6">История отправленных рассылок и статусы выполнения</p>
+
+          {campaignLogsLoading ? (
+            <div className="flex items-center justify-center py-12 text-[#5E7488] text-sm">Загрузка логов рассылок...</div>
+          ) : campaignLogs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-14 h-14 rounded-xl bg-[#1A2535] border border-[#223444] flex items-center justify-center mb-4">
+                <Send size={22} className="text-[#5E7488]" />
+              </div>
+              <p className="text-[#EDF2FA] font-medium mb-1">Кампаний пока нет</p>
+              <p className="text-[#5E7488] text-sm max-w-xs">Создайте первую рассылку, нажав кнопку «Новая рассылка»</p>
             </div>
-            <p className="text-[#EDF2FA] font-medium mb-1">Кампаний пока нет</p>
-            <p className="text-[#5E7488] text-sm max-w-xs">Создайте первую рассылку, нажав кнопку «Новая рассылка»</p>
-          </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#1A2535]">
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Дата</th>
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Кампания</th>
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Сегмент</th>
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Канал</th>
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Получатели</th>
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Статус</th>
+                    <th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap min-w-[280px]">Результат</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaignLogs.map((log) => {
+                    const isSuccess = log.status === "успех";
+                    const statusClasses = isSuccess
+                      ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20"
+                      : "bg-red-500/10 text-red-400 border-red-500/20";
+
+                    return (
+                      <tr key={log.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors align-top">
+                        <td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap">
+                          {log.createdAt ? new Date(log.createdAt).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-[#EDF2FA]">{log.campaignName}</div>
+                          <div className="text-xs text-[#5E7488] line-clamp-2 max-w-md">{log.text || "Без текста сообщения"}</div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap">{log.segment}</td>
+                        <td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap uppercase">{log.transport}</td>
+                        <td className="px-4 py-3 text-sm text-[#EDF2FA] font-semibold whitespace-nowrap">{log.recipientsCount}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium whitespace-nowrap ${statusClasses}`}>
+                            {isSuccess ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                            {log.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-[#8299B4]">
+                          {log.errorMessage ? (
+                            <span className="text-red-400">{log.errorMessage}</span>
+                          ) : (
+                            <span>Отправка завершена{log.role ? ` · роль: ${log.role}` : ""}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div>
@@ -589,6 +656,29 @@ export default function ClientsPage() {
           </div>
         </div>
       </div>
+
+      {campaignToast && (
+        <div className="fixed bottom-6 right-6 z-[70] max-w-sm w-[calc(100vw-2rem)] sm:w-full">
+          <div className={`rounded-xl border shadow-2xl px-4 py-3 backdrop-blur-sm ${campaignToast.type === "success" ? "bg-[#0F1622]/95 border-[#00FF00]/30" : "bg-[#0F1622]/95 border-red-500/30"}`}>
+            <div className="flex items-start gap-3">
+              <div className={`mt-0.5 ${campaignToast.type === "success" ? "text-[#00FF00]" : "text-red-400"}`}>
+                {campaignToast.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-[#EDF2FA]">{campaignToast.title}</div>
+                <div className="text-sm text-[#8299B4] mt-1">{campaignToast.message}</div>
+              </div>
+              <button
+                onClick={() => setCampaignToast(null)}
+                className="text-[#5E7488] hover:text-[#EDF2FA] transition-colors"
+                aria-label="Закрыть уведомление"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -762,8 +852,9 @@ export default function ClientsPage() {
               </button>
               <button
                 onClick={async () => {
-                  await callWebhook("rassylka_zapustit", {
-                    campaign_name: campaignName,
+                  setCampaignSending(true);
+                  const result = await callWebhook("rassylka_zapustit", {
+                    campaign_name: campaignName || "Новая рассылка",
                     segment,
                     transport: "telegram",
                     text: msgText,
@@ -782,10 +873,27 @@ export default function ClientsPage() {
                     recipients_count: campaignRecipients.length,
                     recipient_ids: campaignRecipients.map((c) => c.id),
                   }, role);
-                  setShowModal(false);
+
+                  setCampaignSending(false);
+
+                  if (result.ok) {
+                    setCampaignToast({
+                      type: "success",
+                      title: "Рассылка отправлена",
+                      message: `Кампания «${campaignName || "Новая рассылка"}» запущена на ${campaignRecipients.length} получателей.`,
+                    });
+                    setShowModal(false);
+                  } else {
+                    setCampaignToast({
+                      type: "error",
+                      title: result.configured ? "Ошибка отправки" : "Вебхук не настроен",
+                      message: result.error || "Не удалось запустить рассылку. Проверьте настройки интеграции.",
+                    });
+                  }
                 }}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
-                Запустить рассылку
+                disabled={campaignSending || !msgText.trim() || campaignRecipients.length === 0}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                {campaignSending ? "Отправка..." : "Запустить рассылку"}
               </button>
             </div>
           </div>
