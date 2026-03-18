@@ -6,6 +6,7 @@ export interface CampaignLog {
   id: string
   createdAt: string | null
   campaignName: string
+  campaignType: string
   segment: string
   transport: string
   text: string
@@ -32,6 +33,7 @@ function mapRow(row: any): CampaignLog {
     id: String(row.id ?? row.created_at ?? Math.random()),
     createdAt: toIsoDate(row.created_at ?? row.inserted_at ?? row.client_time ?? params.client_time),
     campaignName: String(params.campaign_name || 'Без названия'),
+    campaignType: String(params.campaign_type || 'предложение'),
     segment: String(params.segment || '—'),
     transport: String(params.transport || 'telegram'),
     text: String(params.text || ''),

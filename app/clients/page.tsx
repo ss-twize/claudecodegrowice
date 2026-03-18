@@ -143,6 +143,15 @@ const EMPTY_CLIENT_FILTERS: ClientFilterOptions = {
   reactedToOffers: "all",
 };
 
+type CampaignPreview = {
+  id: string;
+  createdAt: string;
+  campaignName: string;
+  campaignType: string;
+  text: string;
+  recipientsCount: number;
+};
+
 const EMPTY_CAMPAIGN_FILTERS: CampaignFilterOptions = {
   lastVisitFrom: "",
   lastVisitTo: "",
@@ -454,6 +463,7 @@ export default function ClientsPage() {
   const [showModal, setShowModal] = useState(false);
   const [msgText, setMsgText] = useState("");
   const [campaignName, setCampaignName] = useState("");
+  const [campaignType, setCampaignType] = useState("предложение");
   const [campaignQuery, setCampaignQuery] = useState("");
   const [campaignFilters, setCampaignFilters] = useState<CampaignFilterOptions>(EMPTY_CAMPAIGN_FILTERS);
   const [showAdvancedCampaignFilters, setShowAdvancedCampaignFilters] = useState(false);
@@ -461,6 +471,7 @@ export default function ClientsPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [campaignToast, setCampaignToast] = useState<{ type: "success" | "error"; title: string; message: string } | null>(null);
   const [campaignSending, setCampaignSending] = useState(false);
+  const [optimisticCampaigns, setOptimisticCampaigns] = useState<CampaignPreview[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -534,6 +545,32 @@ export default function ClientsPage() {
 
   const clientFilterCount = countAppliedClientFilters({ ...clientFilters, segment: activeSegment === "all" ? clientFilters.segment : activeSegment });
   const campaignFilterCount = countAppliedCampaignFilters(campaignFilters);
+
+  const campaignSignature = (campaign: Pick<CampaignPreview, "campaignName" | "text" | "recipientsCount" | "campaignType">) => `${campaign.campaignName}::${campaign.text}::${campaign.recipientsCount}::${campaign.campaignType}`;
+
+  useEffect(() => {
+    const serverSignatures = new Set(campaignLogs.map((log) => campaignSignature({
+      campaignName: log.campaignName,
+      text: log.text,
+      recipientsCount: log.recipientsCount,
+      campaignType: log.campaignType,
+    })));
+
+    setOptimisticCampaigns((prev) => prev.filter((campaign) => !serverSignatures.has(campaignSignature(campaign))));
+  }, [campaignLogs]);
+
+  const visibleCampaigns = useMemo(() => {
+    const mappedLogs: CampaignPreview[] = campaignLogs.map((log) => ({
+      id: log.id,
+      createdAt: log.createdAt || new Date().toISOString(),
+      campaignName: log.campaignName,
+      campaignType: log.campaignType,
+      text: log.text,
+      recipientsCount: log.recipientsCount,
+    }));
+
+    return [...optimisticCampaigns, ...mappedLogs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [campaignLogs, optimisticCampaigns]);
 
   return (
     <div>
@@ -697,8 +734,8 @@ export default function ClientsPage() {
 
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Результаты кампаний</h3>
-          <p className="text-[#5E7488] text-sm mb-6">История отправленных рассылок и статусы выполнения</p>
-          {campaignLogsLoading ? <div className="flex items-center justify-center py-12 text-[#5E7488] text-sm">Загрузка логов рассылок...</div> : campaignLogs.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-center"><div className="w-14 h-14 rounded-xl bg-[#1A2535] border border-[#223444] flex items-center justify-center mb-4"><Send size={22} className="text-[#5E7488]" /></div><p className="text-[#EDF2FA] font-medium mb-1">Кампаний пока нет</p><p className="text-[#5E7488] text-sm max-w-xs">Создайте первую рассылку, нажав кнопку «Новая рассылка»</p></div> : <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b border-[#1A2535]"><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Дата</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Кампания</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Сегмент</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Канал</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Получатели</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Статус</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap min-w-[280px]">Результат</th></tr></thead><tbody>{campaignLogs.map((log) => { const isSuccess = log.status === "успех"; const statusClasses = isSuccess ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-red-500/10 text-red-400 border-red-500/20"; return <tr key={log.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors align-top"><td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap">{log.createdAt ? new Date(log.createdAt).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td><td className="px-4 py-3"><div className="text-sm font-medium text-[#EDF2FA]">{log.campaignName}</div><div className="text-xs text-[#5E7488] line-clamp-2 max-w-md">{log.text || "Без текста сообщения"}</div></td><td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap">{log.segment}</td><td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap uppercase">{log.transport}</td><td className="px-4 py-3 text-sm text-[#EDF2FA] font-semibold whitespace-nowrap">{log.recipientsCount}</td><td className="px-4 py-3"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium whitespace-nowrap ${statusClasses}`}>{isSuccess ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}{log.status}</span></td><td className="px-4 py-3 text-sm text-[#8299B4]">{log.errorMessage ? <span className="text-red-400">{log.errorMessage}</span> : <span>Отправка завершена{log.role ? ` · роль: ${log.role}` : ""}</span>}</td></tr>; })}</tbody></table></div>}
+          <p className="text-[#5E7488] text-sm mb-6">История отправленных рассылок</p>
+          {campaignLogsLoading && visibleCampaigns.length === 0 ? <div className="flex items-center justify-center py-12 text-[#5E7488] text-sm">Загрузка кампаний...</div> : visibleCampaigns.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-center"><div className="w-14 h-14 rounded-xl bg-[#1A2535] border border-[#223444] flex items-center justify-center mb-4"><Send size={22} className="text-[#5E7488]" /></div><p className="text-[#EDF2FA] font-medium mb-1">Кампаний пока нет</p><p className="text-[#5E7488] text-sm max-w-xs">Запустите первую рассылку, и она сразу появится в таблице ниже.</p></div> : <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b border-[#1A2535]"><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Дата запуска</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Название</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 min-w-[320px]">Текст кампании</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Получатели</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Тип</th></tr></thead><tbody>{visibleCampaigns.map((campaign) => <tr key={campaign.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors align-top"><td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap">{new Date(campaign.createdAt).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td><td className="px-4 py-3 text-sm font-medium text-[#EDF2FA] whitespace-nowrap">{campaign.campaignName}</td><td className="px-4 py-3 text-sm text-[#8299B4]">{campaign.text || "Без текста сообщения"}</td><td className="px-4 py-3 text-sm font-semibold text-[#EDF2FA] whitespace-nowrap">{campaign.recipientsCount}</td><td className="px-4 py-3"><span className="inline-flex items-center rounded-md border border-[#223444] bg-[#1A2535] px-2.5 py-1 text-xs font-medium text-[#EDF2FA] capitalize">{campaign.campaignType}</span></td></tr>)}</tbody></table></div>}
         </div>
 
         <div>
@@ -730,10 +767,14 @@ export default function ClientsPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div className="md:col-span-2">
                   <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Название кампании</label>
                   <FilterInput value={campaignName} onChange={(e) => setCampaignName(e.target.value)} placeholder="Например: Реактивация потерянных клиентов" className="w-full text-sm py-2.5" />
+                </div>
+                <div>
+                  <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Тип кампании</label>
+                  <FilterSelect value={campaignType} onChange={(e) => setCampaignType(e.target.value)} className="w-full text-sm py-2.5"><option value="скидка">Скидка</option><option value="акция">Акция</option><option value="предложение">Предложение</option></FilterSelect>
                 </div>
                 <div>
                   <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Логика условий</label>
@@ -815,8 +856,10 @@ export default function ClientsPage() {
               <button
                 onClick={async () => {
                   setCampaignSending(true);
+                  const launchedAt = new Date().toISOString();
                   const result = await callWebhook("rassylka_zapustit", {
                     campaign_name: campaignName || "Новая рассылка",
+                    campaign_type: campaignType,
                     transport: campaignFilters.channel === "all" ? "telegram" : campaignFilters.channel.toLowerCase(),
                     text: msgText,
                     filters: campaignFilters,
@@ -825,6 +868,14 @@ export default function ClientsPage() {
                   }, role);
                   setCampaignSending(false);
                   if (result.ok) {
+                    setOptimisticCampaigns((prev) => [{
+                      id: `local-${launchedAt}`,
+                      createdAt: launchedAt,
+                      campaignName: campaignName || "Новая рассылка",
+                      campaignType,
+                      text: msgText,
+                      recipientsCount: campaignRecipients.length,
+                    }, ...prev]);
                     setCampaignToast({ type: "success", title: "Рассылка отправлена", message: `Кампания «${campaignName || "Новая рассылка"}» запущена на ${campaignRecipients.length} получателей.` });
                     setShowModal(false);
                   } else {
