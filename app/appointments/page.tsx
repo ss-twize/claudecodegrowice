@@ -5,7 +5,6 @@ import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
 import AppointmentsTable from "@/components/appointments/AppointmentsTable";
 import { useAppointments } from "@/lib/hooks/useAppointments";
-import { appointmentsFunnel } from "@/lib/mockData";
 import { CalendarCheck, XCircle, Clock, AlertTriangle } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -23,8 +22,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const funnelMax = appointmentsFunnel[0].count;
-
 export default function AppointmentsPage() {
   const { appointments, loading } = useAppointments(300);
 
@@ -34,6 +31,24 @@ export default function AppointmentsPage() {
   const cancelled = appointments.filter((a) => a.status === "Отменено").length;
   const pending = appointments.filter((a) => a.status === "Ожидание").length;
   const cancelRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
+
+  const funnelData = useMemo(() => {
+    const all = appointments.length;
+    const booked = all;
+    const confirmedCnt = appointments.filter((a) => a.status === "Подтверждено").length;
+    const doneCnt = appointments.filter((a) => a.status === "Завершено").length;
+    const paidCnt = appointments.filter((a) => a.price > 0).length;
+
+    return [
+      { stage: "Запросы", count: all },
+      { stage: "Записаны", count: booked },
+      { stage: "Подтверждены", count: confirmedCnt },
+      { stage: "Завершены", count: doneCnt },
+      { stage: "Оплачены", count: paidCnt },
+    ];
+  }, [appointments]);
+
+  const funnelMax = Math.max(funnelData[0]?.count || 0, 1);
 
   // Hour heatmap from real appointment times
   const hourData = useMemo(() => {
@@ -92,10 +107,10 @@ export default function AppointmentsPage() {
               <p className="text-[#5E7488] text-sm">Путь от обращения до оплаты</p>
             </div>
             <div className="space-y-3">
-              {appointmentsFunnel.map((stage, i) => {
+              {funnelData.map((stage, i) => {
                 const pct = Math.round((stage.count / funnelMax) * 100);
                 const convFromPrev = i > 0
-                  ? Math.round((stage.count / appointmentsFunnel[i - 1].count) * 100)
+                  ? Math.round((stage.count / Math.max(funnelData[i - 1].count, 1)) * 100)
                   : 100;
                 return (
                   <div key={stage.stage}>
@@ -129,7 +144,7 @@ export default function AppointmentsPage() {
             <div className="mt-5 pt-4 border-t border-[#1A2535] flex items-center justify-between">
               <span className="text-[#5E7488] text-sm">Итоговая конверсия</span>
               <span className="text-[#00FF00] font-bold text-xl">
-                {Math.round((appointmentsFunnel[appointmentsFunnel.length - 1].count / funnelMax) * 100)}%
+                {Math.round(((funnelData[funnelData.length - 1]?.count || 0) / funnelMax) * 100)}%
               </span>
             </div>
           </div>

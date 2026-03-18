@@ -6,10 +6,10 @@ import type { MetricTooltipDef } from "@/components/ui/MetricCard";
 import RevenueChart from "@/components/charts/RevenueChart";
 import ServicesChart from "@/components/charts/ServicesChart";
 import AppointmentsChart from "@/components/charts/AppointmentsChart";
-import { recentActivity } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useDashboardStats } from "@/lib/hooks/useDashboardStats";
+import { useRealtimePlatform } from "@/lib/hooks/useRealtimePlatform";
 import {
   TrendingUp,
   Users,
@@ -47,6 +47,7 @@ const activityIcons: Record<string, React.ReactNode> = {
 export default function DashboardPage() {
   const { isOwner } = useAuth();
   const { stats, loading } = useDashboardStats();
+  const { revenueSeries, servicesSeries, appointmentsByDay, activity } = useRealtimePlatform();
 
   return (
     <div>
@@ -94,22 +95,22 @@ export default function DashboardPage() {
         {/* Charts row */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="xl:col-span-2 flex flex-col">
-            <RevenueChart />
+            <RevenueChart data={revenueSeries} />
           </div>
-          <ServicesChart />
+          <ServicesChart data={servicesSeries} />
         </div>
 
         {/* Bottom row */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-stretch">
           <div className="xl:col-span-2 flex flex-col">
-            <AppointmentsChart />
+            <AppointmentsChart data={appointmentsByDay} />
           </div>
 
           {/* Recent Activity */}
           <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col">
             <h3 className="text-[#EDF2FA] font-semibold mb-4 font-unbounded">Последние события</h3>
             <div className="space-y-3">
-              {recentActivity.map((activity) => (
+              {activity.map((activity) => (
                 <div
                   key={activity.id}
                   className="flex items-start gap-3 pb-3 border-b border-[#1A2535] last:border-0 last:pb-0"

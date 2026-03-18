@@ -39,7 +39,7 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function load() {
+    const load = async () => {
       const curr = monthBounds(0)
       const prev = monthBounds(-1)
 
@@ -49,14 +49,10 @@ export function useDashboardStats() {
         { count: currNew },
         { count: prevNew },
       ] = await Promise.all([
-        supabase.from('appointments').select('price')
-          .gte('date', curr.start).lte('date', curr.end + 'T23:59:59'),
-        supabase.from('appointments').select('price')
-          .gte('date', prev.start).lte('date', prev.end + 'T23:59:59'),
-        supabase.from('clients_tg').select('tg_id', { count: 'exact', head: true })
-          .gte('created_at', curr.start),
-        supabase.from('clients_tg').select('tg_id', { count: 'exact', head: true })
-          .gte('created_at', prev.start).lt('created_at', curr.start),
+        supabase.from('appointments').select('price').gte('date', curr.start).lte('date', `${curr.end}T23:59:59`),
+        supabase.from('appointments').select('price').gte('date', prev.start).lte('date', `${prev.end}T23:59:59`),
+        supabase.from('clients_tg').select('tg_id', { count: 'exact', head: true }).gte('created_at', curr.start),
+        supabase.from('clients_tg').select('tg_id', { count: 'exact', head: true }).gte('created_at', prev.start).lt('created_at', curr.start),
       ])
 
       const currRev = (currAppts || []).reduce((s, r) => s + (Number(r.price) || 0), 0)
@@ -75,7 +71,23 @@ export function useDashboardStats() {
       })
       setLoading(false)
     }
+
     load()
+
+    const apptCh = supabase
+      .channel('dashboard_stats_appointments_ch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, load)
+      .subscribe()
+
+    const clientsCh = supabase
+      .channel('dashboard_stats_clients_ch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients_tg' }, load)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(apptCh)
+      supabase.removeChannel(clientsCh)
+    }
   }, [])
 
   return { stats, loading }
