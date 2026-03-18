@@ -7,6 +7,7 @@ const DEFAULT_WEBHOOK_URLS: Record<string, string> = {
 }
 
 async function getUrl(code: string): Promise<string | null> {
+  if (code === 'rassylka_zapustit') return 'https://n8n.srv1090249.hstgr.cloud/webhook/growice/rassylka_zapustit'
   if (!urlCache) {
     const { data } = await supabase
       .from('webhooks')
