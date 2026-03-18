@@ -10,17 +10,17 @@ import { useAuth } from "@/lib/auth";
 import { useMapRatings } from "@/lib/hooks/useMapRatings";
 
 const allMainNav = [
-  { href: "/",            label: "Главная",            icon: LayoutDashboard, ownerOnly: false },
-  { href: "/clients",     label: "Клиенты и Рассылка", icon: Megaphone,       ownerOnly: false },
-  { href: "/appointments",label: "Записи",             icon: CalendarDays,    ownerOnly: false },
-  { href: "/staff",       label: "Персонал",           icon: UserCog,         ownerOnly: true  },
-  { href: "/finances",    label: "Финансы",            icon: DollarSign,      ownerOnly: true  },
+  { href: "/",             label: "Главная",            icon: LayoutDashboard, ownerOnly: false },
+  { href: "/analytics",    label: "Аналитика",          icon: BarChart3,       ownerOnly: false },
+  { href: "/appointments", label: "Записи",             icon: CalendarDays,    ownerOnly: false },
+  { href: "/clients",      label: "Клиенты и Рассылка", icon: Megaphone,       ownerOnly: false },
 ];
 
 const allUtilNav = [
-  { href: "/analytics", label: "Аналитика",       icon: BarChart3,  ownerOnly: true  },
-  { href: "/system",    label: "Система и оплата", icon: CreditCard, ownerOnly: false },
-  { href: "/settings",  label: "Настройки",        icon: Settings,   ownerOnly: false },
+  { href: "/finances", label: "Финансы",           icon: DollarSign, ownerOnly: false },
+  { href: "/staff",    label: "Персонал",          icon: UserCog,    ownerOnly: false },
+  { href: "/settings", label: "Настройки",         icon: Settings,   ownerOnly: false },
+  { href: "/system",   label: "Система и оплата",  icon: CreditCard, ownerOnly: false },
 ];
 
 function NavItem({ href, label, icon: Icon }: { href: string; label: string; icon: any }) {
@@ -78,8 +78,8 @@ export default function Sidebar() {
   const { role, setRole, isOwner } = useAuth();
   const ratings = useMapRatings();
 
-  const mainNav = allMainNav.filter((item) => !item.ownerOnly || isOwner);
-  const utilNav = allUtilNav.filter((item) => !item.ownerOnly || isOwner);
+  const mainNav = allMainNav;
+  const utilNav = allUtilNav;
 
   return (
     <aside className="fixed left-0 top-0 h-full w-60 bg-[#07090E] border-r border-[#141E2B] flex flex-col z-50">
