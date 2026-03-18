@@ -2,6 +2,10 @@ import { supabase, ORG_UID } from './supabase'
 
 let urlCache: Record<string, string> | null = null
 
+const DEFAULT_WEBHOOK_URLS: Record<string, string> = {
+  rassylka_zapustit: 'https://n8n.srv1090249.hstgr.cloud/webhook/growice/rassylka_zapustit',
+}
+
 async function getUrl(code: string): Promise<string | null> {
   if (!urlCache) {
     const { data } = await supabase
@@ -15,7 +19,7 @@ async function getUrl(code: string): Promise<string | null> {
   }
   if (urlCache[code]) return urlCache[code]
   const envKey = `NEXT_PUBLIC_WEBHOOK_${code.toUpperCase().replace(/-/g, '_')}`
-  return (process.env as any)[envKey] || null
+  return (process.env as any)[envKey] || DEFAULT_WEBHOOK_URLS[code] || null
 }
 
 async function log(code: string, params: any, status: string, error?: string, role?: string) {
