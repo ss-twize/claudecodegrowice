@@ -1,0 +1,4213 @@
+{
+  "name": "AiAdmin Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "minimax/minimax-m2.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        448,
+        768
+      ],
+      "id": "68ac39ec-57b1-45bc-a272-7e4fc15d8dbe",
+      "name": "M",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FuLG2Pya7UCWtKrU",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get a list of services available for booking",
+        "url": "=https://api.yclients.com/api/v1/book_services/1647948",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "service_ids",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `ID услуг`, 'string') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            }
+          ]
+        },
+        "options": {
+          "queryParameterArrays": "brackets"
+        }
+      },
+      "id": "00e06950-c0fa-4f1a-addd-6cf0d42915ae",
+      "name": "get_ava_services",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        1120
+      ],
+      "notesInFlow": true,
+      "disabled": true,
+      "notes": "не воркает"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get list of staff members in the company",
+        "url": "https://api.yclients.com/api/v1/company/1647948/staff",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc922e28-6531-44ec-81ec-e6b138870759",
+      "name": "get_staff",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "get staff schedule",
+        "url": "=https://api.yclients.com/api/v1/company/1647948/staff/schedule",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "start_date",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Дата начала поиска расписаний сотрудников`, 'string') }}"
+            },
+            {
+              "name": "end_date",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Дата окончания поиска расписаний сотрудников`, 'string') }}"
+            },
+            {
+              "name": "staff_ids",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Набор идентификаторов сотрудников, по которым должен осуществляться поиск расписаний`, 'string') }}"
+            },
+            {
+              "name": "busy_intervals",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `временные промежутки когда сотрудник занят`, 'string') }}"
+            },
+            {
+              "name": "off_day_type",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `время или дни, когда сотрудник не работает`, 'string') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1c5a408d-617c-4c6c-867f-82c65a128879",
+      "name": "staff_schedule",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1376,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are a beauty salon assistant on multiple platforms.\nRespond politely and to the point to the client.\n\n#Rules:\n- FULFILL THE CLIENT'S REQUEST IMMEDIATELY WITHOUT ANY CONFIRMATION\n- Don't ask again\n- You must process phone number only in format without \"-\" between numbers. Like this: 71005003040\n- When offering an appointment time, you should consider the length of the service. For example, if the service lasts 1.5 hours, and the client wants an appointment time that won't allow them to complete it because the salon will be closed by the time the service is expected to end. If the salon is open until 9:30 PM, and the service lasts 1.5 hours, you can offer an appointment an hour and a half before the end of the working day.\n\n#COMMUNICATION RULES:\n- Rely only on facts and information from tools. Never make things up; verify everything using tools.\n- If the price for a service isn't specified precisely (from X to Y), then write: \"from X rubles.\"\n- Offer available appointment times like this (example): 8 AM to 12 PM and 4:30 PM to 6:00 PM\n- Ask client's their fullname (name, surname) when you need to create an appointment.\n\n#Beauty Salon Information:\n- Appointments can only be made for full time periods (example: 10:00 / 10:30 / 12:00 / 14:30, etc.).\n- Address: ТЦ \"Аура\".\n- A salon may sometimes send people messages with questions to clarify why the client stopped visiting the salon. Your job at this point is to try to bring the client back.\n\nToday's Date: {{ $now }}\n\n#Tools:\n- think – use to think about anything if you need to.\n- vectore_storage – use to read iformation about the company and answer user's questions.\n- get_client → use to search client via client id (not phone), get it from the \"create_client\" tool\n- create_client → use only if the client doesn't exist\n- get_staff / get_services → to find available technicians and services\n- get_ava_services → use to check service availability\n- \"create_book\" → to schedule a client for a service, the current date, you can use this as a starting point when creating the record.\n- Cancel Record → to cancel a record (record_id required).\n- booking_dates – use to search available slots for client booking.\n- get_staff_info – use to get IDs and other employee information.\n- staff_schedule – use to view staff schedules. First, get the information from \"get_staff_info\" and then use this tool. Always do this before attempting to book a client.\n- get_bookings – use to get client records (information about them).\n- update_book – use to update book.\n- gs_get_bookinfo – use to catch record_id and record_hash\n- delete_book – use to delete book.\n- Customer_Retainer – use to retain clients or sell extra services.\n- Human_help – use when you can't answer user's questions. But use it only in risky or really difficult situations.\n\nBefore booking, ALWAYS get a list of services using get_services and select the service_id from it. Never pass service_id=0 or an empty one. If the service you need is not available, check with the client.\n\nHow to use:\n22. Do not create an appointment if the clients did not tell you desired date of visit.\n1. First, ask the client what service they want. Also, tell them the price and duration of the service.\n10. When a client asks about available services, use \"get_services\" to find available services.\n11. If a client asks about a service that you didn't find in \"get_services,\" use \"get_services\" to view information about it.\n12. If the client has specified the service they want, first check its availability using \"get_ava_services\".\n8. When a client asks about available time slots, use \"get_staff\" to get staff information.\n9. Before using \"booking_dates,\" use the \"get_staff\" tool to get staff information.\n19. When you need to check free timeslots with \"booking_dates\" you must first catch data from \"get_staff\" and \"get_services\".\n2. Offer the client several available appointment options (the closest ones).\n3. Ask for their name and phone number in a single message to add the client to the database only after finding a suitable time.\n5. When a client contacts you, don't create them again; first try to find them in the database using \"get_client\".\n6. If there's no client, use \"create_client\".\n23. Always check if the client is in the database; if not, add them using the tool \"create_client\".\n4. If they want to book, specify the date/time, service, and technician, then use \"create_book\".\n13. When you have just created a book → use \"gs_record_cr\" to write booking info.\n\n14. When the user asks to reschedule or cancel a booking: You MUST FIRST retrieve booking data from \"get_bookings\".\n21. If a client asks to reschedule an appointment, ask for their full name, then find their appointment, and then ask what date to reschedule it to.\n7. If they ask to cancel an appointment, try rescheduling it for another time or day. If the client refuses or wants to cancel, first find the record_id of that appointment using the \"get_bookings\" tool, then use \"Cancel Record.\"\n- If the client wants to cancell an appointment use \"Clients_Retainer\" and your goal – retain clients and offer him the best conditions.\n\n18. If a client asks anyting like \"do i have any booked appointments?\" You must rely only on facts, which means you must check the tools and then give an answer.\n\n16. Everytime you need to use \"get_bookings\" you must first use \"gs_get_bookinfo\" to catch record_id and record_hash.\n17. Everytime when you need to update or delete any appointment you must first catch record_id and record_hash from \"gs_get_bookinfo\".\n15. Whent the user asks to delete/cancel booking:\n1) You need to find the client's last record by phone number and take the \"record_id\" and \"record_hash\" from there. \n2) Then You search for the user's record in the \"get_bookings\" tool. \n3) After that You take the information from \"gs_get_bookinfo\" and delete the record using \"delete_book\".\n\n20. Never create a post without human approval.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        464
+      ],
+      "id": "57c65dc5-8073-4721-8524-8cc0c5910ed1",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 250,
+      "maxTries": 5,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "description": "call to delete appointment",
+        "workflowId": {
+          "__rl": true,
+          "value": "pbWtCriTuU1ozq91",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/pbWtCriTuU1ozq91",
+          "cachedResultName": "delete_book"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('record_id', `record_id`, 'string') }}",
+            "record_hash": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('record_hash', `record_hash`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "record_hash",
+              "displayName": "record_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1936,
+        912
+      ],
+      "id": "dd57c0c3-0ce1-4e18-a77f-f5b05bbf89eb",
+      "name": "delete_book"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use to search client via client id (not phone), get it from the \"create_client\" tool",
+        "url": "=https://api.yclients.com/api/v1/client/1647948/{{ $fromAI('id') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47f03d94-d3e7-4ce0-9499-a47aa0ac5767",
+      "name": "get_client",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1296,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "search client",
+        "method": "POST",
+        "url": "=https://api.yclients.com/api/v1/company/1647948/clients/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"page\": 1,\n  \"page_size\": 1,\n  \"filters\": [\n    {\n      \"type\": \"quick_search\",\n      \"state\": {\n        \"value\": \"{{$json.phone}}\"\n      }\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "57bcdbf2-d99d-4670-b19f-e45c64f756ef",
+      "name": "get_clients_list",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1136,
+        912
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        768
+      ],
+      "id": "09fe6d19-9b52-4a84-8483-88fc3de349ce",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "description": "call to search free timeslots for booking",
+        "workflowId": {
+          "__rl": true,
+          "value": "BAZyYLjb1XYEBaS2",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BAZyYLjb1XYEBaS2",
+          "cachedResultName": "booking_dates"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "service_ids": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('service_ids', ``, 'string') }}",
+            "staff_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('staff_id', ``, 'string') }}",
+            "services": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('services', ``, 'string') }}",
+            "date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', ``, 'string') }}",
+            "date_from": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date_from', ``, 'string') }}",
+            "date_to": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date_to', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "service_ids",
+              "displayName": "service_ids",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "staff_id",
+              "displayName": "staff_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "services",
+              "displayName": "services",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_from",
+              "displayName": "date_from",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_to",
+              "displayName": "date_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        912
+      ],
+      "id": "0ca091bb-1fd8-4ef3-8b6f-8766ffb28ac2",
+      "name": "booking_dates"
+    },
+    {
+      "parameters": {
+        "description": "use to create an appointment. but firstly use \"get_services\" and \"get_staff\" to take information",
+        "workflowId": {
+          "__rl": true,
+          "value": "3ZcJYOVdftZjNa3r",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/3ZcJYOVdftZjNa3r",
+          "cachedResultName": "create YCLIENTS record"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('phone', `client's phone number`, 'string') }}",
+            "fullname": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fullname', `client's name`, 'string') }}",
+            "services": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('services', `the id of service/services that client wants (get it from the \"get_services\" tool)`, 'string') }}",
+            "staff_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('staff_id', `this is staff_id, get it from the \"get_staff\" tool`, 'string') }}",
+            "datetime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('datetime', `format: 2026-01-29 20:00:00`, 'string') }}",
+            "email": "mail@mail.rur",
+            "comment": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('comment', `client's wishes`, 'string') }}",
+            "chat_id": "={{ $('Merge2').item.json.sessionId }}",
+            "duration_min": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('duration_min', `duration in minutes`, 'number') }}",
+            "price": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('price', `price `, 'string') }}",
+            "service_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('service_name', `service name that client wants`, 'string') }}",
+            "service_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('service_id', `service id`, 'string') }}",
+            "staff_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('staff_name', `staff name`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "fullname",
+              "displayName": "fullname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "services",
+              "displayName": "services",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "comment",
+              "displayName": "comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "staff_id",
+              "displayName": "staff_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "datetime",
+              "displayName": "datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service_name",
+              "displayName": "service_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "duration_min",
+              "displayName": "duration_min",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service_id",
+              "displayName": "service_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "staff_name",
+              "displayName": "staff_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        912
+      ],
+      "id": "ca81a924-34be-449f-83ce-20c993d64a10",
+      "name": "create_book"
+    },
+    {
+      "parameters": {
+        "description": "call to reschedule bookings",
+        "workflowId": {
+          "__rl": true,
+          "value": "cQeKCsKJlH58YKov",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/cQeKCsKJlH58YKov",
+          "cachedResultName": "update_book"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('record_id', `record_id`, 'string') }}",
+            "record_hash": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('record_hash', `record_hash`, 'string') }}",
+            "datetime": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('datetime', `new datetime`, 'string') }}",
+            "comment": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('comment', `comment or cancel reason`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "record_hash",
+              "displayName": "record_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "datetime",
+              "displayName": "datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "comment",
+              "displayName": "comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "newdate",
+              "displayName": "newdate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1776,
+        912
+      ],
+      "id": "ccf874e2-2a59-4594-ad3a-41189dd59f7c",
+      "name": "update_book"
+    },
+    {
+      "parameters": {
+        "toolDescription": "get staff info",
+        "url": "=https://api.yclients.com/api/v1/company/1647948/staff/{{ $fromAI('staff_id') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "=application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "94beb53c-098f-4704-b37e-f0c880a02f54",
+      "name": "get_staff_info",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get list of services in the company",
+        "url": "=https://api.yclients.com/api/v1/company/1647948/services",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "76ba5fd5-6c6d-426b-ac4c-08d2e734ffe0",
+      "name": "get_services",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1536,
+        768
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        848,
+        768
+      ],
+      "id": "21da2a58-8fed-4591-9e6a-771ecffb4501",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        320
+      ],
+      "id": "3fe1b378-ba3c-4d79-b912-328a155bec64",
+      "name": "typing",
+      "webhookId": "96940aee-1a0d-4cfd-92ac-b999d6250e74",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Edit Fields4').item.json.sessionId }}",
+        "text": "Приветствуем Вас в салоне красоты \"Пять ручек\"!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -768,
+        112
+      ],
+      "id": "07b25b23-184e-43c8-8374-52580d1bacf6",
+      "name": "SendPrivet",
+      "webhookId": "aff8df70-7753-4059-9c95-eed873be0542",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        288,
+        464
+      ],
+      "id": "c8efa105-6424-432d-9502-33ee22a7964a",
+      "name": "Merge2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc0b174d-e22b-4468-a357-46d524e2c642",
+              "name": "message.text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "de24bf44-8548-4acd-9538-fd8960deaede",
+              "name": "sessionId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        240
+      ],
+      "id": "ed5eb1c8-e568-4d94-b4ef-c76313b8668b",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6b954dce-f6f3-46e9-bf14-5525a0224a82",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1504,
+        256
+      ],
+      "id": "d0d0e497-9bc4-43f7-8d35-899799eb0546",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        480
+      ],
+      "id": "b3d4c765-05f0-4ddd-abe8-affc0a75056a",
+      "name": "Get a file2",
+      "webhookId": "6a987b00-6633-40b1-b862-d8ab06dd6cce",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "0a236099-525e-4748-a57d-8b8e2c63c48b",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "24b7e8b8-6fce-4ddc-94b6-30b852891995",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "10aa7d55-948b-4875-9058-971688971da2",
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "media",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Media"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9cf4eff7-ba15-44d1-8fb6-f4160b4eef51",
+      "name": "Text Or Voice2",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -768,
+        464
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -320,
+        480
+      ],
+      "id": "92bdfb16-f707-4a2b-b49c-5d89307f95e9",
+      "name": "Transcribe a recording2",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "yMszb1xRe7vslWJR",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc0b174d-e22b-4468-a357-46d524e2c642",
+              "name": "message.text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "de24bf44-8548-4acd-9538-fd8960deaede",
+              "name": "sessionId",
+              "value": "={{ $('Text Or Voice2').item.json.message.from.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        480
+      ],
+      "id": "8f1fd0d0-4fbd-4860-9bda-decf00e36b75",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc0b174d-e22b-4468-a357-46d524e2c642",
+              "name": "message.text",
+              "value": "={{ $json['0'].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "de24bf44-8548-4acd-9538-fd8960deaede",
+              "name": "sessionId",
+              "value": "={{ $('Text Or Voice2').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        608
+      ],
+      "id": "e0f33162-5fe9-4410-bff2-c9c790689bbb",
+      "name": "Edit Fields16"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[0].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        608
+      ],
+      "id": "ac929bd7-92fc-43cc-8336-1246b50c9f7d",
+      "name": "Get a file",
+      "webhookId": "253c67a3-94ec-47bb-b0b0-069d3d547226",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "What's in this image? (describe in detail)",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        608
+      ],
+      "id": "2670ec87-0c6b-45a8-a268-484890d6d1fe",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "yMszb1xRe7vslWJR",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "use to add new client to base",
+        "workflowId": {
+          "__rl": true,
+          "value": "itTbB4I1zLVJUnxx",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/itTbB4I1zLVJUnxx",
+          "cachedResultName": "create_client"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fullname": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fullname', `client's name`, 'string') }}",
+            "phone": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('phone', `client's phone in format: 71002003344`, 'string') }}",
+            "chat_id": "={{ $('Merge2').item.json.sessionId }}",
+            "Gender": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Gender', `gender (look at client's name)`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "fullname",
+              "displayName": "fullname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2096,
+        912
+      ],
+      "id": "d3294a63-9d9a-4bc6-a5fa-b77aa54d9d74",
+      "name": "create_client"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use it to keep customers from canceling appointments and upselling additional (related) services",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "=You are a professional salesperson.\nYou know a lot of sales methods sales techniques.\n\n#Goal\nYour goal is to prevent the client from canceling their appointment entirely; you should try to negotiate with them to keep their appointment. For example, you could negotiate a rescheduling for another available time today or reschedule it for another day.\nAlso you should try to upsell additional services. But you should do it very soft and unobtrusively.\n\n#TOOLS\nsend_mess – use this tool to comunicate with client"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        896
+      ],
+      "id": "7072dceb-d319-42ea-9515-ed6213e06f80",
+      "name": "Customer_Retainer"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        144,
+        1024
+      ],
+      "id": "411214a0-6ea0-4762-bd57-8119a2d78101",
+      "name": "M2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FuLG2Pya7UCWtKrU",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=buf:{{ $json.sessionId }}",
+        "messageData": "={{ JSON.stringify({\n  id: $json.sessionId,\n  text: $json.message.text,\n  ts: $now\n}) }}",
+        "tail": "={{ true }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        224,
+        96
+      ],
+      "id": "4e6cfb76-8a77-465d-9e8e-1bb1a89cf14a",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "debounce",
+        "key": "=debounce:{{ $json.sessionId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        352,
+        96
+      ],
+      "id": "0fb305b6-6758-4e64-9bdb-a681dc69271c",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7b25f053-b90f-45e4-8b7b-e6a6836ab264",
+              "leftValue": "={{ $json.debounce }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        96
+      ],
+      "id": "25db4f5e-cf22-4781-84fd-142d8c3623f4",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=debounce:{{ $('Redis').item.json.sessionId }}",
+        "value": "1",
+        "expire": true,
+        "ttl": 30
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        608,
+        112
+      ],
+      "id": "2acce274-62d5-4928-b31d-d0532cc1e242",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        112
+      ],
+      "id": "cd60c12a-4aa5-474d-a362-059cdcbf837e",
+      "name": "Wait2",
+      "webhookId": "1a93bc90-a143-4df7-ab38-3fce6514d50b"
+    },
+    {
+      "parameters": {
+        "operation": "pop",
+        "list": "=buf:{{ $('Redis').item.json.sessionId }}",
+        "propertyName": "=payload",
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        880,
+        112
+      ],
+      "id": "bde93c2a-fba8-4af2-a986-b5ac3352d63d",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1dd2043-d45c-4074-8e1a-a377392b8a59",
+              "leftValue": "={{ $json.payload }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        112
+      ],
+      "id": "a269e2ea-58ed-4119-abfa-fff963eddb68",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JS)\n\nreturn items.map(item => {\n  const raw = item.json.payload;\n\n  let obj;\n\n  // payload может быть строкой (JSON) или уже объектом\n  if (raw == null) {\n    obj = {};\n  } else if (typeof raw === 'string') {\n    try {\n      obj = JSON.parse(raw);\n    } catch (e) {\n      // если строка не JSON — считаем, что это и есть текст\n      obj = { text: raw };\n    }\n  } else if (typeof raw === 'object') {\n    obj = raw;\n  } else {\n    obj = { text: String(raw) };\n  }\n\n  const text = (obj.text ?? '').toString().trim();\n\n  return {\n    json: { text }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        96
+      ],
+      "id": "d2ff3998-66fa-4f86-a9e6-85381a249b0e",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1536,
+        112
+      ],
+      "id": "589bb4a6-974f-4b58-b920-5531a2abb2d5",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "agg",
+        "key": "=agg:{{ $('Merge2').item.json.sessionId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        192
+      ],
+      "id": "00a743e8-1cc0-409d-a478-f4fdbe326bab",
+      "name": "Redis4",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node (Run Once for All Items)\n\nconst data = $input.first().json;\n\nconst prev = (data.agg ?? '').toString().trim();\nconst line = (data.text ?? '').toString().trim();\n\nconst combined = prev\n  ? (line ? `${prev}\\n${line}` : prev)\n  : line;\n\nreturn [{ json: { combined } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        112
+      ],
+      "id": "b6dac397-2fa6-4d62-acdc-197a6d73dc98",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=agg:{{ $('Merge2').item.json.sessionId }}",
+        "value": "={{ $json.combined }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        112
+      ],
+      "id": "699b090a-1520-4a97-9f10-a4c867fb844a",
+      "name": "Redis5",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "prompt",
+        "key": "=agg:{{ $('Merge2').item.json.sessionId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        576,
+        464
+      ],
+      "id": "3810ee76-565d-4016-bd00-aa3d1a58b2d9",
+      "name": "Redis6",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=agg:{{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2384,
+        304
+      ],
+      "id": "28520ff2-e617-49f8-90ed-1371d74cb28b",
+      "name": "Redis7",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=tg_test:{{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 35
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        768
+      ],
+      "id": "2d1a0438-b283-47bc-8698-7af8f944f279",
+      "name": "Memory",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=tg_test:{{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        1024
+      ],
+      "id": "a0ac5211-d7d8-4c92-b6be-cb4e71c89bcc",
+      "name": "Memory1",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Merge2').item.json.sessionId }}",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        1024
+      ],
+      "id": "c50a7f99-0546-4519-b7dc-1c8af1daba75",
+      "name": "Sendmess",
+      "webhookId": "c05f1340-90a2-435d-ba27-ab5d37793814",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        640,
+        1024
+      ],
+      "id": "4f64d744-910b-4120-8431-9d811cae215d",
+      "name": "M3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FuLG2Pya7UCWtKrU",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=tg_test:{{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        736,
+        1024
+      ],
+      "id": "2f74eeac-3766-4896-98cf-86412e853b65",
+      "name": "Memory2",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "=You're a customer support assistant. You're called when the main agent can't answer the call. Your task is to send the customer a message saying \"Я сейчас уточню у владельца\" using the \"to_client\" tool, and then forward the customer's question to the owner using the \"to_owner\" tool.\nWhen you get owner's answer, you should answer to client with owner's answer.\nAnd when you got owner's answer you must send it to the main agent"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        896
+      ],
+      "id": "a3b69262-22c2-4576-987c-87860c0513d5",
+      "name": "Human_help"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Merge2').item.json.sessionId }}",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', ``, 'string') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        1024
+      ],
+      "id": "03762c31-3000-414b-a41a-9c352a0e82d8",
+      "name": "to_client",
+      "webhookId": "c05f1340-90a2-435d-ba27-ab5d37793814",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "=6420087545",
+        "message": "=\"{{ $json.prompt }}\"",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        1024
+      ],
+      "id": "1882b744-6b26-4c9f-a424-dd2089423838",
+      "name": "to_owner",
+      "webhookId": "c05f1340-90a2-435d-ba27-ab5d37793814",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        544,
+        1024
+      ],
+      "id": "6fff8f80-df52-4fa6-959d-eb848a71fe44",
+      "name": "Reranker",
+      "credentials": {
+        "cohereApi": {
+          "id": "oNVhArwOLZf9quF7",
+          "name": "CohereApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        1024
+      ],
+      "id": "57f4059f-cc1e-4462-abc9-895e395d5d09",
+      "name": "Embeddings",
+      "credentials": {
+        "openAiApi": {
+          "id": "yMszb1xRe7vslWJR",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "RAG tool, vector store tool",
+        "tableName": {
+          "__rl": true,
+          "value": "about_business",
+          "mode": "list",
+          "cachedResultName": "about_business"
+        },
+        "topK": 20,
+        "useReranker": true,
+        "options": {
+          "queryName": "match_documents",
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "clause_number",
+                "value": "1"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        896
+      ],
+      "id": "f56f99ca-e7d6-4ced-8399-075aba68de6c",
+      "name": "vectore_storage",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -32
+      ],
+      "id": "be353f66-9493-49e5-83bc-cf555b664145",
+      "name": "typing1",
+      "webhookId": "96940aee-1a0d-4cfd-92ac-b999d6250e74",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "yNxFIi6JUCI0vOzJ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/yNxFIi6JUCI0vOzJ",
+          "cachedResultName": "Error w-f"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2384,
+        624
+      ],
+      "id": "abc46357-1623-4b7a-ba05-14b00cdbb57b",
+      "name": "Call 'Error w-f'",
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-flash",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        544,
+        768
+      ],
+      "id": "f4012741-3c94-40ce-be5f-46684c95473d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FuLG2Pya7UCWtKrU",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "use to search bookings info",
+        "operation": "getAll",
+        "tableId": "YC_bookings_wtags",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1120
+      ],
+      "id": "aae9e042-512e-4d02-bc8f-ae6e5a28ad46",
+      "name": "gs_get_bookin",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "tableId": "clients_tg",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tg_id",
+              "fieldValue": "={{ $json.sessionId }}"
+            },
+            {
+              "fieldId": "tg_username",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.username }}"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.first_name }}"
+            },
+            {
+              "fieldId": "last_name",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.last_name }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "blocked",
+              "fieldValue": "no"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        240
+      ],
+      "id": "ec53d2e6-64ce-4ec4-b9e9-6fba09f758e9",
+      "name": "Create new client",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('admin').item.json.result.chat.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tg_username",
+              "fieldValue": "={{ $('admin').item.json.result.chat.username }}"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $('admin').item.json.result.chat.first_name }}"
+            },
+            {
+              "fieldId": "last_name",
+              "fieldValue": "={{ $('admin').item.json.result.chat.last_name }}"
+            },
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "blocked",
+              "fieldValue": "no"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        368
+      ],
+      "id": "440b89a5-c105-4342-9cef-962dd7280a35",
+      "name": "UpdateClient",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "call to get client bookings",
+        "url": "=https://api.yclients.com/api/v1/book_record/1647948/{{$fromAI('record_id')}}/{{$fromAI('record_hash')}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "=application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "69c21443-d5b9-47e4-b493-04a0ddbb7eab",
+      "name": "get_bookings22",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        1120
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "description": "call to get bookings information",
+        "workflowId": {
+          "__rl": true,
+          "value": "HZBOuIdEf05OU4Es",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HZBOuIdEf05OU4Es",
+          "cachedResultName": "ycl_bookings"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        768
+      ],
+      "id": "9e09c371-dde3-4bd4-9ffa-9a8ec4db8071",
+      "name": "get_bookings"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "blocked",
+              "fieldValue": "yes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        560
+      ],
+      "id": "90e2bf21-7849-4eb3-937e-89443e47b49a",
+      "name": "UpdateClient1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Merge2').item.json.sessionId }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1856,
+        464
+      ],
+      "id": "11d79767-3b2d-485a-92c5-5ff2e4ea5ca4",
+      "name": "Send message",
+      "webhookId": "0707f51d-eb75-4659-9bb3-8150f7d01021",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.sessionId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "blocked",
+              "fieldValue": "no"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        256
+      ],
+      "id": "bf4f647e-e3f0-4469-ba13-05519f6ec45e",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Edit Fields4').item.json.sessionId }}",
+        "text": "=Подтвердите соглашение на обработку персональных данных и получение маркетинговый кампаний (напоминания, специальные предложения)",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Подтверждаю соглашение",
+                    "additionalFields": {
+                      "callback_data": "marketing_agree"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        112
+      ],
+      "id": "7fabde06-c6cf-4e30-8fc2-f6c3aca1248b",
+      "name": "SendAgreement",
+      "webhookId": "aff8df70-7753-4059-9c95-eed873be0542",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "keyValue": "={{ $('Edit Fields1').item.json.chat_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        480
+      ],
+      "id": "f42bb237-20bc-470c-8421-18fdbbcfbb5a",
+      "name": "Get a row",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.tg_id }}",
+        "text": "=Здравствуйте, меня зовут Мария, администратор салона\nЧем могу помочь?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1328,
+        1088
+      ],
+      "id": "56884abc-ce72-439c-8f63-e069bd7e3d2e",
+      "name": "SendPrivet1",
+      "webhookId": "aff8df70-7753-4059-9c95-eed873be0542",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tg_id",
+              "fieldValue": "={{ $json.sessionId }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "b3a3b64b-60b4-4c32-a8e6-f1c6f8580139",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "89af2e61-7ef7-4a28-8ca0-6f06e742c428",
+              "leftValue": "={{ $json.can_message }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1504,
+        480
+      ],
+      "id": "8d772df2-3bd0-445a-aefe-e17b5b049d08",
+      "name": "If_canmess",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1200,
+        448
+      ],
+      "id": "a22d8783-2f7d-4b67-b7fa-b5f30d3c9809",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc0b174d-e22b-4468-a357-46d524e2c642",
+              "name": "message.text",
+              "value": "={{ $('Switch').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "de24bf44-8548-4acd-9538-fd8960deaede",
+              "name": "sessionId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        336
+      ],
+      "id": "f36e8a2d-a0b5-4938-aa3e-98df52f2dca0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "allow_marketing",
+              "fieldValue": "yes"
+            },
+            {
+              "fieldId": "can_message",
+              "fieldValue": "no"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        112
+      ],
+      "id": "b8268159-49ff-47d6-afef-3b0ca2ef52e0",
+      "name": "agreementmark_no",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.callback_query.message.chat.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "allow_marketing",
+              "fieldValue": "yes"
+            },
+            {
+              "fieldId": "can_message",
+              "fieldValue": "yes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        1088
+      ],
+      "id": "38edd1f3-9411-4c3e-b08d-9607c22ad1ff",
+      "name": "agreementmark_yes",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.result.chat.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        1088
+      ],
+      "id": "343babe0-f953-4eda-9a9c-2cc93bff3ac9",
+      "name": "upd_lastmess",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        112
+      ],
+      "id": "ab9d938d-389b-4da8-acf8-21eb3b431af0",
+      "name": "Wait1",
+      "webhookId": "7c867d0d-d2a4-4a31-9ee0-3a3ebc669c17"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2016,
+        256
+      ],
+      "id": "fb785c27-af6b-4485-9b9e-c80670949bea",
+      "name": "Telegram Trigger",
+      "webhookId": "1673f7c7-c62e-4eb2-b10a-a0595bb4644e",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# agreement mark",
+        "height": 224,
+        "width": 836,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        1024
+      ],
+      "id": "24e0568e-5591-4abc-9838-0dea40a8ad8d",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "# Reminder answerer",
+        "height": 576,
+        "width": 2016,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        1264
+      ],
+      "id": "9aa880b8-7362-443c-8109-df6c1fd1c054",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "650dce4a-6e4e-4f37-b7f7-d2177abdda20",
+                    "leftValue": "={{ $json.callback_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "22304ae0-8b5d-405c-b19c-99be66732b18",
+                    "leftValue": "={{ $json.callback_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "callback"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1856,
+        256
+      ],
+      "id": "724c50a8-8748-45a5-a455-8b0edd022464",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ea5fc49a-469a-448b-adbd-985f5c37a626",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "marketing_agree",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "agreement"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9a3757f6-5acb-43fd-9cd7-fd03d62c1015",
+                    "leftValue": "={{ $json.callback_query.message.reply_markup.inline_keyboard[0][0].text }}",
+                    "rightValue": "Приду",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "remind"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2000,
+        1104
+      ],
+      "id": "f1b038f5-0556-46f7-bbf8-c270bb97d3e9",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1472,
+        1088
+      ],
+      "id": "e9ba6cb8-9e2c-4edf-b0f5-625efd085ad9",
+      "name": "Wait",
+      "webhookId": "7389337c-703d-46e1-9618-1a32fa212898"
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Telegram Trigger').item.json.callback_query.id }}",
+        "additionalFields": {
+          "text": "=Благодарим Вас за помощь!"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1616,
+        1088
+      ],
+      "id": "4269d9da-b756-4315-a5b3-63283226fdde",
+      "name": "Answer a callback",
+      "webhookId": "bb288a16-03d9-42af-bf94-8b9d7f07066e",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const first = $input.first();\nif (!first?.json) return [];\n\nconst raw = first.json;\nconst cq = raw.callback_query ?? raw;\n\nconst callbackData = String(cq?.data ?? '').trim();\nif (!callbackData) return [];\nif (!cq?.id || !cq?.message?.chat?.id || !cq?.message?.message_id) return [];\n\nconst reminderMap = {\n  '24h': 'reminder_24h',\n  '12h': 'reminder_12h',\n  '2h': 'reminder_2h',\n  '1h': 'reminder_1h'\n};\n\nlet action = '';\nlet recordIdRaw = '';\nlet reminderKey = '';\n\nif (callbackData.includes('|')) {\n  const parts = callbackData.split('|');\n  if (parts.length !== 3) return [];\n  [action, recordIdRaw, reminderKey] = parts;\n  if (!Object.prototype.hasOwnProperty.call(reminderMap, reminderKey)) return [];\n} else if (callbackData.includes('_')) {\n  const underscoreIdx = callbackData.indexOf('_');\n  action = callbackData.substring(0, underscoreIdx);\n  recordIdRaw = callbackData.substring(underscoreIdx + 1);\n  reminderKey = '';\n} else {\n  return [];\n}\n\nif (!['confirm', 'reschedule', 'cancel'].includes(action)) return [];\n\nconst recordId = Number(recordIdRaw);\nif (!Number.isFinite(recordId)) return [];\n\nreturn [{\n  json: {\n    query_id: cq.id,\n    chat_id: String(cq.message.chat.id),\n    message_id: cq.message.message_id,\n    action,\n    reminder_key: reminderKey,\n    reminder_column: reminderMap[reminderKey] || '',\n    record_id: recordId\n  }\n}];"
+      },
+      "id": "29cd2e4c-5207-4f3c-9974-55215b7afff8",
+      "name": "Разобрать callback1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1776,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $json.query_id }}",
+        "additionalFields": {}
+      },
+      "id": "356332bc-3817-4f0f-9422-0a8a5574ee78",
+      "name": "answerCallbackQuery1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1616,
+        1472
+      ],
+      "webhookId": "2854cd02-e4e7-4d53-86ca-b917a59e21a0",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'record_id=eq.' + $('Разобрать callback1').item.json.record_id }}"
+      },
+      "id": "3fd58cfc-70e0-4ca2-bc04-fa6978d49ed6",
+      "name": "Supabase: GET appointment1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        1472
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cb = $('Разобрать callback1').all()[0]?.json;\nif (!cb) return [];\n\nconst appt = $input.first()?.json;\nif (!appt?.record_id) return [];\n\nconst tz = 'Europe/Moscow';\nconst dt = new Date(appt.date);\nconst dateFormatted = Number.isNaN(dt.getTime())\n  ? String(appt.date || '')\n  : dt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', timeZone: tz }) + ' в ' + dt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz });\n\nconst actionToValues = {\n  confirm: { reminder_value: 'confirmed_tg', status_value: 'confirmed', attendance: 2, comment_suffix: 'Подтверждено клиентом в Telegram' },\n  reschedule: { reminder_value: 'rescheduled_tg', status_value: 'rescheduled', attendance: 0, comment_suffix: 'Клиент запросил перенос через Telegram' },\n  cancel: { reminder_value: 'cancelled_tg', status_value: 'cancelled', attendance: -1, comment_suffix: 'Клиент отменил запись через Telegram' }\n};\n\nconst picked = actionToValues[cb.action];\nif (!picked) return [];\n\nlet reminderColumn = String(cb.reminder_column || '').trim();\nif (!reminderColumn) {\n  const candidates = ['reminder_1h', 'reminder_2h', 'reminder_12h', 'reminder_24h']\n    .filter((col) => String(appt[col] || '').trim() === 'sent_tg_waiting_response');\n  if (candidates.length === 1) reminderColumn = candidates[0];\n  else return [];\n}\n\nconst ycIdRaw = String(appt.YC_ID || '').trim();\nconst yclientsRecordId = /^\\d+$/.test(ycIdRaw) ? ycIdRaw : '';\nconst yDate = Number.isNaN(dt.getTime())\n  ? String(appt.date || '')\n  : (() => {\n      const parts = new Intl.DateTimeFormat('sv-SE', {\n        timeZone: 'Europe/Moscow',\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n        hour: '2-digit',\n        minute: '2-digit',\n        second: '2-digit',\n        hour12: false\n      }).formatToParts(dt).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});\n      return parts.year + '-' + parts.month + '-' + parts.day + ' ' + parts.hour + ':' + parts.minute + ':' + parts.second;\n    })();\n\nconst serviceId = Number(appt.service_id || 0);\nconst staffId = Number(appt.master_id || 0);\nconst durationSec = Math.max(300, Number(appt.duration_min || 60) * 60);\nconst phone = String(appt.phone || '').replace(/\\D/g, '');\nconst clientName = String(appt.clientName || 'Клиент').trim() || 'Клиент';\n\nconst yBody = {\n  staff_id: staffId,\n  services: serviceId ? [{ id: serviceId }] : [],\n  datetime: yDate,\n  seance_length: durationSec,\n  attendance: picked.attendance,\n  comment: [String(appt.comment || '').trim(), picked.comment_suffix].filter(Boolean).join(' | ')\n};\nif (phone) yBody.client = { phone, name: clientName };\n\nreturn [{\n  json: {\n    ...cb,\n    reminder_column: reminderColumn,\n    date_formatted: dateFormatted,\n    service_name: String(appt.service_name || ''),\n    yclients_record_id: yclientsRecordId,\n    yclients_put_body: yBody,\n    reminder_value: picked.reminder_value,\n    status_value: picked.status_value\n  }\n}];"
+      },
+      "id": "6e5417ec-c798-4c1b-8c3d-8878c44c1d7c",
+      "name": "Объединить данные + payload1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.action }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "confirm"
+            },
+            {
+              "value2": "reschedule"
+            },
+            {
+              "value2": "cancel"
+            }
+          ]
+        },
+        "fallbackOutput": "none"
+      },
+      "id": "6083a7dc-7968-4a57-9082-bafd76a9b381",
+      "name": "Маршрутизация по действию1",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        1456
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Маршрутизация по действию1').item.json.chat_id }}",
+        "messageId": "={{ $('Маршрутизация по действию1').item.json.message_id }}",
+        "text": "=✅ *Визит подтверждён*\n🗓 {{ $('Маршрутизация по действию1').item.json.date_formatted }}\n✂️ {{ $json.service_name }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "bac2990f-6111-4bb6-aeb0-e9b5667a4d20",
+      "name": "[Приду] editMessage1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        1296
+      ],
+      "webhookId": "9479d2dc-f79e-4bc1-9563-da6818016c99",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filterType": "string",
+        "filterString": "={{ 'record_id=eq.' + $json.record_id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ $json.reminder_column }}",
+              "fieldValue": "={{ $json.reminder_value }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status_value }}"
+            }
+          ]
+        }
+      },
+      "id": "05b30e87-099e-436f-a5d9-8bbb73572fd2",
+      "name": "[Приду] Supabase update1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        1296
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Маршрутизация по действию1').item.json.chat_id }}",
+        "text": "=Спасибо, что сообщили!\nНа какую дату хотите перенести?",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "fe6d1545-a74a-46b1-9e6d-5f2d5e1ebdb8",
+      "name": "[Перенести] editMessage1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        1472
+      ],
+      "webhookId": "96dcc879-6bd4-4e25-8805-8d7ee16c77f0",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filterType": "string",
+        "filterString": "={{ 'record_id=eq.' + $json.record_id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ $json.reminder_column }}",
+              "fieldValue": "={{ $json.reminder_value }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status_value }}"
+            }
+          ]
+        }
+      },
+      "id": "33320162-2184-45dc-8133-64942e4ec4e1",
+      "name": "[Перенести] Supabase update1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        1472
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Маршрутизация по действию1').item.json.chat_id }}",
+        "messageId": "={{ $('Маршрутизация по действию1').item.json.message_id }}",
+        "text": "=❌ *Запись {{ $('Маршрутизация по действию1').item.json.date_formatted }} отменена*\nСпасибо, что сообщили!",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "d67fb4fa-ded3-45fd-bd29-5fa521d9e923",
+      "name": "[Не смогу] editMessage1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        1648
+      ],
+      "webhookId": "b7b3793c-5052-4813-9dc6-72539345735b",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filterType": "string",
+        "filterString": "={{ 'record_id=eq.' + $json.record_id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "={{ $json.reminder_column }}",
+              "fieldValue": "={{ $json.reminder_value }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status_value }}"
+            }
+          ]
+        }
+      },
+      "id": "0ce853f1-f90a-4ce2-903d-7b7a8d4fdc06",
+      "name": "[Не смогу] Supabase update1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        1648
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ Number($('Объединить данные + payload1').item.json.chat_id) }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        1296
+      ],
+      "id": "2dfe985b-cbce-4ec7-97f5-8946cd816269",
+      "name": "upd_lastmess8",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ Number($('Объединить данные + payload1').item.json.chat_id) }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        1472
+      ],
+      "id": "92622b6e-4b8d-473e-999d-6e56394723a2",
+      "name": "upd_lastmess9",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "clients_tg",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tg_id",
+              "condition": "eq",
+              "keyValue": "={{ Number($('Объединить данные + payload1').item.json.chat_id) }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        1648
+      ],
+      "id": "ef8b0645-076d-40e3-be95-b8094d588490",
+      "name": "upd_lastmess10",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=agg:{{ $json.result.chat.id }}",
+        "messageData": "={{ $json.result.text }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        1472
+      ],
+      "id": "0e7d03e1-79b5-4ac9-aa42-729dcd374cd2",
+      "name": "Redis11",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=agg:{{ $json.result.chat.id }}",
+        "messageData": "={{ $json.result.text }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        1648
+      ],
+      "id": "aba8d3d1-7f0c-4927-8d12-4e5d7f66d9aa",
+      "name": "Redis12",
+      "credentials": {
+        "redis": {
+          "id": "hpTsISx59dNbFk5x",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.yclients.com/api/v1/user/records/{{ $('[Не смогу] Supabase update1').item.json.record_id }}/{{ $('[Не смогу] Supabase update1').item.json.record_hash }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -544,
+        1648
+      ],
+      "id": "dcc81b0a-9299-46db-8ead-c4d9e65c9443",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "record_id",
+              "condition": "eq",
+              "keyValue": "={{ $('[Не смогу] Supabase update1').item.json.record_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "Canceled"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        1648
+      ],
+      "id": "9b2f85cd-2297-4681-8a57-164b9572f100",
+      "name": "Update a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "M": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_staff": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "staff_schedule": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete_book": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_clients_list": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "booking_dates": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_book": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_book": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_staff_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_services": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendPrivet": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Create new client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file2": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Or Voice2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields16": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer_Retainer": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "M2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Customer_Retainer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "typing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Redis6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "typing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Redis5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis5": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis6": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "typing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Customer_Retainer",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sendmess": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer_Retainer",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "M3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Human_help",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Human_help",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human_help": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "to_client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Human_help",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "to_owner": {
+      "ai_tool": [
+        [
+          {
+            "node": "Human_help",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker": {
+      "ai_reranker": [
+        [
+          {
+            "node": "vectore_storage",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "vectore_storage",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "vectore_storage": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create new client": {
+      "main": [
+        [
+          {
+            "node": "SendPrivet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_bookings": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Redis7",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "UpdateClient",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UpdateClient1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'Error w-f'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "SendPrivet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendAgreement": {
+      "main": [
+        [
+          {
+            "node": "agreementmark_no",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "If_canmess",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendPrivet1": {
+      "main": [
+        [
+          {
+            "node": "upd_lastmess",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_canmess": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Text Or Voice2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agreementmark_yes": {
+      "main": [
+        [
+          {
+            "node": "Answer a callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "SendAgreement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "agreementmark_yes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Разобрать callback1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "SendPrivet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer a callback": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разобрать callback1": {
+      "main": [
+        [
+          {
+            "node": "answerCallbackQuery1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "answerCallbackQuery1": {
+      "main": [
+        [
+          {
+            "node": "Supabase: GET appointment1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: GET appointment1": {
+      "main": [
+        [
+          {
+            "node": "Объединить данные + payload1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Объединить данные + payload1": {
+      "main": [
+        [
+          {
+            "node": "Маршрутизация по действию1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Маршрутизация по действию1": {
+      "main": [
+        [
+          {
+            "node": "[Приду] Supabase update1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Перенести] Supabase update1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Не смогу] Supabase update1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Приду] editMessage1": {
+      "main": [
+        [
+          {
+            "node": "upd_lastmess8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Приду] Supabase update1": {
+      "main": [
+        [
+          {
+            "node": "[Приду] editMessage1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Перенести] editMessage1": {
+      "main": [
+        [
+          {
+            "node": "Redis11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Перенести] Supabase update1": {
+      "main": [
+        [
+          {
+            "node": "[Перенести] editMessage1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Не смогу] editMessage1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Не смогу] Supabase update1": {
+      "main": [
+        [
+          {
+            "node": "[Не смогу] editMessage1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis11": {
+      "main": [
+        [
+          {
+            "node": "upd_lastmess9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis12": {
+      "main": [
+        [
+          {
+            "node": "upd_lastmess10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update a row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row2": {
+      "main": [
+        [
+          {
+            "node": "Redis12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "60cbaaa8-0a56-46b3-91c7-da30e4f000f7",
+  "meta": {
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "YRc6sHkXYOsM4bDH",
+  "tags": []
+}
