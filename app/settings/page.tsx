@@ -171,79 +171,66 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <Header title="Настройки" subtitle="Секции MVP: профиль, каналы, интеграции, правила записи, ИИ, автоматизации и доступы" />
-      <div className="p-6 space-y-6 max-w-5xl">
+      <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
+      <div className="p-6 space-y-6">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {[
-            ["Профиль и бизнес", "Профиль, филиалы и контактные данные"],
-            ["Каналы связи", "Telegram, WhatsApp, MAX, SMS и ошибки подключения"],
-            ["ИИ-агент", "Тон общения, приветствие, база знаний, правила передачи человеку"],
-            ["Автоматизации", "Сценарии, задержки запуска и шаблоны"],
-            ["Роли и доступы", "Владельцы, администраторы, права и уведомления"],
-          ].map(([title, text]) => (
-            <div key={String(title)} className="bg-[#0F1622] border border-[#223444] rounded-xl p-4">
-              <p className="text-[#EDF2FA] text-sm font-semibold">{title}</p>
-              <p className="text-[#5E7488] text-xs mt-2 leading-relaxed">{text}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Main agent toggle ── */}
-        {isOwner && mainAgent && (
-          <div id="agent" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Power size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">ИИ-агент</h3>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[#EDF2FA] font-medium">{mainAgent.name}</p>
-                <p className="text-[#5E7488] text-sm mt-0.5">{mainAgent.description}</p>
-                <p className={`text-xs mt-1 font-medium ${mainAgent.enabled ? "text-[#00FF00]" : "text-red-400"}`}>
-                  {mainAgent.enabled ? "Активен — принимает обращения" : "Выключен — обращения не обрабатываются"}
-                </p>
+        <div className={`grid gap-6 ${isOwner && mainAgent ? "xl:grid-cols-2 xl:items-start" : "grid-cols-1"}`}>
+          {/* ── Main agent toggle ── */}
+          {isOwner && mainAgent && (
+            <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full">
+              <div className="flex items-center gap-2 mb-4">
+                <Power size={16} className="text-[#00FF00]" />
+                <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Основной агент</h3>
               </div>
-              <Toggle
-                enabled={mainAgent.enabled}
-                onChange={() => toggleSystem(mainAgent.system_code, mainAgent.enabled)}
-              />
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[#EDF2FA] font-medium">{mainAgent.name}</p>
+                  <p className="text-[#5E7488] text-sm mt-0.5">{mainAgent.description}</p>
+                  <p className={`text-xs mt-1 font-medium ${mainAgent.enabled ? "text-[#00FF00]" : "text-red-400"}`}>
+                    {mainAgent.enabled ? "Активен — принимает обращения" : "Выключен — обращения не обрабатываются"}
+                  </p>
+                </div>
+                <Toggle
+                  enabled={mainAgent.enabled}
+                  onChange={() => toggleSystem(mainAgent.system_code, mainAgent.enabled)}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── Greeting message ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <MessageSquare size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Приветственное сообщение</h3>
-          </div>
-          <p className="text-[#5E7488] text-sm mb-4">Первое сообщение агента новому клиенту</p>
-          <textarea
-            rows={3}
-            value={greeting}
-            onChange={(e) => setGreeting(e.target.value)}
-            className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488] resize-none"
-          />
-          <div className="flex justify-end mt-3">
-            <button onClick={saveGreeting} disabled={greetingLoading}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                greetingSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
-                : greetingLoading ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
-                : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
-              }`}>
-              {greetingLoading && <RefreshCw size={14} className="animate-spin" />}
-              {greetingSaved && <CheckCircle2 size={14} />}
-              {greetingSaved ? "Сохранено" : greetingLoading ? "Отправка..." : "Сохранить"}
-            </button>
+          {/* ── Greeting message ── */}
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full">
+            <div className="flex items-center gap-2 mb-1">
+              <MessageSquare size={16} className="text-[#00FF00]" />
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Приветственное сообщение</h3>
+            </div>
+            <p className="text-[#5E7488] text-sm mb-4">Первое сообщение агента новому клиенту</p>
+            <textarea
+              rows={3}
+              value={greeting}
+              onChange={(e) => setGreeting(e.target.value)}
+              className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488] resize-none"
+            />
+            <div className="flex justify-end mt-3">
+              <button onClick={saveGreeting} disabled={greetingLoading}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  greetingSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                  : greetingLoading ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                  : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                }`}>
+                {greetingLoading && <RefreshCw size={14} className="animate-spin" />}
+                {greetingSaved && <CheckCircle2 size={14} />}
+                {greetingSaved ? "Сохранено" : greetingLoading ? "Отправка..." : "Сохранить"}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* ── Knowledge base ── */}
-        <div id="knowledge" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <FileText size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">FAQ / база знаний</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">База знаний</h3>
           </div>
           <p className="text-[#5E7488] text-sm mb-4">Загрузите документы для агента — они отправляются в обработку и сохраняются на Google Диск</p>
 
@@ -474,10 +461,10 @@ export default function SettingsPage() {
 
         {/* ── Roles (owner only) ── */}
         {isOwner && (
-          <div id="roles" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-1">
               <Shield size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Роли и доступы</h3>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Роли и права доступа</h3>
             </div>
             <p className="text-[#5E7488] text-sm mb-5">Управление уровнями доступа для сотрудников</p>
             <div className="space-y-3">
@@ -515,7 +502,7 @@ export default function SettingsPage() {
         )}
 
         {/* ── Notifications ── */}
-        <div id="notifications" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Bell size={16} className="text-[#00FF00]" />
             <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Уведомления</h3>
