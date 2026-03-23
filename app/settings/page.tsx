@@ -174,7 +174,7 @@ export default function SettingsPage() {
       <Header title="Настройки" subtitle="Секции MVP: профиль, каналы, интеграции, правила записи, ИИ, автоматизации и доступы" />
       <div className="p-6 space-y-6 max-w-5xl">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             ["Профиль и бизнес", "Профиль, филиалы и контактные данные"],
             ["Каналы связи", "Telegram, WhatsApp, MAX, SMS и ошибки подключения"],

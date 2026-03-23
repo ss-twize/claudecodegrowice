@@ -68,7 +68,7 @@ export default function ClientsPage() {
     <div>
       <Header title="Клиенты" subtitle="Чистая база клиентов: статусы, возврат, каналы связи и участие в сценариях" />
       <div className="p-6 space-y-6">
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard title="Новые" value={loading ? "—" : String(summary.newClients)} icon={<UserPlus size={18} />} accent />
           <MetricCard title="Активные" value={String(summary.active)} icon={<TrendingUp size={18} />} />
           <MetricCard title="Спящие" value={String(summary.sleeping)} icon={<MoonStar size={18} />} />

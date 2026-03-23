@@ -52,7 +52,7 @@ export default function ConversationsPage() {
     <div>
       <Header title="Обращения" subtitle="Рабочий экран диалогов: каналы, скорость ответа, участие ИИ и финальный результат" />
       <div className="p-6 space-y-6">
-        <div className="grid grid-cols-2 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard title="Всего обращений" value={loading ? "—" : String(total)} icon={<MessageSquare size={18} />} accent />
           <MetricCard title="Средний ответ" value="1 мин 42 сек" icon={<Clock3 size={18} />} />
           <MetricCard title="Решено ИИ" value={`${Math.round((aiSolved / Math.max(total, 1)) * 100)}%`} icon={<Bot size={18} />} />

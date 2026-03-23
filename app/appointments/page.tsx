@@ -40,7 +40,7 @@ export default function AppointmentsPage() {
     <div>
       <Header title="Записи" subtitle="Результат общения: создание, подтверждение, перенос, отмены и контроль будущих визитов" />
       <div className="p-6 space-y-6">
-        <div className="grid grid-cols-2 xl:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard title="Создано через ИИ" value={loading ? "—" : String(createdByAi)} icon={<CalendarCheck size={18} />} accent />
           <MetricCard title="Перенесено" value={String(rescheduled)} icon={<Repeat2 size={18} />} />
           <MetricCard title="Отменено" value={String(cancelled)} icon={<XCircle size={18} />} />
