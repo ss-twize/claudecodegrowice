@@ -71,8 +71,14 @@ export default function SystemPage() {
 
   return (
     <div>
-      <Header title="Система и оплата" subtitle="Управление подпиской и модулями" />
+      <Header title="Оплата и тариф" subtitle="Secondary-раздел: подписка, каналы связи и интеграции без перегруза основного MVP" />
       <div className="p-6 space-y-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-4"><p className="text-[#EDF2FA] text-sm font-semibold">Интеграции</p><p className="text-[#5E7488] text-xs mt-2">Сюда перенесены статусы подключений и ошибки каналов.</p></div>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-4"><p className="text-[#EDF2FA] text-sm font-semibold">Оплата</p><p className="text-[#5E7488] text-xs mt-2">Тарифы и история списаний убраны со стартовых экранов.</p></div>
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-4"><p className="text-[#EDF2FA] text-sm font-semibold">Legacy-модули</p><p className="text-[#5E7488] text-xs mt-2">Финансы и персонал остаются future / legacy модулями.</p></div>
+        </div>
 
         {/* Current subscription */}
         <div className="bg-[#00FF00] rounded-xl p-5">
@@ -201,9 +207,9 @@ export default function SystemPage() {
         </div>
 
         {/* Channel management */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+        <div id="integrations" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="mb-5">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Каналы связи</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Интеграции и каналы связи</h3>
             <p className="text-[#5E7488] text-sm mt-0.5">Настройте интеграции и параметры каналов</p>
           </div>
           <div className="space-y-3">

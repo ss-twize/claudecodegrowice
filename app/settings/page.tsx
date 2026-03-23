@@ -171,15 +171,30 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
-      <div className="p-6 space-y-6 max-w-3xl">
+      <Header title="Настройки" subtitle="Секции MVP: профиль, каналы, интеграции, правила записи, ИИ, автоматизации и доступы" />
+      <div className="p-6 space-y-6 max-w-5xl">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {[
+            ["Профиль и бизнес", "Профиль, филиалы и контактные данные"],
+            ["Каналы связи", "Telegram, WhatsApp, MAX, SMS и ошибки подключения"],
+            ["ИИ-агент", "Тон общения, приветствие, база знаний, правила передачи человеку"],
+            ["Автоматизации", "Сценарии, задержки запуска и шаблоны"],
+            ["Роли и доступы", "Владельцы, администраторы, права и уведомления"],
+          ].map(([title, text]) => (
+            <div key={String(title)} className="bg-[#0F1622] border border-[#223444] rounded-xl p-4">
+              <p className="text-[#EDF2FA] text-sm font-semibold">{title}</p>
+              <p className="text-[#5E7488] text-xs mt-2 leading-relaxed">{text}</p>
+            </div>
+          ))}
+        </div>
 
         {/* ── Main agent toggle ── */}
         {isOwner && mainAgent && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div id="agent" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Power size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Основной агент</h3>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">ИИ-агент</h3>
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -225,10 +240,10 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Knowledge base ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+        <div id="knowledge" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <FileText size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">База знаний</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">FAQ / база знаний</h3>
           </div>
           <p className="text-[#5E7488] text-sm mb-4">Загрузите документы для агента — они отправляются в обработку и сохраняются на Google Диск</p>
 
@@ -459,10 +474,10 @@ export default function SettingsPage() {
 
         {/* ── Roles (owner only) ── */}
         {isOwner && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div id="roles" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-1">
               <Shield size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Роли и права доступа</h3>
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Роли и доступы</h3>
             </div>
             <p className="text-[#5E7488] text-sm mb-5">Управление уровнями доступа для сотрудников</p>
             <div className="space-y-3">
@@ -500,7 +515,7 @@ export default function SettingsPage() {
         )}
 
         {/* ── Notifications ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+        <div id="notifications" className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Bell size={16} className="text-[#00FF00]" />
             <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Уведомления</h3>
