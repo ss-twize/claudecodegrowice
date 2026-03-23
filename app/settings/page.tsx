@@ -172,55 +172,57 @@ export default function SettingsPage() {
   return (
     <div>
       <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
-      <div className="p-6 space-y-6 max-w-3xl">
+      <div className="p-6 space-y-6">
 
-        {/* ── Main agent toggle ── */}
-        {isOwner && mainAgent && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Power size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Основной агент</h3>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[#EDF2FA] font-medium">{mainAgent.name}</p>
-                <p className="text-[#5E7488] text-sm mt-0.5">{mainAgent.description}</p>
-                <p className={`text-xs mt-1 font-medium ${mainAgent.enabled ? "text-[#00FF00]" : "text-red-400"}`}>
-                  {mainAgent.enabled ? "Активен — принимает обращения" : "Выключен — обращения не обрабатываются"}
-                </p>
+        <div className={`grid gap-6 ${isOwner && mainAgent ? "xl:grid-cols-2 xl:items-start" : "grid-cols-1"}`}>
+          {/* ── Main agent toggle ── */}
+          {isOwner && mainAgent && (
+            <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full">
+              <div className="flex items-center gap-2 mb-4">
+                <Power size={16} className="text-[#00FF00]" />
+                <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Основной агент</h3>
               </div>
-              <Toggle
-                enabled={mainAgent.enabled}
-                onChange={() => toggleSystem(mainAgent.system_code, mainAgent.enabled)}
-              />
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[#EDF2FA] font-medium">{mainAgent.name}</p>
+                  <p className="text-[#5E7488] text-sm mt-0.5">{mainAgent.description}</p>
+                  <p className={`text-xs mt-1 font-medium ${mainAgent.enabled ? "text-[#00FF00]" : "text-red-400"}`}>
+                    {mainAgent.enabled ? "Активен — принимает обращения" : "Выключен — обращения не обрабатываются"}
+                  </p>
+                </div>
+                <Toggle
+                  enabled={mainAgent.enabled}
+                  onChange={() => toggleSystem(mainAgent.system_code, mainAgent.enabled)}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── Greeting message ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <MessageSquare size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Приветственное сообщение</h3>
-          </div>
-          <p className="text-[#5E7488] text-sm mb-4">Первое сообщение агента новому клиенту</p>
-          <textarea
-            rows={3}
-            value={greeting}
-            onChange={(e) => setGreeting(e.target.value)}
-            className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488] resize-none"
-          />
-          <div className="flex justify-end mt-3">
-            <button onClick={saveGreeting} disabled={greetingLoading}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                greetingSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
-                : greetingLoading ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
-                : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
-              }`}>
-              {greetingLoading && <RefreshCw size={14} className="animate-spin" />}
-              {greetingSaved && <CheckCircle2 size={14} />}
-              {greetingSaved ? "Сохранено" : greetingLoading ? "Отправка..." : "Сохранить"}
-            </button>
+          {/* ── Greeting message ── */}
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full">
+            <div className="flex items-center gap-2 mb-1">
+              <MessageSquare size={16} className="text-[#00FF00]" />
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Приветственное сообщение</h3>
+            </div>
+            <p className="text-[#5E7488] text-sm mb-4">Первое сообщение агента новому клиенту</p>
+            <textarea
+              rows={3}
+              value={greeting}
+              onChange={(e) => setGreeting(e.target.value)}
+              className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488] resize-none"
+            />
+            <div className="flex justify-end mt-3">
+              <button onClick={saveGreeting} disabled={greetingLoading}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  greetingSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                  : greetingLoading ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                  : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                }`}>
+                {greetingLoading && <RefreshCw size={14} className="animate-spin" />}
+                {greetingSaved && <CheckCircle2 size={14} />}
+                {greetingSaved ? "Сохранено" : greetingLoading ? "Отправка..." : "Сохранить"}
+              </button>
+            </div>
           </div>
         </div>
 
