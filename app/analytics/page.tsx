@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
         {/* Trends table */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[#223444]">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Тренды: текущий vs прошлый месяц</h3>
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Тренды: текущий / прошлый месяц</h3>
             <p className="text-[#5E7488] text-sm">Сравнительный анализ ключевых метрик</p>
           </div>
           <div className="overflow-x-auto">
