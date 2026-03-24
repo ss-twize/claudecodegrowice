@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import RevenueChart from "@/components/charts/RevenueChart";
 import MetricCard from "@/components/ui/MetricCard";
 import { useAuth } from "@/lib/auth";
+import { ORG_UID, supabase } from "@/lib/supabase";
 import { Lock } from "lucide-react";
 import {
   analyticsKPIs, dailyContactsData, cancellationsData,
@@ -69,10 +70,32 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("all");
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
   const [periodOffset, setPeriodOffset] = useState(0);
-  const k = analyticsKPIs;
-  const registrationDate = useMemo(() => {
+  const [registrationDate, setRegistrationDate] = useState<Date>(() => {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() - (revenueData.length - 1), 1);
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const k = analyticsKPIs;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("clients_tg")
+        .select("created_at")
+        .eq("org_uid", ORG_UID)
+        .order("created_at", { ascending: true })
+        .limit(1);
+
+      if (cancelled || error || !data?.length) return;
+      const parsed = new Date(data[0].created_at);
+      if (!Number.isNaN(parsed.getTime())) {
+        setRegistrationDate(parsed);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const dateOptions = useMemo(() => {
