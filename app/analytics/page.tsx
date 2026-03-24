@@ -87,55 +87,31 @@ export default function AnalyticsPage() {
     }
 
     if (period === "week") {
-      const options: Array<{ value: number; label: string }> = [];
-      const weekEnd = new Date(now);
-      let offset = 0;
-      while (weekEnd >= registrationDate) {
-        const weekStart = new Date(weekEnd);
-        weekStart.setDate(weekStart.getDate() - 6);
-        const normalizedStart = weekStart < registrationDate ? registrationDate : weekStart;
-        options.push({ value: offset, label: `${formatDay(normalizedStart)} — ${formatDay(weekEnd)}` });
-        weekEnd.setDate(weekEnd.getDate() - 7);
-        offset += 1;
-      }
-      return options;
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - 6);
+      const normalizedStart = weekStart < registrationDate ? registrationDate : weekStart;
+      return normalizedStart <= now
+        ? [{ value: 0, label: `${formatDay(normalizedStart)} — ${formatDay(now)}` }]
+        : [];
     }
 
     if (period === "month") {
-      const options: Array<{ value: number; label: string }> = [];
-      const cursor = new Date(now.getFullYear(), now.getMonth(), 1);
-      let offset = 0;
-      while (new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0) >= registrationDate) {
-        options.push({ value: offset, label: formatMonthYear(cursor) });
-        cursor.setMonth(cursor.getMonth() - 1);
-        offset += 1;
-      }
-      return options;
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return monthEnd >= registrationDate ? [{ value: 0, label: formatMonthYear(monthStart) }] : [];
     }
 
     if (period === "quarter") {
-      const options: Array<{ value: number; label: string }> = [];
       const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
-      const cursor = new Date(now.getFullYear(), quarterStartMonth, 1);
-      let offset = 0;
-      while (new Date(cursor.getFullYear(), cursor.getMonth() + 3, 0) >= registrationDate) {
-        const q = Math.floor(cursor.getMonth() / 3) + 1;
-        options.push({ value: offset, label: `${q}-й квартал ${cursor.getFullYear()}` });
-        cursor.setMonth(cursor.getMonth() - 3);
-        offset += 1;
-      }
-      return options;
+      const quarterStart = new Date(now.getFullYear(), quarterStartMonth, 1);
+      const quarterEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0);
+      const q = Math.floor(quarterStart.getMonth() / 3) + 1;
+      return quarterEnd >= registrationDate ? [{ value: 0, label: `${q}-й квартал ${quarterStart.getFullYear()}` }] : [];
     }
 
-    const options: Array<{ value: number; label: string }> = [];
-    let year = now.getFullYear();
-    let offset = 0;
-    while (new Date(year, 11, 31) >= registrationDate) {
-      options.push({ value: offset, label: String(year) });
-      year -= 1;
-      offset += 1;
-    }
-    return options;
+    return new Date(now.getFullYear(), 11, 31) >= registrationDate
+      ? [{ value: 0, label: String(now.getFullYear()) }]
+      : [];
   }, [period, registrationDate]);
 
   useEffect(() => {
