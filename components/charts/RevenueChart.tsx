@@ -138,7 +138,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка за период</h3>
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Движение денег за период</h3>
           <div className="relative">
             <button
               type="button"
