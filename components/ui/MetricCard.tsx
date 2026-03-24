@@ -84,14 +84,14 @@ export default function MetricCard({
 
   return (
     <div
-      className={`rounded-xl border ${compact ? "p-4 pb-16 relative" : "p-5"} card-hover transition-all duration-150 ${
+      className={`rounded-xl border ${compact ? "p-3 pb-12 relative" : "p-5"} card-hover transition-all duration-150 ${
         accent ? "card-accent" : "bg-[#0F1622] border-[#223444] card-premium"
       }`}
     >
-      <div className={`flex items-start justify-between ${compact ? "mb-3" : "mb-4"}`}>
+      <div className={`flex items-start justify-between ${compact ? "mb-2.5" : "mb-4"}`}>
         {/* Icon */}
         <div
-          className={`${compact ? "w-9 h-9" : "w-10 h-10"} rounded-lg flex items-center justify-center ${
+          className={`${compact ? "w-8 h-8" : "w-10 h-10"} rounded-lg flex items-center justify-center ${
             accent
               ? "bg-[#00FF00]/[0.1] border border-[#00FF00]/25"
               : "bg-[#141E2B] border border-[#1A2535]"
@@ -120,7 +120,7 @@ export default function MetricCard({
 
       {/* Text */}
       <p className={`text-xs font-medium ${compact ? "mb-1" : "mb-1.5"} text-[#5E7488] uppercase tracking-[0.06em]`}>{title}</p>
-      <p className={`${compact ? "text-[30px] absolute right-12 bottom-9 text-right" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
+      <p className={`${compact ? "text-[24px] absolute right-8 bottom-6 text-right" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
         {value}
       </p>
       {changeLabel && (
