@@ -228,9 +228,9 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
           </div>
         </div>
       </div>
-      <div className="flex-1 min-h-0" style={{ minHeight: 220 }}>
+      <div className="h-[260px]">
         {!hasEnoughData ? (
-          <div className="h-full min-h-[220px] rounded-lg border border-dashed border-[#223444] bg-[#0A0D14] flex items-center justify-center">
+          <div className="h-full rounded-lg border border-dashed border-[#223444] bg-[#0A0D14] flex items-center justify-center">
             <p className="text-[#8299B4] text-sm font-medium">Недостаточно данных</p>
           </div>
         ) : (
