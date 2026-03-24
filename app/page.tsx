@@ -64,6 +64,7 @@ export default function DashboardPage() {
               icon={<TrendingUp size={18} />}
               accent
               tooltip={TOOLTIPS.revenue}
+              compact
             />
           )}
           <MetricCard
@@ -73,6 +74,7 @@ export default function DashboardPage() {
             changeLabel="vs прошлый месяц"
             icon={<Users size={18} />}
             tooltip={TOOLTIPS.newClients}
+            compact
           />
           <MetricCard
             title="Всего записей"
@@ -81,6 +83,7 @@ export default function DashboardPage() {
             changeLabel="vs прошлый месяц"
             icon={<CalendarCheck size={18} />}
             tooltip={TOOLTIPS.appointments}
+            compact
           />
           {isOwner && (
             <MetricCard
@@ -88,6 +91,7 @@ export default function DashboardPage() {
               value={loading ? "—" : formatCurrency(stats.avgCheck)}
               icon={<Receipt size={18} />}
               tooltip={TOOLTIPS.avgCheck}
+              compact
             />
           )}
         </div>
