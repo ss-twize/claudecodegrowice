@@ -7,12 +7,10 @@ import { useClients, type Client } from "@/lib/hooks/useClients";
 import { useCampaignLogs } from "@/lib/hooks/useCampaignLogs";
 import { formatCurrency } from "@/lib/utils";
 import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
-import { useSystemStates } from "@/lib/hooks/useSystemStates";
 import { useAuth } from "@/lib/auth";
 import { callWebhook } from "@/lib/webhooks";
-import { supabase, ORG_UID } from "@/lib/supabase";
 import {
-  Send, Bot, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile, Settings, Power, CheckCircle2, AlertCircle, Filter, RotateCcw, Search,
+  Send, X, TrendingUp, AlertTriangle, UserPlus, UserX, Smile, CheckCircle2, AlertCircle, Filter, RotateCcw, Search,
 } from "lucide-react";
 
 const EMOJIS = [
@@ -450,11 +448,9 @@ function ServicesCell({ services }: { services: string[] }) {
 }
 
 export default function ClientsPage() {
-  const { role, isOwner } = useAuth();
+  const { role } = useAuth();
   const { clients, loading: clientsLoading } = useClients();
   const { logs: campaignLogs, loading: campaignLogsLoading } = useCampaignLogs();
-  const { systems, setSystems } = useSystemStates();
-  const autoSystems = systems.filter((s) => s.system_code !== "main_agent");
 
   const [activeSegment, setActiveSegment] = useState("all");
   const [clientFilters, setClientFilters] = useState<ClientFilterOptions>(EMPTY_CLIENT_FILTERS);
@@ -503,18 +499,6 @@ export default function ClientsPage() {
       ta.focus();
       ta.setSelectionRange(start + emoji.length, start + emoji.length);
     }, 0);
-  };
-
-  const handleSystemToggle = async (systemCode: string, currentEnabled: boolean) => {
-    if (!isOwner) return;
-    const newEnabled = !currentEnabled;
-    setSystems((prev) => prev.map((s) => s.system_code === systemCode ? { ...s, enabled: newEnabled } : s));
-    await supabase.from("system_states").update({ enabled: newEnabled }).eq("org_uid", ORG_UID).eq("system_code", systemCode);
-    await callWebhook("sistema_toggle", { system_code: systemCode, enabled: newEnabled }, role);
-  };
-
-  const handleSystemConfigure = async (systemCode: string) => {
-    await callWebhook("sistema_nastroit", { system_code: systemCode }, role);
   };
 
   const channels = useMemo(() => Array.from(new Set(clients.map((c) => c.communicationChannel))).sort(), [clients]);
@@ -738,19 +722,6 @@ export default function ClientsPage() {
           {campaignLogsLoading && visibleCampaigns.length === 0 ? <div className="flex items-center justify-center py-12 text-[#5E7488] text-sm">Загрузка кампаний...</div> : visibleCampaigns.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-center"><div className="w-14 h-14 rounded-xl bg-[#1A2535] border border-[#223444] flex items-center justify-center mb-4"><Send size={22} className="text-[#5E7488]" /></div><p className="text-[#EDF2FA] font-medium mb-1">Кампаний пока нет</p><p className="text-[#5E7488] text-sm max-w-xs">Запустите первую рассылку, и она сразу появится в таблице ниже.</p></div> : <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b border-[#1A2535]"><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Дата запуска</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Название</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 min-w-[320px]">Текст кампании</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Получатели</th><th className="text-left text-[#5E7488] text-xs font-medium px-4 py-3 whitespace-nowrap">Тип</th></tr></thead><tbody>{visibleCampaigns.map((campaign) => <tr key={campaign.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors align-top"><td className="px-4 py-3 text-sm text-[#8299B4] whitespace-nowrap">{new Date(campaign.createdAt).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td><td className="px-4 py-3 text-sm font-medium text-[#EDF2FA] whitespace-nowrap">{campaign.campaignName}</td><td className="px-4 py-3 text-sm text-[#8299B4]">{campaign.text || "Без текста сообщения"}</td><td className="px-4 py-3 text-sm font-semibold text-[#EDF2FA] whitespace-nowrap">{campaign.recipientsCount}</td><td className="px-4 py-3"><span className="inline-flex items-center rounded-md border border-[#223444] bg-[#1A2535] px-2.5 py-1 text-xs font-medium text-[#EDF2FA] capitalize">{campaign.campaignType}</span></td></tr>)}</tbody></table></div>}
         </div>
 
-        <div>
-          <div className="mb-4"><h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автосистемы</h3><p className="text-[#5E7488] text-sm">Автоматические сценарии работы с клиентами</p></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {autoSystems.map((sys) => (
-              <div key={sys.system_code} className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 card-hover flex flex-col">
-                <div className="flex items-start justify-between mb-4"><div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0"><Bot size={18} className="text-[#00FF00]" /></div><span className={`text-xs font-medium px-2 py-1 rounded-md border ${sys.enabled ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-[#1A2535] text-[#5E7488] border-[#223444]"}`}>{sys.enabled ? "Активно" : "Выключено"}</span></div>
-                <p className="text-[#EDF2FA] font-semibold mb-1 text-sm">{sys.name}</p>
-                <p className="text-[#5E7488] text-xs mb-4 leading-relaxed flex-1">{sys.description}</p>
-                {isOwner && <div className="flex gap-2"><button onClick={() => handleSystemToggle(sys.system_code, sys.enabled)} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${sys.enabled ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-[#00FF00]/30 text-[#00FF00] hover:bg-[#00FF00]/10"}`}><Power size={12} />{sys.enabled ? "Выключить" : "Включить"}</button><button onClick={() => handleSystemConfigure(sys.system_code)} className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors" title="Настроить"><Settings size={12} /></button></div>}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {campaignToast && <div className="fixed bottom-6 right-6 z-[70] max-w-sm w-[calc(100vw-2rem)] sm:w-full"><div className={`rounded-xl border shadow-2xl px-4 py-3 backdrop-blur-sm ${campaignToast.type === "success" ? "bg-[#0F1622]/95 border-[#00FF00]/30" : "bg-[#0F1622]/95 border-red-500/30"}`}><div className="flex items-start gap-3"><div className={`mt-0.5 ${campaignToast.type === "success" ? "text-[#00FF00]" : "text-red-400"}`}>{campaignToast.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}</div><div className="flex-1 min-w-0"><div className="text-sm font-semibold text-[#EDF2FA]">{campaignToast.title}</div><div className="text-sm text-[#8299B4] mt-1">{campaignToast.message}</div></div><button onClick={() => setCampaignToast(null)} className="text-[#5E7488] hover:text-[#EDF2FA] transition-colors" aria-label="Закрыть уведомление"><X size={16} /></button></div></div></div>}
