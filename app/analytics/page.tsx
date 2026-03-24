@@ -114,6 +114,11 @@ export default function AnalyticsPage() {
       : [];
   }, [period, registrationDate]);
 
+  const registrationMonthLabel = useMemo(
+    () => registrationDate.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase()),
+    [registrationDate]
+  );
+
   useEffect(() => {
     if (dateOptions.length === 0) return;
     if (!dateOptions.some((option) => option.value === periodOffset)) {
@@ -122,7 +127,9 @@ export default function AnalyticsPage() {
   }, [dateOptions, periodOffset]);
 
   const selectedDateLabel =
-    dateOptions.find((option) => option.value === periodOffset)?.label ?? "Нет доступных дат";
+    period === "all"
+      ? `от ${registrationMonthLabel}`
+      : dateOptions.find((option) => option.value === periodOffset)?.label ?? "Нет доступных дат";
 
   if (!isOwner) {
     return (
@@ -167,14 +174,21 @@ export default function AnalyticsPage() {
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setDateMenuOpen((prev) => !prev)}
-                className="h-14 inline-flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 text-[#EDF2FA] text-sm font-medium"
+                onClick={() => {
+                  if (period === "all") return;
+                  setDateMenuOpen((prev) => !prev);
+                }}
+                className={`h-14 inline-flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 text-[#EDF2FA] text-sm font-medium ${
+                  period === "all" ? "cursor-default" : ""
+                }`}
               >
                 <CalendarCheck size={14} className="text-[#5E7488]" />
                 <span>{selectedDateLabel}</span>
-                <ChevronDown size={14} className={`text-[#5E7488] transition-transform ${dateMenuOpen ? "rotate-180" : ""}`} />
+                {period !== "all" && (
+                  <ChevronDown size={14} className={`text-[#5E7488] transition-transform ${dateMenuOpen ? "rotate-180" : ""}`} />
+                )}
               </button>
-              {dateMenuOpen && (
+              {period !== "all" && dateMenuOpen && (
                 <div className="absolute z-20 top-full left-0 mt-1 min-w-[260px] max-h-72 overflow-y-auto rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl py-1">
                   {dateOptions.map((option) => (
                     <button
