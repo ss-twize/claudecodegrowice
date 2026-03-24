@@ -14,7 +14,7 @@ import { ChevronDown } from "lucide-react";
 
 type RevenuePoint = { month: string; revenue: number; expenses: number };
 type RevenueRange = "week" | "month" | "quarter" | "year";
-type RangeFocus = "current" | "previous";
+type DateOption = { value: number; label: string };
 
 const RANGE_OPTIONS: Array<{ value: RevenueRange; label: string }> = [
   { value: "week", label: "Неделя" },
@@ -46,35 +46,74 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
   const [range, setRange] = useState<RevenueRange>("year");
-  const [focus, setFocus] = useState<RangeFocus>("current");
+  const [offset, setOffset] = useState(0);
   const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
-  const [focusMenuOpen, setFocusMenuOpen] = useState(false);
+  const [dateMenuOpen, setDateMenuOpen] = useState(false);
+
+  const dateOptions: DateOption[] = useMemo(() => {
+    const now = new Date();
+    const formatDay = (date: Date) => date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    if (range === "week") {
+      return Array.from({ length: 8 }, (_, i) => {
+        const end = new Date(now);
+        end.setDate(now.getDate() - i * 7);
+        const start = new Date(end);
+        start.setDate(end.getDate() - 6);
+        return { value: i, label: `${formatDay(start)} — ${formatDay(end)}` };
+      });
+    }
+
+    if (range === "month") {
+      return Array.from({ length: 12 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        return {
+          value: i,
+          label: d.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase()),
+        };
+      });
+    }
+
+    if (range === "quarter") {
+      return Array.from({ length: 8 }, (_, i) => {
+        const totalQuarterIndex = (now.getFullYear() * 4 + Math.floor(now.getMonth() / 3)) - i;
+        const year = Math.floor(totalQuarterIndex / 4);
+        const quarter = (totalQuarterIndex % 4 + 4) % 4 + 1;
+        return { value: i, label: `Q${quarter} ${year}` };
+      });
+    }
+
+    return Array.from({ length: 5 }, (_, i) => ({ value: i, label: String(now.getFullYear() - i) }));
+  }, [range]);
 
   const periodData = useMemo(() => {
+    const safeSlice = (start: number, end?: number) => {
+      const chunk = data.slice(start, end);
+      return chunk.length > 0 ? chunk : data.slice(-1);
+    };
+
     if (range === "week") {
-      return focus === "current" ? data.slice(-1) : data.slice(-2, -1);
+      const end = data.length - offset;
+      const start = end - 1;
+      return safeSlice(start, end);
     }
     if (range === "month") {
-      return focus === "current" ? data.slice(-1) : data.slice(-2, -1);
+      const end = data.length - offset;
+      const start = end - 1;
+      return safeSlice(start, end);
     }
     if (range === "quarter") {
-      return focus === "current" ? data.slice(-3) : data.slice(-6, -3);
+      const end = data.length - offset * 3;
+      const start = end - 3;
+      return safeSlice(start, end);
     }
-    if (focus === "previous") {
-      const previousYear = data.slice(-24, -12);
-      return previousYear.length > 0 ? previousYear : data.slice(-12);
-    }
-    return data.slice(-12);
-  }, [data, range, focus]);
+    const end = data.length - offset * 12;
+    const start = end - 12;
+    return safeSlice(start, end);
+  }, [data, range, offset]);
 
   const selectedRangeLabel = RANGE_OPTIONS.find((option) => option.value === range)?.label ?? RANGE_OPTIONS[3].label;
-  const focusOptions: Array<{ value: RangeFocus; label: string }> = useMemo(() => {
-    if (range === "week") return [{ value: "current", label: "Текущая неделя" }, { value: "previous", label: "Предыдущая неделя" }];
-    if (range === "month") return [{ value: "current", label: "Текущий месяц" }, { value: "previous", label: "Предыдущий месяц" }];
-    if (range === "quarter") return [{ value: "current", label: "Текущий квартал" }, { value: "previous", label: "Предыдущий квартал" }];
-    return [{ value: "current", label: "Текущий год" }, { value: "previous", label: "Предыдущий год" }];
-  }, [range]);
-  const selectedFocusLabel = focusOptions.find((option) => option.value === focus)?.label ?? focusOptions[0].label;
+  const selectedDateLabel = dateOptions.find((option) => option.value === offset)?.label ?? dateOptions[0]?.label ?? "";
 
   return (
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
@@ -86,7 +125,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
               type="button"
               onClick={() => {
                 setRangeMenuOpen((prev) => !prev);
-                setFocusMenuOpen(false);
+                setDateMenuOpen(false);
               }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#223444] bg-[#0A0D14] text-[#8299B4] text-xs hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
               aria-haspopup="menu"
@@ -103,7 +142,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
                     type="button"
                     onClick={() => {
                       setRange(option.value);
-                      setFocus("current");
+                      setOffset(0);
                       setRangeMenuOpen(false);
                     }}
                     className={`w-full text-left px-3 py-2 text-xs transition-colors ${
@@ -122,28 +161,28 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
             <button
               type="button"
               onClick={() => {
-                setFocusMenuOpen((prev) => !prev);
+                setDateMenuOpen((prev) => !prev);
                 setRangeMenuOpen(false);
               }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#223444] bg-[#0A0D14] text-[#8299B4] text-xs hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
               aria-haspopup="menu"
-              aria-expanded={focusMenuOpen}
+              aria-expanded={dateMenuOpen}
             >
-              {selectedFocusLabel}
-              <ChevronDown size={14} className={`transition-transform ${focusMenuOpen ? "rotate-180" : ""}`} />
+              {selectedDateLabel}
+              <ChevronDown size={14} className={`transition-transform ${dateMenuOpen ? "rotate-180" : ""}`} />
             </button>
-            {focusMenuOpen && (
+            {dateMenuOpen && (
               <div className="absolute top-full left-0 mt-1 min-w-[190px] rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl z-20 py-1">
-                {focusOptions.map((option) => (
+                {dateOptions.map((option) => (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => {
-                      setFocus(option.value);
-                      setFocusMenuOpen(false);
+                      setOffset(option.value);
+                      setDateMenuOpen(false);
                     }}
                     className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                      focus === option.value
+                      offset === option.value
                         ? "text-[#00FF00] bg-[#00FF00]/10"
                         : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
                     }`}
