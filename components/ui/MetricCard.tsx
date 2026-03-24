@@ -84,7 +84,7 @@ export default function MetricCard({
 
   return (
     <div
-      className={`rounded-xl border ${compact ? "p-4" : "p-5"} card-hover transition-all duration-150 ${
+      className={`rounded-xl border ${compact ? "p-4 pb-10 relative" : "p-5"} card-hover transition-all duration-150 ${
         accent ? "card-accent" : "bg-[#0F1622] border-[#223444] card-premium"
       }`}
     >
@@ -120,7 +120,7 @@ export default function MetricCard({
 
       {/* Text */}
       <p className={`text-xs font-medium ${compact ? "mb-1" : "mb-1.5"} text-[#5E7488] uppercase tracking-[0.06em]`}>{title}</p>
-      <p className={`${compact ? "text-[22px]" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
+      <p className={`${compact ? "text-[22px] absolute right-4 bottom-3 text-right" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
         {value}
       </p>
       {changeLabel && (
