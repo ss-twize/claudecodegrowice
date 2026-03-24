@@ -105,7 +105,7 @@ export default function MetricCard({
           {tooltip && <TooltipPopup tooltip={tooltip} />}
           {change !== undefined && (
             <div
-              className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${
+              className={`flex items-center gap-1.5 text-sm font-medium px-2.5 py-1.5 rounded-md ${
                 isPositive
                   ? "bg-[#00FF00]/[0.08] text-[#00FF00]"
                   : "bg-red-500/[0.08] text-red-400"
@@ -119,12 +119,12 @@ export default function MetricCard({
       </div>
 
       {/* Text */}
-      <p className={`text-xs font-medium ${compact ? "mb-1" : "mb-1.5"} text-[#5E7488] uppercase tracking-[0.06em]`}>{title}</p>
+      <p className={`text-xs font-medium ${compact ? "mb-1" : "mb-1.5"} text-[#EDF2FA] uppercase tracking-[0.06em]`}>{title}</p>
       <p className={`${compact ? "text-[24px] absolute right-8 bottom-6 text-right" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
         {value}
       </p>
       {changeLabel && (
-        <p className={`text-xs ${compact ? "mt-1.5" : "mt-2"} text-[#2C4460]`}>{changeLabel}</p>
+        <p className={`text-xs ${compact ? "mt-1.5" : "mt-2"} text-[#8299B4]`}>{changeLabel}</p>
       )}
     </div>
   );
