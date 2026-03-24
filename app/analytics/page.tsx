@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import Header from "@/components/layout/Header";
+import RevenueChart from "@/components/charts/RevenueChart";
 import { useAuth } from "@/lib/auth";
 import { Lock } from "lucide-react";
 import {
   analyticsKPIs, dailyContactsData, cancellationsData,
   noShowData, dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
-  analyticsTrends, revenueHistory,
+  analyticsTrends, revenueData,
 } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "recharts";
 import {
@@ -32,21 +33,6 @@ const AreaTooltip = ({ active, payload, label }: any) => {
     <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
       <p className="text-[#8299B4] mb-1">{label}</p>
       <p className="text-[#00FF00] font-semibold">{payload[0].value} обращений</p>
-    </div>
-  );
-};
-
-const ForecastTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
-      <p className="text-[#8299B4] mb-1">{label}</p>
-      {payload.map((p: any, i: number) => p.value != null && (
-        <p key={i} style={{ color: p.color }} className="font-semibold">
-          {p.name}:{" "}
-          {new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(p.value)}
-        </p>
-      ))}
     </div>
   );
 };
@@ -174,24 +160,8 @@ export default function AnalyticsPage() {
           <KpiCard title="Обращений всего" value={String(k.incomingMessages)} sub="уникальных контактов" icon={<MessageSquare size={16} />} />
         </div>
 
-        {/* Revenue History — full width */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="mb-5">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка по месяцам</h3>
-            <p className="text-[#5E7488] text-sm">Октябрь 2025 — февраль 2026</p>
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false}
-                tickFormatter={(v) => `${v / 1000}к`} width={45} />
-              <Tooltip content={<ForecastTooltip />} />
-              <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
-                dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Revenue movement chart */}
+        <RevenueChart data={revenueData} />
 
         {/* Trends table */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
