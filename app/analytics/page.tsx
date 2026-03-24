@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Messages banner */}
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-lg px-3 py-2 flex items-center justify-between flex-wrap gap-4">
             <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
