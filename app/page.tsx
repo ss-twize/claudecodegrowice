@@ -96,50 +96,44 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Charts row */}
+        {/* Charts + activity columns */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="xl:col-span-2 flex flex-col">
+          <div className="xl:col-span-2 flex flex-col gap-4">
             <RevenueChart data={revenueSeries} />
-          </div>
-          <div className="self-start">
-            <ServicesChart data={servicesSeries} />
-          </div>
-        </div>
-
-        {/* Bottom row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-end">
-          <div className="xl:col-span-2 flex flex-col xl:mt-16">
             <AppointmentsChart data={appointmentsByDay} />
           </div>
+          <div className="flex flex-col gap-4 self-start">
+            <ServicesChart data={servicesSeries} />
 
-          {/* Recent Activity */}
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col">
-            <h3 className="text-[#EDF2FA] font-semibold mb-4 font-unbounded">Последние события</h3>
-            <div className="space-y-3">
-              {activity.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-start gap-3 pb-3 border-b border-[#1A2535] last:border-0 last:pb-0"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {activityIcons[activity.type]}
+            {/* Recent Activity */}
+            <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col">
+              <h3 className="text-[#EDF2FA] font-semibold mb-4 font-unbounded">Последние события</h3>
+              <div className="space-y-3">
+                {activity.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 pb-3 border-b border-[#1A2535] last:border-0 last:pb-0"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0 mt-0.5">
+                      {activityIcons[activity.type]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[#EDF2FA] text-xs leading-relaxed">{activity.text}</p>
+                      <p className="text-[#5E7488] text-xs mt-0.5">{activity.time}</p>
+                    </div>
+                    {isOwner && activity.amount !== null && (
+                      <span
+                        className={`text-xs font-bold flex-shrink-0 ${
+                          activity.amount > 0 ? "text-[#00FF00]" : "text-red-400"
+                        }`}
+                      >
+                        {activity.amount > 0 ? "+" : ""}
+                        {formatCurrency(activity.amount)}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[#EDF2FA] text-xs leading-relaxed">{activity.text}</p>
-                    <p className="text-[#5E7488] text-xs mt-0.5">{activity.time}</p>
-                  </div>
-                  {isOwner && activity.amount !== null && (
-                    <span
-                      className={`text-xs font-bold flex-shrink-0 ${
-                        activity.amount > 0 ? "text-[#00FF00]" : "text-red-400"
-                      }`}
-                    >
-                      {activity.amount > 0 ? "+" : ""}
-                      {formatCurrency(activity.amount)}
-                    </span>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
