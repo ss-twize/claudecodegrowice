@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -9,8 +10,16 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { ChevronDown } from "lucide-react";
 
 type RevenuePoint = { month: string; revenue: number; expenses: number };
+type RevenuePeriod = "3m" | "6m" | "12m";
+
+const PERIOD_OPTIONS: Array<{ value: RevenuePeriod; label: string }> = [
+  { value: "3m", label: "Последние 3 месяца" },
+  { value: "6m", label: "Последние 6 месяцев" },
+  { value: "12m", label: "Последние 12 месяцев" },
+];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -34,12 +43,55 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
+  const [period, setPeriod] = useState<RevenuePeriod>("12m");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const periodData = useMemo(() => {
+    if (period === "3m") return data.slice(-3);
+    if (period === "6m") return data.slice(-6);
+    return data.slice(-12);
+  }, [data, period]);
+
+  const selectedPeriodLabel = PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? PERIOD_OPTIONS[2].label;
+
   return (
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка за год</h3>
-          <p className="text-[#5E7488] text-sm">Последние 12 месяцев (real-time)</p>
+        <div className="flex items-center gap-2">
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка за период</h3>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#223444] bg-[#0A0D14] text-[#8299B4] text-xs hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              {selectedPeriodLabel}
+              <ChevronDown size={14} className={`transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+            </button>
+            {menuOpen && (
+              <div className="absolute top-full left-0 mt-1 min-w-[190px] rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl z-20 py-1">
+                {PERIOD_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setPeriod(option.value);
+                      setMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                      period === option.value
+                        ? "text-[#00FF00] bg-[#00FF00]/10"
+                        : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
@@ -54,7 +106,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
       </div>
       <div className="flex-1 min-h-0" style={{ minHeight: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+          <AreaChart data={periodData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
