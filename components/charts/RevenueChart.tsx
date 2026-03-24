@@ -86,68 +86,37 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
 
   const rawDateOptions: DateOption[] = useMemo(() => {
     const now = new Date();
-    const monthDiffSinceRegistration = Math.max(
-      0,
-      (now.getFullYear() - registrationDate.getFullYear()) * 12 + (now.getMonth() - registrationDate.getMonth()),
-    );
+    const isRegistered = registrationDate <= now;
     const formatDay = (date: Date) => date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+    if (!isRegistered) return [];
+
     if (range === "week") {
-      // Для недель показываем только интервалы текущего месяца.
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const allowedStart =
         registrationDate.getFullYear() === now.getFullYear() && registrationDate.getMonth() === now.getMonth()
           ? new Date(registrationDate)
           : monthStart;
-
-      const weeks: DateOption[] = [];
-      let cursorEnd = new Date(now);
-      let weekOffset = 0;
-
-      while (cursorEnd >= allowedStart) {
-        const cursorStart = new Date(cursorEnd);
-        cursorStart.setDate(cursorEnd.getDate() - 6);
-        const boundedStart = cursorStart < allowedStart ? new Date(allowedStart) : cursorStart;
-        weeks.push({ value: weekOffset, label: `${formatDay(boundedStart)} — ${formatDay(cursorEnd)}` });
-
-        const prevEnd = new Date(boundedStart);
-        prevEnd.setDate(boundedStart.getDate() - 1);
-        cursorEnd = prevEnd;
-        weekOffset += 1;
-      }
-
-      return weeks;
+      return [{ value: 0, label: `${formatDay(allowedStart)} — ${formatDay(now)}` }];
     }
 
     if (range === "month") {
-      return Array.from({ length: Math.min(data.length, monthDiffSinceRegistration + 1) }, (_, i) => {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        return {
-          value: i,
-          label: d.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase()),
-        };
-      });
+      return [{
+        value: 0,
+        label: now.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase()),
+      }];
     }
 
     if (range === "quarter") {
-      const quarterCount = Math.max(1, Math.floor(monthDiffSinceRegistration / 3) + 1);
-      return Array.from({ length: Math.min(Math.ceil(data.length / 3), quarterCount) }, (_, i) => {
-        const totalQuarterIndex = (now.getFullYear() * 4 + Math.floor(now.getMonth() / 3)) - i;
-        const year = Math.floor(totalQuarterIndex / 4);
-        const quarter = (totalQuarterIndex % 4 + 4) % 4 + 1;
-        return { value: i, label: `Q${quarter} ${year}` };
-      });
+      const quarter = Math.floor(now.getMonth() / 3) + 1;
+      return [{ value: 0, label: `Q${quarter} ${now.getFullYear()}` }];
     }
 
-    const yearCount = Math.max(1, now.getFullYear() - registrationDate.getFullYear() + 1);
-    return Array.from({ length: Math.min(Math.ceil(data.length / 12), yearCount) }, (_, i) => ({ value: i, label: String(now.getFullYear() - i) }));
-  }, [data.length, range, registrationDate]);
+    return [{ value: 0, label: String(now.getFullYear()) }];
+  }, [range, registrationDate]);
 
   const requiredPoints = range === "year" ? 12 : range === "quarter" ? 3 : 1;
-  const dateOptions = useMemo(
-    () => rawDateOptions.filter((option) => getPeriodSlice(range, option.value).length >= requiredPoints),
-    [rawDateOptions, range, requiredPoints, data],
-  );
+  const dateOptions = rawDateOptions;
 
   useEffect(() => {
     if (dateOptions.length === 0) return;
@@ -159,7 +128,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
   const effectiveOffset = dateOptions.some((option) => option.value === offset)
     ? offset
     : dateOptions[0]?.value ?? 0;
-  const periodData = useMemo(() => getPeriodSlice(range, effectiveOffset), [range, effectiveOffset, data]);
+  const periodData = getPeriodSlice(range, effectiveOffset);
   const hasEnoughData = periodData.length >= requiredPoints;
 
   const selectedRangeLabel = RANGE_OPTIONS.find((option) => option.value === range)?.label ?? RANGE_OPTIONS[3].label;
