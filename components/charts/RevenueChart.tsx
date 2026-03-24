@@ -115,7 +115,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     return [{ value: 0, label: String(now.getFullYear()) }];
   }, [range, registrationDate]);
 
-  const requiredPoints = range === "year" ? 12 : range === "quarter" ? 3 : 1;
+  const requiredPoints = 1;
   const dateOptions = rawDateOptions;
 
   useEffect(() => {
