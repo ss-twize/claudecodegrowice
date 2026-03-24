@@ -101,7 +101,9 @@ export default function DashboardPage() {
           <div className="xl:col-span-2 flex flex-col">
             <RevenueChart data={revenueSeries} />
           </div>
-          <ServicesChart data={servicesSeries} />
+          <div className="self-start">
+            <ServicesChart data={servicesSeries} />
+          </div>
         </div>
 
         {/* Bottom row */}
