@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import RevenueChart from "@/components/charts/RevenueChart";
+import MetricCard from "@/components/ui/MetricCard";
 import { useAuth } from "@/lib/auth";
 import { Lock } from "lucide-react";
 import {
@@ -59,21 +60,6 @@ const PieTooltip = ({ active, payload }: any) => {
   );
 };
 
-function KpiCard({ title, value, sub, icon, accent }: { title: string; value: string; sub?: string; icon: React.ReactNode; accent?: boolean }) {
-  return (
-    <div className={`rounded-xl border p-4 ${accent ? "bg-[#00FF00] border-[#00FF00]" : "bg-[#0F1622] border-[#223444]"}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent ? "bg-black/20" : "bg-[#1A2535] border border-[#223444]"}`}>
-          <span className={accent ? "text-black" : "text-[#00FF00]"}>{icon}</span>
-        </div>
-      </div>
-      <p className={`text-xs font-medium mb-1 ${accent ? "text-black/70" : "text-[#8299B4]"}`}>{title}</p>
-      <p className={`text-xl font-bold ${accent ? "text-black" : "text-[#EDF2FA]"}`}>{value}</p>
-      {sub && <p className={`text-xs mt-0.5 ${accent ? "text-black/60" : "text-[#5E7488]"}`}>{sub}</p>}
-    </div>
-  );
-}
-
 export default function AnalyticsPage() {
   const { isOwner } = useAuth();
   const [period, setPeriod] = useState<"month" | "quarter" | "half">("month");
@@ -117,17 +103,17 @@ export default function AnalyticsPage() {
 
         {/* Main KPI cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Выручка за период" value={formatCurrency(k.revenue)} sub={`~${formatCurrency(k.revenueAvgDay)} в день`} icon={<TrendingUp size={16} />} accent />
-          <KpiCard title="Записей за период" value={String(k.appointments)} sub={`~${k.appointmentsAvgDay} в день`} icon={<CalendarCheck size={16} />} />
-          <KpiCard title="Конверсия в запись" value={`${k.conversionRate}%`} sub="переписки → запись" icon={<MessageSquare size={16} />} />
-          <KpiCard title="Средний чек" value={formatCurrency(k.avgCheck)} icon={<Receipt size={16} />} />
+          <MetricCard title="Выручка за период" value={formatCurrency(k.revenue)} changeLabel={`~${formatCurrency(k.revenueAvgDay)} в день`} icon={<TrendingUp size={16} />} accent compact />
+          <MetricCard title="Записей за период" value={String(k.appointments)} changeLabel={`~${k.appointmentsAvgDay} в день`} icon={<CalendarCheck size={16} />} compact />
+          <MetricCard title="Конверсия в запись" value={`${k.conversionRate}%`} changeLabel="переписки → запись" icon={<MessageSquare size={16} />} compact />
+          <MetricCard title="Средний чек" value={formatCurrency(k.avgCheck)} icon={<Receipt size={16} />} compact />
         </div>
 
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} />
-          <KpiCard title="Сообщений на обращение" value={String(k.messagesPerContact)} sub="сред. длина диалога" icon={<MessageSquare size={16} />} />
-          <KpiCard title="Возвращаемость" value={`${k.retention}%`} sub="повторные визиты" icon={<RotateCcw size={16} />} />
-          <KpiCard title="Ср. скорость ответа" value={k.avgResponseTime} sub="время реакции агента" icon={<Clock size={16} />} />
+          <MetricCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} compact />
+          <MetricCard title="Сообщений на обращение" value={String(k.messagesPerContact)} changeLabel="сред. длина диалога" icon={<MessageSquare size={16} />} compact />
+          <MetricCard title="Возвращаемость" value={`${k.retention}%`} changeLabel="повторные визиты" icon={<RotateCcw size={16} />} compact />
+          <MetricCard title="Ср. скорость ответа" value={k.avgResponseTime} changeLabel="время реакции агента" icon={<Clock size={16} />} compact />
         </div>
 
         {/* Messages banner */}
@@ -154,10 +140,10 @@ export default function AnalyticsPage() {
 
         {/* Operational metrics */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Записи вне рабочего времени" value={String(k.offHoursAppointments)} sub="агент работает пока все спят" icon={<MoonStar size={16} />} />
-          <KpiCard title="Сэкономлено времени" value={`${k.timeSaved} ч`} sub="администратора" icon={<Zap size={16} />} />
-          <KpiCard title="Реанимированных клиентов" value={String(k.reactivated)} sub="после рассылки по неактивным" icon={<RotateCcw size={16} />} />
-          <KpiCard title="Обращений всего" value={String(k.incomingMessages)} sub="уникальных контактов" icon={<MessageSquare size={16} />} />
+          <MetricCard title="Записи вне рабочего времени" value={String(k.offHoursAppointments)} changeLabel="агент работает пока все спят" icon={<MoonStar size={16} />} compact />
+          <MetricCard title="Сэкономлено времени" value={`${k.timeSaved} ч`} changeLabel="администратора" icon={<Zap size={16} />} compact />
+          <MetricCard title="Реанимированных клиентов" value={String(k.reactivated)} changeLabel="после рассылки по неактивным" icon={<RotateCcw size={16} />} compact />
+          <MetricCard title="Обращений всего" value={String(k.incomingMessages)} changeLabel="уникальных контактов" icon={<MessageSquare size={16} />} compact />
         </div>
 
         {/* Revenue movement chart */}
