@@ -50,22 +50,51 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
   const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
 
+  const registrationDate = useMemo(() => {
+    // Определяем стартовый месяц на основе самого раннего доступного месяца в данных
+    // (fallback: текущий месяц при пустых данных).
+    const now = new Date();
+    if (data.length === 0) return new Date(now.getFullYear(), now.getMonth(), 1);
+    return new Date(now.getFullYear(), now.getMonth() - (data.length - 1), 1);
+  }, [data]);
+
   const dateOptions: DateOption[] = useMemo(() => {
     const now = new Date();
+    const monthDiffSinceRegistration = Math.max(
+      0,
+      (now.getFullYear() - registrationDate.getFullYear()) * 12 + (now.getMonth() - registrationDate.getMonth()),
+    );
     const formatDay = (date: Date) => date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
 
     if (range === "week") {
-      return Array.from({ length: 8 }, (_, i) => {
-        const end = new Date(now);
-        end.setDate(now.getDate() - i * 7);
-        const start = new Date(end);
-        start.setDate(end.getDate() - 6);
-        return { value: i, label: `${formatDay(start)} — ${formatDay(end)}` };
-      });
+      // Для недель показываем только интервалы текущего месяца.
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const allowedStart =
+        registrationDate.getFullYear() === now.getFullYear() && registrationDate.getMonth() === now.getMonth()
+          ? new Date(registrationDate)
+          : monthStart;
+
+      const weeks: DateOption[] = [];
+      let cursorEnd = new Date(now);
+      let weekOffset = 0;
+
+      while (cursorEnd >= allowedStart) {
+        const cursorStart = new Date(cursorEnd);
+        cursorStart.setDate(cursorEnd.getDate() - 6);
+        const boundedStart = cursorStart < allowedStart ? new Date(allowedStart) : cursorStart;
+        weeks.push({ value: weekOffset, label: `${formatDay(boundedStart)} — ${formatDay(cursorEnd)}` });
+
+        const prevEnd = new Date(boundedStart);
+        prevEnd.setDate(boundedStart.getDate() - 1);
+        cursorEnd = prevEnd;
+        weekOffset += 1;
+      }
+
+      return weeks;
     }
 
     if (range === "month") {
-      return Array.from({ length: 12 }, (_, i) => {
+      return Array.from({ length: Math.min(data.length, monthDiffSinceRegistration + 1) }, (_, i) => {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         return {
           value: i,
@@ -75,7 +104,8 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     }
 
     if (range === "quarter") {
-      return Array.from({ length: 8 }, (_, i) => {
+      const quarterCount = Math.max(1, Math.floor(monthDiffSinceRegistration / 3) + 1);
+      return Array.from({ length: Math.min(Math.ceil(data.length / 3), quarterCount) }, (_, i) => {
         const totalQuarterIndex = (now.getFullYear() * 4 + Math.floor(now.getMonth() / 3)) - i;
         const year = Math.floor(totalQuarterIndex / 4);
         const quarter = (totalQuarterIndex % 4 + 4) % 4 + 1;
@@ -83,13 +113,14 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
       });
     }
 
-    return Array.from({ length: 5 }, (_, i) => ({ value: i, label: String(now.getFullYear() - i) }));
-  }, [range]);
+    const yearCount = Math.max(1, now.getFullYear() - registrationDate.getFullYear() + 1);
+    return Array.from({ length: Math.min(Math.ceil(data.length / 12), yearCount) }, (_, i) => ({ value: i, label: String(now.getFullYear() - i) }));
+  }, [data.length, range, registrationDate]);
 
   const periodData = useMemo(() => {
     const safeSlice = (start: number, end?: number) => {
       const chunk = data.slice(start, end);
-      return chunk.length > 0 ? chunk : data.slice(-1);
+      return chunk.length > 0 ? chunk : [];
     };
 
     if (range === "week") {
@@ -111,6 +142,9 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     const start = end - 12;
     return safeSlice(start, end);
   }, [data, range, offset]);
+
+  const requiredPoints = range === "year" ? 12 : range === "quarter" ? 3 : 1;
+  const hasEnoughData = periodData.length >= requiredPoints;
 
   const selectedRangeLabel = RANGE_OPTIONS.find((option) => option.value === range)?.label ?? RANGE_OPTIONS[3].label;
   const selectedDateLabel = dateOptions.find((option) => option.value === offset)?.label ?? dateOptions[0]?.label ?? "";
@@ -206,26 +240,32 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
         </div>
       </div>
       <div className="flex-1 min-h-0" style={{ minHeight: 220 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={periodData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-            <defs>
-              <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="expensesGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4a5568" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#4a5568" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
-            <XAxis dataKey="month" tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}к`} width={45} />
-            <Tooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="revenue" name="Выручка" stroke="#00FF00" strokeWidth={2} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
-            <Area type="monotone" dataKey="expenses" name="Расходы" stroke="#4a5568" strokeWidth={2} fill="url(#expensesGrad)" dot={false} activeDot={{ r: 4, fill: "#4a5568", strokeWidth: 0 }} />
-          </AreaChart>
-        </ResponsiveContainer>
+        {!hasEnoughData ? (
+          <div className="h-full min-h-[220px] rounded-lg border border-dashed border-[#223444] bg-[#0A0D14] flex items-center justify-center">
+            <p className="text-[#8299B4] text-sm font-medium">Недостаточно данных</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={periodData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+              <defs>
+                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#00FF00" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="expensesGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4a5568" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#4a5568" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}к`} width={45} />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="revenue" name="Выручка" stroke="#00FF00" strokeWidth={2} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
+              <Area type="monotone" dataKey="expenses" name="Расходы" stroke="#4a5568" strokeWidth={2} fill="url(#expensesGrad)" dot={false} activeDot={{ r: 4, fill: "#4a5568", strokeWidth: 0 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
