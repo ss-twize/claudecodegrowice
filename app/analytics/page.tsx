@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
 import RevenueChart from "@/components/charts/RevenueChart";
 import MetricCard from "@/components/ui/MetricCard";
@@ -19,14 +19,18 @@ import {
 } from "recharts";
 import {
   TrendingUp, TrendingDown, CalendarCheck, MessageSquare, Receipt, AlertTriangle,
-  RotateCcw, Clock, Zap, ArrowDownLeft, ArrowUpRight, MoonStar, Minus,
+  RotateCcw, Clock, Zap, ArrowDownLeft, ArrowUpRight, MoonStar, Minus, ChevronDown,
 } from "lucide-react";
 
-const PERIOD_LABELS: Record<string, string> = {
-  month: "Февраль 2026 г.",
-  quarter: "1-й квартал 2026",
-  half: "Янв–Июн 2026",
-};
+type AnalyticsPeriod = "all" | "week" | "month" | "quarter" | "year";
+
+const PERIOD_OPTIONS: Array<{ value: AnalyticsPeriod; label: string }> = [
+  { value: "all", label: "Все время" },
+  { value: "week", label: "Неделя" },
+  { value: "month", label: "Месяц" },
+  { value: "quarter", label: "Квартал" },
+  { value: "year", label: "Год" },
+];
 
 const AreaTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -62,8 +66,87 @@ const PieTooltip = ({ active, payload }: any) => {
 
 export default function AnalyticsPage() {
   const { isOwner } = useAuth();
-  const [period, setPeriod] = useState<"month" | "quarter" | "half">("month");
+  const [period, setPeriod] = useState<AnalyticsPeriod>("all");
+  const [dateMenuOpen, setDateMenuOpen] = useState(false);
+  const [periodOffset, setPeriodOffset] = useState(0);
   const k = analyticsKPIs;
+  const registrationDate = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() - (revenueData.length - 1), 1);
+  }, []);
+
+  const dateOptions = useMemo(() => {
+    const now = new Date();
+    const formatMonthYear = (date: Date) =>
+      date.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase());
+    const formatDay = (date: Date) =>
+      date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    if (period === "all") {
+      return [{ value: 0, label: `${formatMonthYear(registrationDate)} — ${formatMonthYear(now)}` }];
+    }
+
+    if (period === "week") {
+      const options: Array<{ value: number; label: string }> = [];
+      const weekEnd = new Date(now);
+      let offset = 0;
+      while (weekEnd >= registrationDate) {
+        const weekStart = new Date(weekEnd);
+        weekStart.setDate(weekStart.getDate() - 6);
+        const normalizedStart = weekStart < registrationDate ? registrationDate : weekStart;
+        options.push({ value: offset, label: `${formatDay(normalizedStart)} — ${formatDay(weekEnd)}` });
+        weekEnd.setDate(weekEnd.getDate() - 7);
+        offset += 1;
+      }
+      return options;
+    }
+
+    if (period === "month") {
+      const options: Array<{ value: number; label: string }> = [];
+      const cursor = new Date(now.getFullYear(), now.getMonth(), 1);
+      let offset = 0;
+      while (cursor >= registrationDate) {
+        options.push({ value: offset, label: formatMonthYear(cursor) });
+        cursor.setMonth(cursor.getMonth() - 1);
+        offset += 1;
+      }
+      return options;
+    }
+
+    if (period === "quarter") {
+      const options: Array<{ value: number; label: string }> = [];
+      const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+      const cursor = new Date(now.getFullYear(), quarterStartMonth, 1);
+      let offset = 0;
+      while (cursor >= registrationDate) {
+        const q = Math.floor(cursor.getMonth() / 3) + 1;
+        options.push({ value: offset, label: `${q}-й квартал ${cursor.getFullYear()}` });
+        cursor.setMonth(cursor.getMonth() - 3);
+        offset += 1;
+      }
+      return options;
+    }
+
+    const options: Array<{ value: number; label: string }> = [];
+    let year = now.getFullYear();
+    let offset = 0;
+    while (year >= registrationDate.getFullYear()) {
+      options.push({ value: offset, label: String(year) });
+      year -= 1;
+      offset += 1;
+    }
+    return options;
+  }, [period, registrationDate]);
+
+  useEffect(() => {
+    if (dateOptions.length === 0) return;
+    if (!dateOptions.some((option) => option.value === periodOffset)) {
+      setPeriodOffset(dateOptions[0].value);
+    }
+  }, [dateOptions, periodOffset]);
+
+  const selectedDateLabel =
+    dateOptions.find((option) => option.value === periodOffset)?.label ?? "Нет доступных дат";
 
   if (!isOwner) {
     return (
@@ -89,16 +172,47 @@ export default function AnalyticsPage() {
           {/* Period selector */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="h-14 flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
-              {(["month", "quarter", "half"] as const).map((p) => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${period === p ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
-                  {p === "month" ? "Месяц" : p === "quarter" ? "Квартал" : "Полгода"}
+              {PERIOD_OPTIONS.map((option) => (
+                <button key={option.value} onClick={() => setPeriod(option.value)}
+                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    period === option.value ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"
+                  }`}
+                >
+                  {option.label}
                 </button>
               ))}
             </div>
-            <div className="h-14 flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3">
-              <CalendarCheck size={14} className="text-[#5E7488]" />
-              <span className="text-[#EDF2FA] text-sm font-medium">{PERIOD_LABELS[period]}</span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDateMenuOpen((prev) => !prev)}
+                className="h-14 inline-flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 text-[#EDF2FA] text-sm font-medium"
+              >
+                <CalendarCheck size={14} className="text-[#5E7488]" />
+                <span>{selectedDateLabel}</span>
+                <ChevronDown size={14} className={`text-[#5E7488] transition-transform ${dateMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+              {dateMenuOpen && (
+                <div className="absolute z-20 top-full left-0 mt-1 min-w-[260px] max-h-72 overflow-y-auto rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl py-1">
+                  {dateOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setPeriodOffset(option.value);
+                        setDateMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        option.value === periodOffset
+                          ? "text-[#00FF00] bg-[#00FF00]/10"
+                          : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
