@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -58,7 +58,33 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     return new Date(now.getFullYear(), now.getMonth() - (data.length - 1), 1);
   }, [data]);
 
-  const dateOptions: DateOption[] = useMemo(() => {
+  const getPeriodSlice = (selectedRange: RevenueRange, selectedOffset: number) => {
+    const safeSlice = (start: number, end?: number) => {
+      const chunk = data.slice(start, end);
+      return chunk.length > 0 ? chunk : [];
+    };
+
+    if (selectedRange === "week") {
+      const end = data.length - selectedOffset;
+      const start = end - 1;
+      return safeSlice(start, end);
+    }
+    if (selectedRange === "month") {
+      const end = data.length - selectedOffset;
+      const start = end - 1;
+      return safeSlice(start, end);
+    }
+    if (selectedRange === "quarter") {
+      const end = data.length - selectedOffset * 3;
+      const start = end - 3;
+      return safeSlice(start, end);
+    }
+    const end = data.length - selectedOffset * 12;
+    const start = end - 12;
+    return safeSlice(start, end);
+  };
+
+  const rawDateOptions: DateOption[] = useMemo(() => {
     const now = new Date();
     const monthDiffSinceRegistration = Math.max(
       0,
@@ -117,37 +143,27 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     return Array.from({ length: Math.min(Math.ceil(data.length / 12), yearCount) }, (_, i) => ({ value: i, label: String(now.getFullYear() - i) }));
   }, [data.length, range, registrationDate]);
 
-  const periodData = useMemo(() => {
-    const safeSlice = (start: number, end?: number) => {
-      const chunk = data.slice(start, end);
-      return chunk.length > 0 ? chunk : [];
-    };
-
-    if (range === "week") {
-      const end = data.length - offset;
-      const start = end - 1;
-      return safeSlice(start, end);
-    }
-    if (range === "month") {
-      const end = data.length - offset;
-      const start = end - 1;
-      return safeSlice(start, end);
-    }
-    if (range === "quarter") {
-      const end = data.length - offset * 3;
-      const start = end - 3;
-      return safeSlice(start, end);
-    }
-    const end = data.length - offset * 12;
-    const start = end - 12;
-    return safeSlice(start, end);
-  }, [data, range, offset]);
-
   const requiredPoints = range === "year" ? 12 : range === "quarter" ? 3 : 1;
+  const dateOptions = useMemo(
+    () => rawDateOptions.filter((option) => getPeriodSlice(range, option.value).length >= requiredPoints),
+    [rawDateOptions, range, requiredPoints, data],
+  );
+
+  useEffect(() => {
+    if (dateOptions.length === 0) return;
+    if (!dateOptions.some((option) => option.value === offset)) {
+      setOffset(dateOptions[0].value);
+    }
+  }, [dateOptions, offset]);
+
+  const effectiveOffset = dateOptions.some((option) => option.value === offset)
+    ? offset
+    : dateOptions[0]?.value ?? 0;
+  const periodData = useMemo(() => getPeriodSlice(range, effectiveOffset), [range, effectiveOffset, data]);
   const hasEnoughData = periodData.length >= requiredPoints;
 
   const selectedRangeLabel = RANGE_OPTIONS.find((option) => option.value === range)?.label ?? RANGE_OPTIONS[3].label;
-  const selectedDateLabel = dateOptions.find((option) => option.value === offset)?.label ?? dateOptions[0]?.label ?? "";
+  const selectedDateLabel = dateOptions.find((option) => option.value === effectiveOffset)?.label ?? "Нет доступных дат";
 
   return (
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
@@ -207,23 +223,27 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
             </button>
             {dateMenuOpen && (
               <div className="absolute top-full left-0 mt-1 min-w-[190px] rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl z-20 py-1">
-                {dateOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      setOffset(option.value);
-                      setDateMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                      offset === option.value
-                        ? "text-[#00FF00] bg-[#00FF00]/10"
-                        : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                {dateOptions.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-[#5E7488]">Нет доступных дат</p>
+                ) : (
+                  dateOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setOffset(option.value);
+                        setDateMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        effectiveOffset === option.value
+                          ? "text-[#00FF00] bg-[#00FF00]/10"
+                          : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
