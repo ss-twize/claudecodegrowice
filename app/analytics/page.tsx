@@ -101,21 +101,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Main KPI cards */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <MetricCard title="Выручка за период" value={formatCurrency(k.revenue)} changeLabel={`~${formatCurrency(k.revenueAvgDay)} в день`} icon={<TrendingUp size={16} />} accent compact />
-          <MetricCard title="Записей за период" value={String(k.appointments)} changeLabel={`~${k.appointmentsAvgDay} в день`} icon={<CalendarCheck size={16} />} compact />
-          <MetricCard title="Конверсия в запись" value={`${k.conversionRate}%`} changeLabel="переписки → запись" icon={<MessageSquare size={16} />} compact />
-          <MetricCard title="Средний чек" value={formatCurrency(k.avgCheck)} icon={<Receipt size={16} />} compact />
-        </div>
-
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <MetricCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} compact />
-          <MetricCard title="Сообщений на обращение" value={String(k.messagesPerContact)} changeLabel="сред. длина диалога" icon={<MessageSquare size={16} />} compact />
-          <MetricCard title="Возвращаемость" value={`${k.retention}%`} changeLabel="повторные визиты" icon={<RotateCcw size={16} />} compact />
-          <MetricCard title="Ср. скорость ответа" value={k.avgResponseTime} changeLabel="время реакции агента" icon={<Clock size={16} />} compact />
-        </div>
-
         {/* Messages banner */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
           <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
@@ -136,6 +121,21 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Main KPI cards */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <MetricCard title="Выручка за период" value={formatCurrency(k.revenue)} changeLabel={`~${formatCurrency(k.revenueAvgDay)} в день`} icon={<TrendingUp size={16} />} accent compact />
+          <MetricCard title="Записей за период" value={String(k.appointments)} changeLabel={`~${k.appointmentsAvgDay} в день`} icon={<CalendarCheck size={16} />} compact />
+          <MetricCard title="Конверсия в запись" value={`${k.conversionRate}%`} changeLabel="переписки → запись" icon={<MessageSquare size={16} />} compact />
+          <MetricCard title="Средний чек" value={formatCurrency(k.avgCheck)} icon={<Receipt size={16} />} compact />
+        </div>
+
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <MetricCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} compact />
+          <MetricCard title="Сообщений на обращение" value={String(k.messagesPerContact)} changeLabel="сред. длина диалога" icon={<MessageSquare size={16} />} compact />
+          <MetricCard title="Возвращаемость" value={`${k.retention}%`} changeLabel="повторные визиты" icon={<RotateCcw size={16} />} compact />
+          <MetricCard title="Ср. скорость ответа" value={k.avgResponseTime} changeLabel="время реакции агента" icon={<Clock size={16} />} compact />
         </div>
 
         {/* Operational metrics */}
