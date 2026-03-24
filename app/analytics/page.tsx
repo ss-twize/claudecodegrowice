@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
       const options: Array<{ value: number; label: string }> = [];
       const cursor = new Date(now.getFullYear(), now.getMonth(), 1);
       let offset = 0;
-      while (cursor >= registrationDate) {
+      while (new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0) >= registrationDate) {
         options.push({ value: offset, label: formatMonthYear(cursor) });
         cursor.setMonth(cursor.getMonth() - 1);
         offset += 1;
@@ -118,7 +118,7 @@ export default function AnalyticsPage() {
       const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
       const cursor = new Date(now.getFullYear(), quarterStartMonth, 1);
       let offset = 0;
-      while (cursor >= registrationDate) {
+      while (new Date(cursor.getFullYear(), cursor.getMonth() + 3, 0) >= registrationDate) {
         const q = Math.floor(cursor.getMonth() / 3) + 1;
         options.push({ value: offset, label: `${q}-й квартал ${cursor.getFullYear()}` });
         cursor.setMonth(cursor.getMonth() - 3);
@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
     const options: Array<{ value: number; label: string }> = [];
     let year = now.getFullYear();
     let offset = 0;
-    while (year >= registrationDate.getFullYear()) {
+    while (new Date(year, 11, 31) >= registrationDate) {
       options.push({ value: offset, label: String(year) });
       year -= 1;
       offset += 1;
@@ -173,7 +173,13 @@ export default function AnalyticsPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="h-14 flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
               {PERIOD_OPTIONS.map((option) => (
-                <button key={option.value} onClick={() => setPeriod(option.value)}
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setPeriod(option.value);
+                    setPeriodOffset(0);
+                    setDateMenuOpen(false);
+                  }}
                   className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     period === option.value ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"
                   }`}
