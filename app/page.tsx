@@ -107,8 +107,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-stretch">
-          <div className="xl:col-span-2 flex flex-col">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-end">
+          <div className="xl:col-span-2 flex flex-col xl:mt-16">
             <AppointmentsChart data={appointmentsByDay} />
           </div>
 
