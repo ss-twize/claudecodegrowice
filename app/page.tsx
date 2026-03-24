@@ -113,7 +113,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col xl:-mt-40">
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 flex flex-col">
             <h3 className="text-[#EDF2FA] font-semibold mb-4 font-unbounded">Последние события</h3>
             <div className="space-y-3">
               {activity.map((activity) => (
