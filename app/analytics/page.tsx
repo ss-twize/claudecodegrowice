@@ -85,39 +85,41 @@ export default function AnalyticsPage() {
       <Header title="Аналитика" subtitle="Полная аналитика бизнеса и агента" />
       <div className="p-6 space-y-6">
 
-        {/* Period selector */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
-            {(["month", "quarter", "half"] as const).map((p) => (
-              <button key={p} onClick={() => setPeriod(p)}
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${period === p ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
-                {p === "month" ? "Месяц" : p === "quarter" ? "Квартал" : "Полгода"}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 py-2">
-            <CalendarCheck size={14} className="text-[#5E7488]" />
-            <span className="text-[#EDF2FA] text-sm font-medium">{PERIOD_LABELS[period]}</span>
-          </div>
-        </div>
-
-        {/* Messages banner */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
-          <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <ArrowDownLeft size={16} className="text-[#00FF00]" />
-              <div>
-                <p className="text-[#EDF2FA] font-bold text-lg">{k.incomingMessages.toLocaleString("ru")}</p>
-                <p className="text-[#5E7488] text-xs">Входящих</p>
-              </div>
+        <div className="grid grid-cols-1 xl:grid-cols-[auto,1fr] gap-4 items-stretch">
+          {/* Period selector */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
+              {(["month", "quarter", "half"] as const).map((p) => (
+                <button key={p} onClick={() => setPeriod(p)}
+                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${period === p ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
+                  {p === "month" ? "Месяц" : p === "quarter" ? "Квартал" : "Полгода"}
+                </button>
+              ))}
             </div>
-            <div className="w-px h-8 bg-[#223444]" />
-            <div className="flex items-center gap-2">
-              <ArrowUpRight size={16} className="text-[#8299B4]" />
-              <div>
-                <p className="text-[#EDF2FA] font-bold text-lg">{k.outgoingMessages.toLocaleString("ru")}</p>
-                <p className="text-[#5E7488] text-xs">Исходящих</p>
+            <div className="flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 py-2">
+              <CalendarCheck size={14} className="text-[#5E7488]" />
+              <span className="text-[#EDF2FA] text-sm font-medium">{PERIOD_LABELS[period]}</span>
+            </div>
+          </div>
+
+          {/* Messages banner */}
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
+            <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2">
+                <ArrowDownLeft size={16} className="text-[#00FF00]" />
+                <div>
+                  <p className="text-[#EDF2FA] font-bold text-lg">{k.incomingMessages.toLocaleString("ru")}</p>
+                  <p className="text-[#5E7488] text-xs">Входящих</p>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-[#223444]" />
+              <div className="flex items-center gap-2">
+                <ArrowUpRight size={16} className="text-[#8299B4]" />
+                <div>
+                  <p className="text-[#EDF2FA] font-bold text-lg">{k.outgoingMessages.toLocaleString("ru")}</p>
+                  <p className="text-[#5E7488] text-xs">Исходящих</p>
+                </div>
               </div>
             </div>
           </div>
