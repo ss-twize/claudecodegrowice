@@ -10,7 +10,7 @@ import { useKnowledgeFiles } from "@/lib/hooks/useKnowledgeFiles";
 import { useAuth } from "@/lib/auth";
 import {
   Plus, Trash2, ExternalLink, CheckCircle2, Shield, Users, Bell,
-  Upload, FileText, X, RefreshCw, MessageSquare, Power, Settings2,
+  Upload, FileText, X, RefreshCw, MessageSquare, Power, Settings2, Bot,
   AlertTriangle,
 } from "lucide-react";
 
@@ -298,28 +298,36 @@ export default function SettingsPage() {
               <Settings2 size={16} className="text-[#00FF00]" />
               <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автосистемы</h3>
             </div>
-            <p className="text-[#5E7488] text-sm mb-4">Включение и настройка автоматических сценариев</p>
-            <div className="space-y-3">
+            <p className="text-[#5E7488] text-sm mb-6">Автоматические сценарии работы с клиентами</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {autoSystems.map((sys) => (
-                <div key={sys.system_code} className="flex items-center justify-between py-3 border-b border-[#1A2535] last:border-0">
-                  <div className="flex-1 min-w-0 mr-4">
-                    <p className="text-[#EDF2FA] text-sm font-medium">{sys.name}</p>
-                    <p className="text-[#5E7488] text-xs mt-0.5">{sys.description}</p>
-                    <p className={`text-xs mt-1 font-medium ${sys.enabled ? "text-[#00FF00]" : "text-[#5E7488]"}`}>
-                      {sys.enabled ? "Активна" : "Отключена"}
-                    </p>
+                <div key={sys.system_code} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-5 card-hover flex flex-col">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
+                      <Bot size={18} className="text-[#00FF00]" />
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-md border ${sys.enabled ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-[#1A2535] text-[#5E7488] border-[#223444]"}`}>
+                      {sys.enabled ? "Активно" : "Выключено"}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <p className="text-[#EDF2FA] font-semibold mb-1 text-sm">{sys.name}</p>
+                  <p className="text-[#5E7488] text-xs mb-4 leading-relaxed flex-1">{sys.description}</p>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => configureSystem(sys.system_code)}
-                      className="px-3 py-1.5 rounded-lg border border-[#223444] text-[#8299B4] text-xs font-medium hover:border-[#2C4460] hover:text-[#EDF2FA] transition-colors"
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
+                      title="Настроить"
                     >
+                      <Settings2 size={12} />
                       Настроить
                     </button>
-                    <Toggle
-                      enabled={sys.enabled}
-                      onChange={() => toggleSystem(sys.system_code, sys.enabled)}
-                    />
+                    <button
+                      onClick={() => toggleSystem(sys.system_code, sys.enabled)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${sys.enabled ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-[#00FF00]/30 text-[#00FF00] hover:bg-[#00FF00]/10"}`}
+                    >
+                      <Power size={12} />
+                      {sys.enabled ? "Выключить" : "Включить"}
+                    </button>
                   </div>
                 </div>
               ))}
