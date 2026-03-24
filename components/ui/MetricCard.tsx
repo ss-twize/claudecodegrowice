@@ -120,7 +120,7 @@ export default function MetricCard({
 
       {/* Text */}
       <p className={`text-xs font-medium font-unbounded ${compact ? "mb-1" : "mb-1.5"} text-[#EDF2FA] uppercase tracking-[0.06em]`}>{title}</p>
-      <p className={`${compact ? "text-[24px] absolute right-8 bottom-6 text-right" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
+      <p className={`${compact ? "text-[24px] absolute right-5 bottom-4 text-right" : "text-2xl"} font-bold font-unbounded leading-none ${accent ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>
         {value}
       </p>
       {changeLabel && (
