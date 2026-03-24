@@ -13,12 +13,14 @@ import {
 import { ChevronDown } from "lucide-react";
 
 type RevenuePoint = { month: string; revenue: number; expenses: number };
-type RevenuePeriod = "3m" | "6m" | "12m";
+type RevenueRange = "week" | "month" | "quarter" | "year";
+type RangeFocus = "current" | "previous";
 
-const PERIOD_OPTIONS: Array<{ value: RevenuePeriod; label: string }> = [
-  { value: "3m", label: "Последние 3 месяца" },
-  { value: "6m", label: "Последние 6 месяцев" },
-  { value: "12m", label: "Последние 12 месяцев" },
+const RANGE_OPTIONS: Array<{ value: RevenueRange; label: string }> = [
+  { value: "week", label: "Неделя" },
+  { value: "month", label: "Месяц" },
+  { value: "quarter", label: "Квартал" },
+  { value: "year", label: "Год" },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -43,45 +45,105 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
-  const [period, setPeriod] = useState<RevenuePeriod>("12m");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [range, setRange] = useState<RevenueRange>("year");
+  const [focus, setFocus] = useState<RangeFocus>("current");
+  const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
+  const [focusMenuOpen, setFocusMenuOpen] = useState(false);
 
   const periodData = useMemo(() => {
-    if (period === "3m") return data.slice(-3);
-    if (period === "6m") return data.slice(-6);
+    if (range === "week") {
+      return focus === "current" ? data.slice(-1) : data.slice(-2, -1);
+    }
+    if (range === "month") {
+      return focus === "current" ? data.slice(-1) : data.slice(-2, -1);
+    }
+    if (range === "quarter") {
+      return focus === "current" ? data.slice(-3) : data.slice(-6, -3);
+    }
+    if (focus === "previous") {
+      const previousYear = data.slice(-24, -12);
+      return previousYear.length > 0 ? previousYear : data.slice(-12);
+    }
     return data.slice(-12);
-  }, [data, period]);
+  }, [data, range, focus]);
 
-  const selectedPeriodLabel = PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? PERIOD_OPTIONS[2].label;
+  const selectedRangeLabel = RANGE_OPTIONS.find((option) => option.value === range)?.label ?? RANGE_OPTIONS[3].label;
+  const focusOptions: Array<{ value: RangeFocus; label: string }> = useMemo(() => {
+    if (range === "week") return [{ value: "current", label: "Текущая неделя" }, { value: "previous", label: "Предыдущая неделя" }];
+    if (range === "month") return [{ value: "current", label: "Текущий месяц" }, { value: "previous", label: "Предыдущий месяц" }];
+    if (range === "quarter") return [{ value: "current", label: "Текущий квартал" }, { value: "previous", label: "Предыдущий квартал" }];
+    return [{ value: "current", label: "Текущий год" }, { value: "previous", label: "Предыдущий год" }];
+  }, [range]);
+  const selectedFocusLabel = focusOptions.find((option) => option.value === focus)?.label ?? focusOptions[0].label;
 
   return (
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка за период</h3>
           <div className="relative">
             <button
               type="button"
-              onClick={() => setMenuOpen((prev) => !prev)}
+              onClick={() => {
+                setRangeMenuOpen((prev) => !prev);
+                setFocusMenuOpen(false);
+              }}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#223444] bg-[#0A0D14] text-[#8299B4] text-xs hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
               aria-haspopup="menu"
-              aria-expanded={menuOpen}
+              aria-expanded={rangeMenuOpen}
             >
-              {selectedPeriodLabel}
-              <ChevronDown size={14} className={`transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+              {selectedRangeLabel}
+              <ChevronDown size={14} className={`transition-transform ${rangeMenuOpen ? "rotate-180" : ""}`} />
             </button>
-            {menuOpen && (
+            {rangeMenuOpen && (
               <div className="absolute top-full left-0 mt-1 min-w-[190px] rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl z-20 py-1">
-                {PERIOD_OPTIONS.map((option) => (
+                {RANGE_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => {
-                      setPeriod(option.value);
-                      setMenuOpen(false);
+                      setRange(option.value);
+                      setFocus("current");
+                      setRangeMenuOpen(false);
                     }}
                     className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                      period === option.value
+                      range === option.value
+                        ? "text-[#00FF00] bg-[#00FF00]/10"
+                        : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setFocusMenuOpen((prev) => !prev);
+                setRangeMenuOpen(false);
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#223444] bg-[#0A0D14] text-[#8299B4] text-xs hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
+              aria-haspopup="menu"
+              aria-expanded={focusMenuOpen}
+            >
+              {selectedFocusLabel}
+              <ChevronDown size={14} className={`transition-transform ${focusMenuOpen ? "rotate-180" : ""}`} />
+            </button>
+            {focusMenuOpen && (
+              <div className="absolute top-full left-0 mt-1 min-w-[190px] rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl z-20 py-1">
+                {focusOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setFocus(option.value);
+                      setFocusMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                      focus === option.value
                         ? "text-[#00FF00] bg-[#00FF00]/10"
                         : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
                     }`}
