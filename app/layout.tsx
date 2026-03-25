@@ -17,7 +17,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "GROWICE — Dashboard",
+  title: "GROWICE — Главная панель",
   description: "Платформа управления салоном красоты",
 };
 

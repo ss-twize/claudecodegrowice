@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const FILE_TYPE_LABELS: Record<string, string> = {
-  pdf: "PDF", txt: "Текст", doc: "Word", docx: "Word",
+  pdf: "PDF", txt: "Текст", doc: "Ворд", docx: "Ворд",
 };
 const STATUS_COLORS: Record<string, string> = {
   загружен: "text-[#00FF00] bg-[#00FF00]/10 border-[#00FF00]/20",
@@ -226,7 +226,7 @@ export default function SettingsPage() {
             <FileText size={16} className="text-[#00FF00]" />
             <h3 className="text-[#EDF2FA] font-semibold font-unbounded">База знаний</h3>
           </div>
-          <p className="text-[#5E7488] text-sm mb-4">Загрузите документы для агента — они отправляются в обработку и сохраняются на Google Диск</p>
+          <p className="text-[#5E7488] text-sm mb-4">Загрузите документы для агента — они отправляются в обработку и сохраняются на Гугл Диск</p>
 
           {/* Upload area */}
           <div

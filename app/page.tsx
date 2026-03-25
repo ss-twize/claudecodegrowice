@@ -60,7 +60,7 @@ export default function DashboardPage() {
               title="Выручка за месяц"
               value={loading ? "—" : formatCurrency(stats.monthlyRevenue)}
               change={stats.monthlyRevenueGrowth}
-              changeLabel="vs прошлый месяц"
+              changeLabel="к прошлому месяцу"
               icon={<TrendingUp size={18} />}
               accent
               tooltip={TOOLTIPS.revenue}
@@ -71,7 +71,7 @@ export default function DashboardPage() {
             title="Новые клиенты"
             value={loading ? "—" : String(stats.newClients)}
             change={stats.newClientsGrowth}
-            changeLabel="vs прошлый месяц"
+            changeLabel="к прошлому месяцу"
             icon={<Users size={18} />}
             tooltip={TOOLTIPS.newClients}
             compact
@@ -80,7 +80,7 @@ export default function DashboardPage() {
             title="Всего записей"
             value={loading ? "—" : String(stats.totalAppointments)}
             change={stats.appointmentsGrowth}
-            changeLabel="vs прошлый месяц"
+            changeLabel="к прошлому месяцу"
             icon={<CalendarCheck size={18} />}
             tooltip={TOOLTIPS.appointments}
             compact

@@ -59,7 +59,7 @@ export const clientsData = [
     totalSpent: 84600,
     ltv: 94000,
     status: "VIP",
-    source: "Instagram",
+    source: "Инстаграм",
     avatar: "АС",
   },
   {
@@ -111,7 +111,7 @@ export const clientsData = [
     totalSpent: 103400,
     ltv: 115000,
     status: "VIP",
-    source: "Instagram",
+    source: "Инстаграм",
     avatar: "НК",
   },
   {
@@ -124,7 +124,7 @@ export const clientsData = [
     totalSpent: 12600,
     ltv: 15000,
     status: "Новый",
-    source: "Google",
+    source: "Гугл",
     avatar: "АН",
   },
   {
@@ -308,10 +308,10 @@ export const staffRevenueData = staffData.map((s) => ({
 }));
 
 export const clientSourcesData = [
-  { name: "Instagram", value: 38, color: "#00FF00" },
+  { name: "Инстаграм", value: 38, color: "#00FF00" },
   { name: "Рекомендации", value: 27, color: "#88CC00" },
   { name: "ВКонтакте", value: 16, color: "#66AA00" },
-  { name: "2GIS/Google", value: 12, color: "#448800" },
+  { name: "2GIS/Гугл", value: 12, color: "#448800" },
   { name: "Другое", value: 7, color: "#2a4400" },
 ];
 
@@ -392,12 +392,12 @@ export const clientsKPIs = {
 // ─── MARKETING / CRM ─────────────────────────────────────────────────────────
 
 export const marketingClients = [
-  { id: 1, name: "Алина Соколова", phone: "+7 (916) 234-56-78", gender: "Ж", revenue: 84600, channel: "Instagram", telegram: "@a_sokolova", lastContact: "12.02.2026", services: ["Окрашивание", "Стрижка"] },
+  { id: 1, name: "Алина Соколова", phone: "+7 (916) 234-56-78", gender: "Ж", revenue: 84600, channel: "Инстаграм", telegram: "@a_sokolova", lastContact: "12.02.2026", services: ["Окрашивание", "Стрижка"] },
   { id: 2, name: "Мария Иванова", phone: "+7 (903) 456-78-90", gender: "Ж", revenue: 56400, channel: "WhatsApp", telegram: "@m_ivanova", lastContact: "18.02.2026", services: ["Маникюр"] },
   { id: 3, name: "Дмитрий Волков", phone: "+7 (926) 789-01-23", gender: "М", revenue: 22300, channel: "2ГИС", telegram: null, lastContact: "20.02.2026", services: ["Стрижка"] },
   { id: 4, name: "Ольга Сидорова", phone: "+7 (967) 012-34-56", gender: "Ж", revenue: 23500, channel: "Telegram", telegram: "@o_sidorova", lastContact: "15.02.2026", services: ["Педикюр"] },
-  { id: 5, name: "Наталья Козлова", phone: "+7 (977) 345-67-89", gender: "Ж", revenue: 103400, channel: "Instagram", telegram: "@nat_kozlova", lastContact: "22.02.2026", services: ["Окрашивание", "Маникюр", "Стрижка"] },
-  { id: 6, name: "Анастасия Новикова", phone: "+7 (916) 678-90-12", gender: "Ж", revenue: 12600, channel: "Google", telegram: null, lastContact: "08.02.2026", services: ["Брови"] },
+  { id: 5, name: "Наталья Козлова", phone: "+7 (977) 345-67-89", gender: "Ж", revenue: 103400, channel: "Инстаграм", telegram: "@nat_kozlova", lastContact: "22.02.2026", services: ["Окрашивание", "Маникюр", "Стрижка"] },
+  { id: 6, name: "Анастасия Новикова", phone: "+7 (916) 678-90-12", gender: "Ж", revenue: 12600, channel: "Гугл", telegram: null, lastContact: "08.02.2026", services: ["Брови"] },
   { id: 7, name: "Алексей Морозов", phone: "+7 (903) 901-23-45", gender: "М", revenue: 31250, channel: "Рекомендация", telegram: "@alex_m", lastContact: "19.02.2026", services: ["Стрижка"] },
   { id: 8, name: "Юлия Волкова", phone: "+7 (926) 234-56-78", gender: "Ж", revenue: 32900, channel: "ВКонтакте", telegram: "@y_volkova", lastContact: "23.02.2026", services: ["Маникюр", "Педикюр"] },
   { id: 9, name: "Сергей Петров", phone: "+7 (916) 555-44-33", gender: "М", revenue: 18700, channel: "WhatsApp", telegram: "@s_petrov", lastContact: "21.02.2026", services: ["Стрижка"] },
@@ -428,14 +428,14 @@ export const autoSystems = [
 // ─── SYSTEM & PAYMENT ────────────────────────────────────────────────────────
 
 export const subscriptionData = {
-  plan: "Voice-Pro", status: "Активна", paidUntil: "01.04.2026", daysLeft: 35,
+  plan: "Воис-Про", status: "Активна", paidUntil: "01.04.2026", daysLeft: 35,
 };
 
 export const pricingPlans = [
-  { id: "text", name: "Text", price: 5900, features: ["Чат-бот и частые вопросы", "Базовые рассылки", "До 500 сообщений/мес", "Поддержка по почте"] },
-  { id: "voice-start", name: "Voice-Start", price: 9900, features: ["Всё из Text", "Базовые голосовые сценарии", "Входящие звонки", "До 2 000 сообщений/мес"] },
-  { id: "voice-pro", name: "Voice-Pro", price: 14900, popular: true, features: ["Всё из Voice-Start", "Расширенная голосовая логика", "CRM-интеграции", "Аналитика звонков"] },
-  { id: "voice-max", name: "Voice-Max", price: 21900, features: ["Всё из Voice-Pro", "Максимальный пакет", "Приоритетная поддержка", "Выделенный менеджер"] },
+  { id: "text", name: "Текст", price: 5900, features: ["Чат-бот и частые вопросы", "Базовые рассылки", "До 500 сообщений/мес", "Поддержка по почте"] },
+  { id: "voice-start", name: "Воис-Старт", price: 9900, features: ["Всё из Текст", "Базовые голосовые сценарии", "Входящие звонки", "До 2 000 сообщений/мес"] },
+  { id: "voice-pro", name: "Воис-Про", price: 14900, popular: true, features: ["Всё из Воис-Старт", "Расширенная голосовая логика", "CRM-интеграции", "Аналитика звонков"] },
+  { id: "voice-max", name: "Воис-Макс", price: 21900, features: ["Всё из Воис-Про", "Максимальный пакет", "Приоритетная поддержка", "Выделенный менеджер"] },
 ];
 
 export const systemModules = [

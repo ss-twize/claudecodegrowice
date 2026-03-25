@@ -125,7 +125,7 @@ export default function FinancesPage() {
             title="Годовая выручка"
             value={formatCurrency(financesKPIs.arr)}
             change={12.8}
-            changeLabel="vs прошлый год"
+            changeLabel="к прошлому году"
             icon={<DollarSign size={18} />}
             tooltip={TOOLTIPS.arr}
           />
@@ -133,7 +133,7 @@ export default function FinancesPage() {
             title="Рост за месяц"
             value={formatPercent(financesKPIs.momGrowth, true)}
             change={3.2}
-            changeLabel="vs прошлый период"
+            changeLabel="к прошлому периоду"
             icon={<BarChart2 size={18} />}
             tooltip={TOOLTIPS.mom}
           />
@@ -141,7 +141,7 @@ export default function FinancesPage() {
             title="Средний чек"
             value={formatCurrency(financesKPIs.avgCheck)}
             change={2.8}
-            changeLabel="vs прошлый месяц"
+            changeLabel="к прошлому месяцу"
             icon={<Receipt size={18} />}
             tooltip={TOOLTIPS.avgCheck}
           />
@@ -203,7 +203,7 @@ export default function FinancesPage() {
         {/* P&L Table */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Доходы и расходы</h3>
-          <p className="text-[#5E7488] text-sm mb-5">Текущий месяц vs предыдущий</p>
+          <p className="text-[#5E7488] text-sm mb-5">Текущий месяц к предыдущему</p>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Revenue P&L */}
             <div>

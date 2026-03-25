@@ -32,7 +32,7 @@ export default function AppointmentsChart({ data }: { data: DayPoint[] }) {
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full flex flex-col">
       <div className="mb-5">
         <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Записи по дням</h3>
-        <p className="text-[#5E7488] text-sm">Актуальные показатели (real-time)</p>
+        <p className="text-[#5E7488] text-sm">Актуальные показатели (в реальном времени)</p>
       </div>
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
