@@ -174,7 +174,15 @@ export default function SettingsPage() {
     setTogglingSystem(null);
   };
 
+  const configureSystem = async (systemCode: string) => {
+    const result = await callWebhook('sistema_nastroit', { system_code: systemCode }, role);
+    if (!result.configured) {
+      alert("Вебхук не настроен. Добавьте адрес для действия «sistema_nastroit».");
+    }
+  };
+
   const mainAgent = systems.find(s => s.system_code === 'main_agent');
+  const autoSystems = systems.filter(s => s.system_code !== 'main_agent');
 
   return (
     <div>
