@@ -1,30 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
+import RevenueChart from "@/components/charts/RevenueChart";
+import MetricCard from "@/components/ui/MetricCard";
 import { useAuth } from "@/lib/auth";
+import { ORG_UID, supabase } from "@/lib/supabase";
 import { Lock } from "lucide-react";
 import {
   analyticsKPIs, dailyContactsData, cancellationsData,
   noShowData, dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
-  analyticsTrends, revenueHistory,
+  analyticsTrends, revenueData,
 } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "recharts";
 import {
   TrendingUp, TrendingDown, CalendarCheck, MessageSquare, Receipt, AlertTriangle,
-  RotateCcw, Clock, Zap, ArrowDownLeft, ArrowUpRight, MoonStar, Minus,
+  RotateCcw, Clock, Zap, ArrowDownLeft, ArrowUpRight, MoonStar, Minus, ChevronDown,
 } from "lucide-react";
 
-const PERIOD_LABELS: Record<string, string> = {
-  month: "Февраль 2026 г.",
-  quarter: "1-й квартал 2026",
-  half: "Янв–Июн 2026",
-};
+type AnalyticsPeriod = "all" | "week" | "month" | "quarter" | "year";
+
+const PERIOD_OPTIONS: Array<{ value: AnalyticsPeriod; label: string }> = [
+  { value: "all", label: "Все время" },
+  { value: "week", label: "Неделя" },
+  { value: "month", label: "Месяц" },
+  { value: "quarter", label: "Квартал" },
+  { value: "year", label: "Год" },
+];
 
 const AreaTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -32,21 +39,6 @@ const AreaTooltip = ({ active, payload, label }: any) => {
     <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
       <p className="text-[#8299B4] mb-1">{label}</p>
       <p className="text-[#00FF00] font-semibold">{payload[0].value} обращений</p>
-    </div>
-  );
-};
-
-const ForecastTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-[#141E2B] border border-[#223444] rounded-lg p-3 text-sm">
-      <p className="text-[#8299B4] mb-1">{label}</p>
-      {payload.map((p: any, i: number) => p.value != null && (
-        <p key={i} style={{ color: p.color }} className="font-semibold">
-          {p.name}:{" "}
-          {new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(p.value)}
-        </p>
-      ))}
     </div>
   );
 };
@@ -73,25 +65,94 @@ const PieTooltip = ({ active, payload }: any) => {
   );
 };
 
-function KpiCard({ title, value, sub, icon, accent }: { title: string; value: string; sub?: string; icon: React.ReactNode; accent?: boolean }) {
-  return (
-    <div className={`rounded-xl border p-4 ${accent ? "bg-[#00FF00] border-[#00FF00]" : "bg-[#0F1622] border-[#223444]"}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent ? "bg-black/20" : "bg-[#1A2535] border border-[#223444]"}`}>
-          <span className={accent ? "text-black" : "text-[#00FF00]"}>{icon}</span>
-        </div>
-      </div>
-      <p className={`text-xs font-medium mb-1 ${accent ? "text-black/70" : "text-[#8299B4]"}`}>{title}</p>
-      <p className={`text-xl font-bold ${accent ? "text-black" : "text-[#EDF2FA]"}`}>{value}</p>
-      {sub && <p className={`text-xs mt-0.5 ${accent ? "text-black/60" : "text-[#5E7488]"}`}>{sub}</p>}
-    </div>
-  );
-}
-
 export default function AnalyticsPage() {
   const { isOwner } = useAuth();
-  const [period, setPeriod] = useState<"month" | "quarter" | "half">("month");
+  const [period, setPeriod] = useState<AnalyticsPeriod>("all");
+  const [dateMenuOpen, setDateMenuOpen] = useState(false);
+  const [periodOffset, setPeriodOffset] = useState(0);
+  const [registrationDate, setRegistrationDate] = useState<Date>(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const k = analyticsKPIs;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("clients_tg")
+        .select("created_at")
+        .eq("org_uid", ORG_UID)
+        .order("created_at", { ascending: true })
+        .limit(1);
+
+      if (cancelled || error || !data?.length) return;
+      const parsed = new Date(data[0].created_at);
+      if (!Number.isNaN(parsed.getTime())) {
+        setRegistrationDate(parsed);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const dateOptions = useMemo(() => {
+    const now = new Date();
+    const formatMonthYear = (date: Date) =>
+      date.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase());
+    const formatDay = (date: Date) =>
+      date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    if (period === "all") {
+      return [{ value: 0, label: `${formatMonthYear(registrationDate)} — ${formatMonthYear(now)}` }];
+    }
+
+    if (period === "week") {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - 6);
+      const normalizedStart = weekStart < registrationDate ? registrationDate : weekStart;
+      return normalizedStart <= now
+        ? [{ value: 0, label: `${formatDay(normalizedStart)} — ${formatDay(now)}` }]
+        : [];
+    }
+
+    if (period === "month") {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return monthEnd >= registrationDate ? [{ value: 0, label: formatMonthYear(monthStart) }] : [];
+    }
+
+    if (period === "quarter") {
+      const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+      const quarterStart = new Date(now.getFullYear(), quarterStartMonth, 1);
+      const quarterEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0);
+      const q = Math.floor(quarterStart.getMonth() / 3) + 1;
+      return quarterEnd >= registrationDate ? [{ value: 0, label: `${q}-й квартал ${quarterStart.getFullYear()}` }] : [];
+    }
+
+    return new Date(now.getFullYear(), 11, 31) >= registrationDate
+      ? [{ value: 0, label: String(now.getFullYear()) }]
+      : [];
+  }, [period, registrationDate]);
+
+  const registrationMonthLabel = useMemo(
+    () => registrationDate.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }).replace(/^./, (s) => s.toUpperCase()),
+    [registrationDate]
+  );
+
+  useEffect(() => {
+    if (dateOptions.length === 0) return;
+    if (!dateOptions.some((option) => option.value === periodOffset)) {
+      setPeriodOffset(dateOptions[0].value);
+    }
+  }, [dateOptions, periodOffset]);
+
+  const selectedDateLabel =
+    period === "all"
+      ? `от ${registrationMonthLabel}`
+      : dateOptions.find((option) => option.value === periodOffset)?.label ?? "Нет доступных дат";
 
   if (!isOwner) {
     return (
@@ -113,90 +174,114 @@ export default function AnalyticsPage() {
       <Header title="Аналитика" subtitle="Полная аналитика бизнеса и агента" />
       <div className="p-6 space-y-6">
 
-        {/* Period selector */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
-            {(["month", "quarter", "half"] as const).map((p) => (
-              <button key={p} onClick={() => setPeriod(p)}
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${period === p ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"}`}>
-                {p === "month" ? "Месяц" : p === "quarter" ? "Квартал" : "Полгода"}
+        <div className="grid grid-cols-1 xl:grid-cols-[auto,1fr] gap-4 items-stretch">
+          {/* Period selector */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="h-14 flex items-center gap-0.5 bg-[#0F1622] border border-[#223444] rounded-lg p-1">
+              {PERIOD_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setPeriod(option.value);
+                    setPeriodOffset(0);
+                    setDateMenuOpen(false);
+                  }}
+                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    period === option.value ? "bg-[#00FF00] text-black" : "text-[#8299B4] hover:text-[#EDF2FA]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  if (period === "all") return;
+                  setDateMenuOpen((prev) => !prev);
+                }}
+                className={`h-14 inline-flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 text-[#EDF2FA] text-sm font-medium ${
+                  period === "all" ? "cursor-default" : ""
+                }`}
+              >
+                <CalendarCheck size={14} className="text-[#5E7488]" />
+                <span>{selectedDateLabel}</span>
+                {period !== "all" && (
+                  <ChevronDown size={14} className={`text-[#5E7488] transition-transform ${dateMenuOpen ? "rotate-180" : ""}`} />
+                )}
               </button>
-            ))}
+              {period !== "all" && dateMenuOpen && (
+                <div className="absolute z-20 top-full left-0 mt-1 min-w-[260px] max-h-72 overflow-y-auto rounded-lg border border-[#223444] bg-[#0A0D14] shadow-xl py-1">
+                  {dateOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setPeriodOffset(option.value);
+                        setDateMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        option.value === periodOffset
+                          ? "text-[#00FF00] bg-[#00FF00]/10"
+                          : "text-[#8299B4] hover:text-[#EDF2FA] hover:bg-[#141E2B]"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2 bg-[#0F1622] border border-[#223444] rounded-lg px-3 py-2">
-            <CalendarCheck size={14} className="text-[#5E7488]" />
-            <span className="text-[#EDF2FA] text-sm font-medium">{PERIOD_LABELS[period]}</span>
+
+          {/* Messages banner */}
+          <div className="h-14 bg-[#0F1622] border border-[#223444] rounded-lg px-3 flex items-center justify-between gap-4">
+            <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций</p>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <ArrowDownLeft size={16} className="text-[#00FF00]" />
+                <p className="text-[#5E7488] text-sm"><span className="text-[#EDF2FA] font-bold">{k.incomingMessages.toLocaleString("ru")}</span> Входящих</p>
+              </div>
+              <div className="w-px h-6 bg-[#223444]" />
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <ArrowUpRight size={16} className="text-[#8299B4]" />
+                <p className="text-[#5E7488] text-sm"><span className="text-[#EDF2FA] font-bold">{k.outgoingMessages.toLocaleString("ru")}</span> Исходящих</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Main KPI cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Выручка за период" value={formatCurrency(k.revenue)} sub={`~${formatCurrency(k.revenueAvgDay)} в день`} icon={<TrendingUp size={16} />} accent />
-          <KpiCard title="Записей за период" value={String(k.appointments)} sub={`~${k.appointmentsAvgDay} в день`} icon={<CalendarCheck size={16} />} />
-          <KpiCard title="Конверсия в запись" value={`${k.conversionRate}%`} sub="переписки → запись" icon={<MessageSquare size={16} />} />
-          <KpiCard title="Средний чек" value={formatCurrency(k.avgCheck)} icon={<Receipt size={16} />} />
+          <MetricCard title="Выручка за период" value={formatCurrency(k.revenue)} changeLabel={`~${formatCurrency(k.revenueAvgDay)} в день`} icon={<TrendingUp size={16} />} accent compact />
+          <MetricCard title="Записей за период" value={String(k.appointments)} changeLabel={`~${k.appointmentsAvgDay} в день`} icon={<CalendarCheck size={16} />} compact />
+          <MetricCard title="Конверсия в запись" value={`${k.conversionRate}%`} changeLabel="переписки → запись" icon={<MessageSquare size={16} />} compact />
+          <MetricCard title="Средний чек" value={formatCurrency(k.avgCheck)} icon={<Receipt size={16} />} compact />
         </div>
 
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} />
-          <KpiCard title="Сообщений на обращение" value={String(k.messagesPerContact)} sub="сред. длина диалога" icon={<MessageSquare size={16} />} />
-          <KpiCard title="Возвращаемость" value={`${k.retention}%`} sub="повторные визиты" icon={<RotateCcw size={16} />} />
-          <KpiCard title="Ср. скорость ответа" value={k.avgResponseTime} sub="время реакции агента" icon={<Clock size={16} />} />
-        </div>
-
-        {/* Messages banner */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-4">
-          <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <ArrowDownLeft size={16} className="text-[#00FF00]" />
-              <div>
-                <p className="text-[#EDF2FA] font-bold text-lg">{k.incomingMessages.toLocaleString("ru")}</p>
-                <p className="text-[#5E7488] text-xs">Входящих</p>
-              </div>
-            </div>
-            <div className="w-px h-8 bg-[#223444]" />
-            <div className="flex items-center gap-2">
-              <ArrowUpRight size={16} className="text-[#8299B4]" />
-              <div>
-                <p className="text-[#EDF2FA] font-bold text-lg">{k.outgoingMessages.toLocaleString("ru")}</p>
-                <p className="text-[#5E7488] text-xs">Исходящих</p>
-              </div>
-            </div>
-          </div>
+          <MetricCard title="Не явки" value={`${k.noShowCount} (${k.noShowPercent}%)`} icon={<AlertTriangle size={16} />} compact />
+          <MetricCard title="Сообщений на обращение" value={String(k.messagesPerContact)} changeLabel="сред. длина диалога" icon={<MessageSquare size={16} />} compact />
+          <MetricCard title="Возвращаемость" value={`${k.retention}%`} changeLabel="повторные визиты" icon={<RotateCcw size={16} />} compact />
+          <MetricCard title="Ср. скорость ответа" value={k.avgResponseTime} changeLabel="время реакции агента" icon={<Clock size={16} />} compact />
         </div>
 
         {/* Operational metrics */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Записи вне рабочего времени" value={String(k.offHoursAppointments)} sub="агент работает пока все спят" icon={<MoonStar size={16} />} />
-          <KpiCard title="Сэкономлено времени" value={`${k.timeSaved} ч`} sub="администратора" icon={<Zap size={16} />} />
-          <KpiCard title="Реанимированных клиентов" value={String(k.reactivated)} sub="после рассылки по неактивным" icon={<RotateCcw size={16} />} />
-          <KpiCard title="Обращений всего" value={String(k.incomingMessages)} sub="уникальных контактов" icon={<MessageSquare size={16} />} />
+          <MetricCard title="Записи вне рабочего времени" value={String(k.offHoursAppointments)} changeLabel="агент работает пока все спят" icon={<MoonStar size={16} />} compact />
+          <MetricCard title="Сэкономлено времени" value={`${k.timeSaved} ч`} changeLabel="администратора" icon={<Zap size={16} />} compact />
+          <MetricCard title="Реанимированных клиентов" value={String(k.reactivated)} changeLabel="после рассылки по неактивным" icon={<RotateCcw size={16} />} compact />
+          <MetricCard title="Обращений всего" value={String(k.incomingMessages)} changeLabel="уникальных контактов" icon={<MessageSquare size={16} />} compact />
         </div>
 
-        {/* Revenue History — full width */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="mb-5">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Выручка по месяцам</h3>
-            <p className="text-[#5E7488] text-sm">Октябрь 2025 — февраль 2026</p>
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={revenueHistory} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false}
-                tickFormatter={(v) => `${v / 1000}к`} width={45} />
-              <Tooltip content={<ForecastTooltip />} />
-              <Line type="monotone" dataKey="value" name="Выручка" stroke="#00FF00" strokeWidth={2}
-                dot={false} activeDot={{ r: 4, fill: "#00FF00", strokeWidth: 0 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Revenue movement chart */}
+        <RevenueChart data={revenueData} />
 
         {/* Trends table */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#223444]">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Тренды: текущий vs прошлый месяц</h3>
+          <div className="px-5 py-2 border-b border-[#223444]">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Тренды: текущий / прошлый месяц</h3>
             <p className="text-[#5E7488] text-sm">Сравнительный анализ ключевых метрик</p>
           </div>
           <div className="overflow-x-auto">
