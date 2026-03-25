@@ -97,9 +97,11 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-4 xl:flex-row">
-          <div className="space-y-4 xl:w-2/3">
+          <div className="xl:w-2/3 flex flex-col gap-4">
             <RevenueChart data={revenueSeries} />
-            <AppointmentsChart data={appointmentsByDay} />
+            <div className="xl:flex-1">
+              <AppointmentsChart data={appointmentsByDay} />
+            </div>
           </div>
           <div className="space-y-4 xl:w-1/3">
             <ServicesChart data={servicesSeries} />
