@@ -62,6 +62,10 @@ export default function SystemPage() {
     setTimeout(() => setChecking(false), 2000);
   };
 
+  const contactSupport = async () => {
+    await callWebhook("support_contact", { plan_id: plan.id }, role);
+  };
+
   const autoSystems = systems.filter((system) => system.system_code !== "main_agent");
 
   const toggleSystem = async (systemCode: string, currentEnabled: boolean) => {
@@ -128,9 +132,16 @@ export default function SystemPage() {
             {pricingPlans.map((p) => {
               const isSelected = selectedPlan === p.id;
               const isCurrent = p.id === "scaling";
+              const isUnavailable = p.id === "growth";
               return (
-                <button key={p.id} onClick={() => setSelectedPlan(p.id)}
-                  className={`text-left rounded-xl border p-5 transition-all ${isSelected ? "border-[#00FF00] bg-[#00FF00]/5" : "border-[#223444] bg-[#0F1622] hover:border-[#2C4460]"}`}>
+                <button
+                  key={p.id}
+                  onClick={() => !isUnavailable && setSelectedPlan(p.id)}
+                  disabled={isUnavailable}
+                  className={`text-left rounded-xl border p-5 transition-all ${
+                    isSelected ? "border-[#00FF00] bg-[#00FF00]/5" : "border-[#223444] bg-[#0F1622] hover:border-[#2C4460]"
+                  } ${isUnavailable ? "opacity-65 cursor-not-allowed hover:border-[#223444]" : ""}`}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isSelected ? "bg-[#00FF00]/20 text-[#00FF00]" : "bg-[#1A2535] text-[#8299B4]"}`}>
                       {PLAN_ICONS[p.id]}
@@ -140,6 +151,9 @@ export default function SystemPage() {
                     )}
                     {(p as any).popular && !isCurrent && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">Популярный</span>
+                    )}
+                    {isUnavailable && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">Недоступно</span>
                     )}
                   </div>
                   <p className={`font-bold text-lg mb-0.5 font-unbounded ${isSelected ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>{p.name}</p>
@@ -209,9 +223,18 @@ export default function SystemPage() {
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
-                <button className="flex-1 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
-                  Оплатить
-                </button>
+                {plan.id === "scaling" ? (
+                  <button
+                    onClick={contactSupport}
+                    className="flex-1 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors"
+                  >
+                    Связаться с поддержкой
+                  </button>
+                ) : (
+                  <button className="flex-1 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
+                    Оплатить
+                  </button>
+                )}
                 <button onClick={handleCheck}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-[#223444] text-[#8299B4] text-sm font-medium hover:border-[#2C4460] transition-colors">
                   <RefreshCw size={14} className={checking ? "animate-spin" : ""} />
