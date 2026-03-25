@@ -8,7 +8,7 @@ import { callWebhook } from "@/lib/webhooks";
 import { useAuth } from "@/lib/auth";
 import { useSystemStates } from "@/lib/hooks/useSystemStates";
 import { supabase, ORG_UID } from "@/lib/supabase";
-import { CheckCircle2, Shield, Zap, Crown, Star, RefreshCw, Settings2, ExternalLink, Clock, MessageSquare, Bot, Power } from "lucide-react";
+import { CheckCircle2, Shield, Zap, Crown, Star, RefreshCw, Settings2, ExternalLink, MessageSquare, Bot, Power } from "lucide-react";
 
 const PLAN_ICONS: Record<string, React.ReactNode> = {
   text: <Zap size={18} />,
@@ -288,7 +288,6 @@ export default function SystemPage() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
                         {[
                           { label: "Сообщений/мес", value: ch.messagesMonth.toLocaleString("ru"), icon: <MessageSquare size={13} /> },
-                          { label: "Ср. ответ", value: ch.avgResponse, icon: <Clock size={13} /> },
                         ].map((stat) => (
                           <div key={stat.label} className="bg-[#0F1622] border border-[#223444] rounded-lg p-3">
                             <div className="flex items-center gap-1.5 mb-1 text-[#5E7488]">{stat.icon}<span className="text-xs">{stat.label}</span></div>
@@ -310,7 +309,9 @@ export default function SystemPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Webhook URL</label>
+                        <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">
+                          {ch.id === "telegram" ? "Токен бота" : "Webhook URL"}
+                        </label>
                         <div className="flex gap-2">
                           <input
                             value={ch.webhookUrl}
@@ -325,25 +326,6 @@ export default function SystemPage() {
                             </a>
                           )}
                         </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Часы работы</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          value={ch.workFrom}
-                          onChange={(e) => updateChannel(ch.id, "workFrom", e.target.value)}
-                          type="time"
-                          className="bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors"
-                        />
-                        <span className="text-[#5E7488] text-sm">—</span>
-                        <input
-                          value={ch.workTo}
-                          onChange={(e) => updateChannel(ch.id, "workTo", e.target.value)}
-                          type="time"
-                          className="bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors"
-                        />
-                        <span className="text-[#5E7488] text-xs">Вне этого времени бот не отвечает</span>
                       </div>
                     </div>
                     <div className="flex justify-end">
