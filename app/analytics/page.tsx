@@ -237,7 +237,7 @@ export default function AnalyticsPage() {
 
           {/* Messages banner */}
           <div className="h-14 bg-[#0F1622] border border-[#223444] rounded-lg px-3 flex items-center justify-between gap-4">
-            <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций за период</p>
+            <p className="text-[#8299B4] text-sm font-medium">Объём коммуникаций</p>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <ArrowDownLeft size={16} className="text-[#00FF00]" />
