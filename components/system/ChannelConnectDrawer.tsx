@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, RefreshCw, CheckCircle2, AlertTriangle, ChevronRight } from "lucide-react";
+import { X, RefreshCw, CheckCircle2, AlertTriangle, ChevronRight, MessageCircle, ExternalLink } from "lucide-react";
 import { ORG_UID } from "@/lib/supabase";
 
 type Step = "intro" | "creating" | "auth_qr" | "checking" | "success" | "error";
@@ -233,13 +233,23 @@ export function ChannelConnectDrawer({
         {/* Footer actions */}
         <div className="px-6 py-4 border-t border-[#223444]">
           {step === "intro" && (
-            <button
-              onClick={handleCreate}
-              className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors bg-[#00FF00] text-black hover:bg-[#ccff33]"
-            >
-              Продолжить
-              <ChevronRight size={16} />
-            </button>
+            <div className="flex gap-2">
+              <a
+                href="https://t.me/ss_bizness"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors bg-[#00FF00] text-black hover:bg-[#ccff33]"
+              >
+                <MessageCircle size={16} />
+                Написать в поддержку
+              </a>
+              <button
+                onClick={onClose}
+                className="px-4 py-3 rounded-xl border border-[#223444] text-[#8299B4] text-sm font-medium hover:border-[#2C4460] hover:text-[#EDF2FA] transition-colors"
+              >
+                Закрыть
+              </button>
+            </div>
           )}
           {step === "auth_qr" && (
             <div className="flex gap-2">
@@ -304,7 +314,7 @@ export function ChannelConnectDrawer({
 
 function stepLabel(step: Step): string {
   const map: Record<Step, string> = {
-    intro: "Шаг 1 — Информация",
+    intro: "Подключение через поддержку",
     creating: "Шаг 2 — Создаём подключение",
     auth_qr: "Шаг 3 — Авторизация",
     checking: "Шаг 4 — Проверка",
@@ -351,16 +361,16 @@ function StepIntro({
   channelCode: string;
   accentColor: string;
 }) {
-  const items = channelCode === "whatsapp"
+  const steps = channelCode === "whatsapp"
     ? [
-        "Система создаст защищённое подключение к вашему аккаунту",
-        "Откройте WhatsApp на телефоне и отсканируйте QR-код",
-        "Аккаунт начнёт принимать и отправлять сообщения автоматически",
+        "Напишите нам в Telegram — мы свяжемся с вами",
+        "Сообщите номер телефона аккаунта WhatsApp",
+        "Мы подключим канал и уведомим вас о готовности",
       ]
     : [
-        "Система создаст защищённое подключение к вашему аккаунту Max",
-        "Откройте приложение Max и подтвердите вход с помощью QR",
-        "Аккаунт начнёт принимать и отправлять сообщения автоматически",
+        "Напишите нам в Telegram — мы свяжемся с вами",
+        "Сообщите данные аккаунта Max для подключения",
+        "Мы подключим канал и уведомим вас о готовности",
       ];
 
   return (
@@ -373,14 +383,15 @@ function StepIntro({
       </div>
       <div className="text-center">
         <h3 className="text-[#EDF2FA] font-semibold text-lg font-unbounded mb-2">
-          Подключение {channelName}
+          Подключение {channelName} через поддержку
         </h3>
         <p className="text-[#8299B4] text-sm leading-relaxed">
-          Займёт около 1–2 минут. Телефон с аккаунтом должен быть рядом.
+          Автоматическое подключение {channelName} пока недоступно.
+          Чтобы подключить аккаунт, свяжитесь с поддержкой — мы подключим его вручную.
         </p>
       </div>
       <div className="space-y-3">
-        {items.map((text, i) => (
+        {steps.map((text, i) => (
           <div key={i} className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-full bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-[#00FF00] text-xs font-bold">{i + 1}</span>
@@ -389,11 +400,21 @@ function StepIntro({
           </div>
         ))}
       </div>
-      <div className="bg-[#0A0D14] border border-[#223444] rounded-xl p-4">
-        <p className="text-[#5E7488] text-xs leading-relaxed">
-          Подключение защищено. Ваши данные и переписка не передаются третьим лицам.
-        </p>
-      </div>
+      <a
+        href="https://t.me/ss_bizness"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 bg-[#0A0D14] border border-[#223444] hover:border-[#2C4460] rounded-xl p-4 transition-colors group"
+      >
+        <div className="w-9 h-9 rounded-lg bg-[#229ED9]/10 border border-[#229ED9]/20 flex items-center justify-center flex-shrink-0">
+          <MessageCircle size={16} className="text-[#229ED9]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[#EDF2FA] text-sm font-medium">@ss_bizness</p>
+          <p className="text-[#5E7488] text-xs">Написать в Telegram</p>
+        </div>
+        <ExternalLink size={14} className="text-[#5E7488] group-hover:text-[#8299B4] transition-colors flex-shrink-0" />
+      </a>
     </div>
   );
 }
