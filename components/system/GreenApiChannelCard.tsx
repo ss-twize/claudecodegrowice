@@ -206,22 +206,33 @@ export function GreenApiChannelCard({
             )}
 
             {status === "error" && (
-              <button
-                onClick={() => setDrawerOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/15 transition-colors"
+              <a
+                href="https://t.me/ss_bizness"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 text-[#00FF00] text-xs font-semibold hover:bg-[#00FF00]/20 transition-colors"
               >
-                <RefreshCw size={12} />
-                Повторить
-              </button>
+                Поддержка
+              </a>
             )}
           </div>
         </div>
 
         {/* ── Error detail ── */}
-        {status === "error" && connection?.error_message && (
-          <div className="px-4 py-3 bg-red-500/5 border-t border-red-500/20 flex items-start gap-2">
-            <AlertTriangle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-red-400 text-xs">{connection.error_message}</p>
+        {status === "error" && (
+          <div className="px-4 py-3 bg-[#0A0D14] border-t border-[#223444] flex items-start gap-2">
+            <AlertTriangle size={14} className="text-[#8299B4] flex-shrink-0 mt-0.5" />
+            <p className="text-[#8299B4] text-xs">
+              Подключить {channelName} можно через поддержку.{" "}
+              <a
+                href="https://t.me/ss_bizness"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#00FF00] hover:text-[#ccff33] transition-colors"
+              >
+                Написать в Telegram
+              </a>
+            </p>
           </div>
         )}
 
