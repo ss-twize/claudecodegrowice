@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className={`${unbounded.variable} ${montserrat.variable} font-montserrat bg-[#0A0D14] text-[#EDF2FA] antialiased`}>
         <AuthProvider>
           <Sidebar />
-          <main className="ml-60 min-h-screen">
+          <main className="ml-60 min-h-screen origin-top-left lg:scale-[0.94] lg:w-[106.4%]">
             {children}
           </main>
         </AuthProvider>
