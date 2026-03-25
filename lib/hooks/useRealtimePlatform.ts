@@ -68,6 +68,31 @@ function computeRevenueSeries(appointments: any[]): RevenuePoint[] {
   return points
 }
 
+function computeRevenueSeriesFromMetrics(metrics: any[]): RevenuePoint[] {
+  const now = new Date()
+  const byMonth = new Map<string, number>()
+
+  for (const row of metrics) {
+    const d = parseDate(row.month)
+    if (!d) continue
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    byMonth.set(key, toNumber(row.revenue))
+  }
+
+  const points: RevenuePoint[] = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    points.push({
+      month: monthLabel(d),
+      revenue: byMonth.get(key) || 0,
+      expenses: 0,
+    })
+  }
+
+  return points
+}
+
 function computeServices(appointments: any[]): ServicePoint[] {
   const counts = new Map<string, number>()
   let total = 0
@@ -184,21 +209,30 @@ export function useRealtimePlatform() {
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: appointments }, { data: clients }] = await Promise.all([
-        supabase.from('appointments').select('record_id,date,status,price,service_name,clientName').order('date', { ascending: false }).limit(4000),
-        supabase.from('clients_tg').select('tg_id,name,first_name,last_name,created_at').order('created_at', { ascending: false }).limit(1000),
-      ])
+      try {
+        const [{ data: appointments }, { data: clients }, { data: metricsMonth }] = await Promise.all([
+          supabase.from('appointments').select('*').order('date', { ascending: false }).limit(4000),
+          supabase.from('clients_tg').select('tg_id,name,first_name,last_name,created_at').order('created_at', { ascending: false }).limit(1000),
+          supabase.from('metrics_month').select('month,revenue').order('month', { ascending: false }).limit(24),
+        ])
 
-      const appts = appointments || []
-      const cls = clients || []
+        const appts = appointments || []
+        const cls = clients || []
+        const monthMetrics = metricsMonth || []
 
-      setRevenueSeries(computeRevenueSeries(appts))
-      setServicesSeries(computeServices(appts))
-      setAppointmentsByDay(computeByWeekday(appts))
-      setAppointmentsByHour(computeByHour(appts))
-      setFunnel(computeFunnel(appts))
-      setActivity(computeActivity(appts, cls))
-      setLoading(false)
+        setRevenueSeries(
+          monthMetrics.length > 0
+            ? computeRevenueSeriesFromMetrics(monthMetrics)
+            : computeRevenueSeries(appts),
+        )
+        setServicesSeries(computeServices(appts))
+        setAppointmentsByDay(computeByWeekday(appts))
+        setAppointmentsByHour(computeByHour(appts))
+        setFunnel(computeFunnel(appts))
+        setActivity(computeActivity(appts, cls))
+      } finally {
+        setLoading(false)
+      }
     }
 
     load()
