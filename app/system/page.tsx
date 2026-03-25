@@ -157,11 +157,7 @@ export default function SystemPage() {
                     )}
                   </div>
                   <p className={`font-bold text-lg mb-0.5 font-unbounded ${isSelected ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>{p.name}</p>
-                  <p className="text-[#5E7488] text-xs mb-2">{p.description}</p>
-                  <p className="text-[#EDF2FA] font-semibold text-lg mb-4">
-                    {p.customPrice ?? formatCurrency(p.price)}
-                    <span className="text-[#5E7488] text-xs font-normal">{p.priceSuffix ?? "/мес"}</span>
-                  </p>
+                  <p className="text-[#5E7488] text-xs mb-4">{p.description}</p>
                   <ul className="space-y-1.5">
                     {p.features.map((f) => (
                       <li key={f} className="flex items-center gap-2">
