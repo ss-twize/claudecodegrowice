@@ -451,7 +451,7 @@ export const pricingPlans = [
   },
   {
     id: "growth",
-    name: "Развитие (В разработке)",
+    name: "Развитие",
     price: 0,
     customPrice: "X₽",
     priceSuffix: "/мес",

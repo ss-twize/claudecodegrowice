@@ -153,7 +153,7 @@ export default function SystemPage() {
                       <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">Популярный</span>
                     )}
                     {isUnavailable && (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">Недоступно</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">СКОРО</span>
                     )}
                   </div>
                   <p className={`font-bold text-lg mb-0.5 font-unbounded ${isSelected ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>{p.name}</p>
