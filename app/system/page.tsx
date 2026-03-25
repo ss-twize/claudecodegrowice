@@ -7,7 +7,9 @@ import { formatCurrency } from "@/lib/utils";
 import { callWebhook } from "@/lib/webhooks";
 import { useAuth } from "@/lib/auth";
 import { useSystemStates } from "@/lib/hooks/useSystemStates";
+import { useChannelConnections } from "@/lib/hooks/useChannelConnections";
 import { supabase, ORG_UID } from "@/lib/supabase";
+import { GreenApiChannelCard } from "@/components/system/GreenApiChannelCard";
 import { CheckCircle2, Shield, Zap, Crown, Star, RefreshCw, Settings2, ExternalLink, MessageSquare, Bot, Power } from "lucide-react";
 
 const PLAN_ICONS: Record<string, React.ReactNode> = {
@@ -15,6 +17,9 @@ const PLAN_ICONS: Record<string, React.ReactNode> = {
   "voice-start": <Star size={18} />,
   "voice-pro": <Shield size={18} />,
   "voice-max": <Crown size={18} />,
+  economy: <Zap size={18} />,
+  scaling: <Crown size={18} />,
+  growth: <Star size={18} />,
 };
 
 const PAYMENT_PERIODS = [
@@ -27,6 +32,7 @@ const PAYMENT_PERIODS = [
 export default function SystemPage() {
   const { role, isOwner } = useAuth();
   const { systems, setSystems } = useSystemStates();
+  const { getConnection, refetch: refetchConnections } = useChannelConnections();
   const [selectedPlan, setSelectedPlan] = useState("scaling");
   const [paymentPeriod, setPaymentPeriod] = useState(1);
   const [channels, setChannels] = useState(channelDetails.map((c) => ({ ...c })));
@@ -36,7 +42,7 @@ export default function SystemPage() {
 
   const plan = pricingPlans.find((p) => p.id === selectedPlan)!;
   const period = PAYMENT_PERIODS.find((p) => p.months === paymentPeriod)!;
-  const monthlyPrice = plan.customPrice ? 0 : Math.round(plan.price * (1 - period.discount / 100));
+  const monthlyPrice = (plan as any).customPrice ? 0 : Math.round(plan.price * (1 - period.discount / 100));
   const total = monthlyPrice * paymentPeriod;
 
   const toggleChannel = async (id: string) => {
@@ -157,7 +163,9 @@ export default function SystemPage() {
                     )}
                   </div>
                   <p className={`font-bold text-lg mb-0.5 font-unbounded ${isSelected ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>{p.name}</p>
-                  <p className="text-[#5E7488] text-xs mb-4">{p.description}</p>
+                  {(p as any).description && (
+                    <p className="text-[#5E7488] text-xs mb-4">{(p as any).description}</p>
+                  )}
                   <ul className="space-y-1.5">
                     {p.features.map((f) => (
                       <li key={f} className="flex items-center gap-2">
@@ -205,9 +213,9 @@ export default function SystemPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#8299B4]">Цена/мес</span>
-                  <span className="text-[#EDF2FA] font-medium">{plan.customPrice ?? formatCurrency(monthlyPrice)}</span>
+                  <span className="text-[#EDF2FA] font-medium">{(plan as any).customPrice ?? formatCurrency(monthlyPrice)}</span>
                 </div>
-                {period.discount > 0 && !plan.customPrice && (
+                {period.discount > 0 && !(plan as any).customPrice && (
                   <div className="flex justify-between text-sm">
                     <span className="text-[#8299B4]">Скидка</span>
                     <span className="text-[#00FF00] font-medium">−{period.discount}%</span>
@@ -215,7 +223,9 @@ export default function SystemPage() {
                 )}
                 <div className="border-t border-[#223444] pt-3 flex justify-between">
                   <span className="text-[#EDF2FA] font-semibold">Итого</span>
-                  <span className="text-[#00FF00] font-bold text-xl">{plan.customPrice ? `${plan.customPrice}${plan.priceSuffix ?? ""}` : formatCurrency(total)}</span>
+                  <span className="text-[#00FF00] font-bold text-xl">
+                    {(plan as any).customPrice ? `${(plan as any).customPrice}${(plan as any).priceSuffix ?? ""}` : formatCurrency(total)}
+                  </span>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
@@ -248,9 +258,9 @@ export default function SystemPage() {
             <p className="text-[#5E7488] text-sm mt-0.5">Настройте интеграции и параметры каналов</p>
           </div>
           <div className="space-y-3">
+            {/* ── Telegram ── */}
             {channels.map((ch) => (
               <div key={ch.id} className={`border rounded-xl overflow-hidden transition-colors ${ch.enabled ? "border-[#00FF00]/30" : "border-[#223444]"}`}>
-                {/* Channel header */}
                 <div className={`flex items-center justify-between p-4 ${ch.enabled ? "bg-[#00FF00]/5" : "bg-[#0A0D14]"}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${ch.enabled ? "bg-[#00FF00]/20 text-[#00FF00]" : "bg-[#1A2535] text-[#8299B4]"}`}>
@@ -281,7 +291,6 @@ export default function SystemPage() {
                   </div>
                 </div>
 
-                {/* Expanded settings */}
                 {expandedChannel === ch.id && (
                   <div className="border-t border-[#223444] p-4 space-y-4 bg-[#0A0D14]">
                     {ch.connected && (
@@ -298,27 +307,17 @@ export default function SystemPage() {
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">
-                          {ch.id === "telegram" ? "Имя бота" : "Идентификатор аккаунта"}
-                        </label>
-                        <input
-                          value={ch.botName}
-                          onChange={(e) => updateChannel(ch.id, "botName", e.target.value)}
-                          placeholder={ch.id === "telegram" ? "@your_bot" : "Введите идентификатор"}
-                          className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
-                        />
+                        <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Имя бота</label>
+                        <input value={ch.botName} onChange={(e) => updateChannel(ch.id, "botName", e.target.value)}
+                          placeholder="@your_bot"
+                          className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
                       </div>
                       <div>
-                        <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">
-                          {ch.id === "telegram" ? "Токен бота" : "Webhook URL"}
-                        </label>
+                        <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Токен бота</label>
                         <div className="flex gap-2">
-                          <input
-                            value={ch.webhookUrl}
-                            onChange={(e) => updateChannel(ch.id, "webhookUrl", e.target.value)}
+                          <input value={ch.webhookUrl} onChange={(e) => updateChannel(ch.id, "webhookUrl", e.target.value)}
                             placeholder="https://..."
-                            className="flex-1 bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
-                          />
+                            className="flex-1 bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
                           {ch.webhookUrl && (
                             <a href={ch.webhookUrl} target="_blank" rel="noopener noreferrer"
                               className="w-10 h-10 rounded-lg bg-[#0F1622] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors flex-shrink-0">
@@ -337,9 +336,30 @@ export default function SystemPage() {
                 )}
               </div>
             ))}
+
+            {/* ── WhatsApp ── */}
+            <GreenApiChannelCard
+              channelCode="whatsapp"
+              channelName="WhatsApp"
+              icon="WA"
+              connection={getConnection("whatsapp")}
+              role={role}
+              onRefetch={refetchConnections}
+            />
+
+            {/* ── Max ── */}
+            <GreenApiChannelCard
+              channelCode="max"
+              channelName="Max"
+              icon="МХ"
+              connection={getConnection("max")}
+              role={role}
+              onRefetch={refetchConnections}
+            />
           </div>
         </div>
 
+        {/* Automation systems — owner only */}
         {isOwner && (
           <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-1">
@@ -349,7 +369,7 @@ export default function SystemPage() {
             <p className="text-[#5E7488] text-sm mb-6">Автоматические сценарии работы с клиентами</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {autoSystems.map((system) => (
-                <div key={system.system_code} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-5 card-hover flex flex-col">
+                <div key={system.system_code} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-5 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
                       <Bot size={18} className="text-[#00FF00]" />
@@ -364,7 +384,6 @@ export default function SystemPage() {
                     <button
                       onClick={() => configureSystem(system.system_code)}
                       className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
-                      title="Настроить"
                     >
                       <Settings2 size={12} />
                       Настроить
