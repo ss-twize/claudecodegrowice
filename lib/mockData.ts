@@ -641,10 +641,9 @@ export const revenueHistory = [
 ];
 
 // ─── SYSTEM: CHANNEL MANAGEMENT ──────────────────────────────────────────────
+// WhatsApp and Max are managed via channel_connections table (GreenApiChannelCard)
 export const channelDetails = [
-  { id: "telegram",  name: "Telegram",  icon: "TG", enabled: true,  botName: "@growice_bot", webhookUrl: "https://api.telegram.org/bot.../webhook", workFrom: "08:00", workTo: "22:00", messagesMonth: 847, avgResponse: "1м 23с", connected: true  },
-  { id: "whatsapp",  name: "WhatsApp",  icon: "WA", enabled: false, botName: "",             webhookUrl: "",                                          workFrom: "09:00", workTo: "21:00", messagesMonth: 0,   avgResponse: "—",     connected: false },
-  { id: "max",       name: "Max",       icon: "МХ", enabled: false, botName: "",             webhookUrl: "",                                          workFrom: "09:00", workTo: "20:00", messagesMonth: 0,   avgResponse: "—",     connected: false },
+  { id: "telegram", name: "Telegram", icon: "TG", enabled: true, botName: "@growice_bot", webhookUrl: "https://api.telegram.org/bot.../webhook", workFrom: "08:00", workTo: "22:00", messagesMonth: 847, avgResponse: "1м 23с", connected: true },
 ];
 
 // ─── SETTINGS: ROLES + NOTIFICATIONS ─────────────────────────────────────────
