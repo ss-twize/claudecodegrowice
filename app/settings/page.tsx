@@ -9,9 +9,21 @@ import { useSystemStates } from "@/lib/hooks/useSystemStates";
 import { useKnowledgeFiles } from "@/lib/hooks/useKnowledgeFiles";
 import { useAuth } from "@/lib/auth";
 import {
-  Plus, Trash2, ExternalLink, CheckCircle2, Shield, Users, Bell,
-  Upload, FileText, X, RefreshCw, MessageSquare, Power,
-  Upload, FileText, X, RefreshCw, MessageSquare, Power, Settings2, Bot,
+  Plus,
+  Trash2,
+  ExternalLink,
+  CheckCircle2,
+  Shield,
+  Users,
+  Bell,
+  Upload,
+  FileText,
+  X,
+  RefreshCw,
+  MessageSquare,
+  Power,
+  Settings2,
+  Bot,
   AlertTriangle,
 } from "lucide-react";
 
