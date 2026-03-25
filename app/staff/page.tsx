@@ -48,7 +48,7 @@ export default function StaffPage() {
             title="Общая выручка"
             value={formatCurrency(totalRevenue)}
             change={14.5}
-            changeLabel="vs прошлый месяц"
+            changeLabel="к прошлому месяцу"
             icon={<TrendingUp size={18} />}
             accent
           />
@@ -57,14 +57,14 @@ export default function StaffPage() {
             title="Средняя оценка"
             value={avgRating}
             change={0.2}
-            changeLabel="vs прошлый месяц"
+            changeLabel="к прошлому месяцу"
             icon={<Star size={18} />}
           />
           <MetricCard
             title="Уникальных клиентов"
             value={String(totalClients)}
             change={7.3}
-            changeLabel="vs прошлый месяц"
+            changeLabel="к прошлому месяцу"
             icon={<Users size={18} />}
           />
         </div>
