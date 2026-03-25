@@ -27,7 +27,7 @@ export default function ServicesChart({ data }: { data: ServicePoint[] }) {
     <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
       <div className="mb-5">
         <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Популярные услуги</h3>
-        <p className="text-[#5E7488] text-sm">Распределение по записям (real-time)</p>
+        <p className="text-[#5E7488] text-sm">Распределение по записям (в реальном времени)</p>
       </div>
       <div className="flex items-center gap-4">
         <ResponsiveContainer width={160} height={160}>

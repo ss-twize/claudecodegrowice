@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Header from "@/components/layout/Header";
-import { subscriptionData, pricingPlans, systemModules, channelDetails } from "@/lib/mockData";
+import { subscriptionData, pricingPlans, channelDetails } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { callWebhook } from "@/lib/webhooks";
 import { useAuth } from "@/lib/auth";
-import { CheckCircle2, Shield, Zap, Crown, Star, RefreshCw, Settings2, ExternalLink, Clock, MessageSquare } from "lucide-react";
+import { useSystemStates } from "@/lib/hooks/useSystemStates";
+import { supabase, ORG_UID } from "@/lib/supabase";
+import { CheckCircle2, Shield, Zap, Crown, Star, RefreshCw, Settings2, ExternalLink, Clock, MessageSquare, Bot, Power } from "lucide-react";
 
 const PLAN_ICONS: Record<string, React.ReactNode> = {
   text: <Zap size={18} />,
@@ -23,26 +25,19 @@ const PAYMENT_PERIODS = [
 ];
 
 export default function SystemPage() {
-  const { role } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState("voice-pro");
+  const { role, isOwner } = useAuth();
+  const { systems, setSystems } = useSystemStates();
+  const [selectedPlan, setSelectedPlan] = useState("scaling");
   const [paymentPeriod, setPaymentPeriod] = useState(1);
-  const [modules, setModules] = useState(systemModules.map((m) => ({ ...m })));
   const [channels, setChannels] = useState(channelDetails.map((c) => ({ ...c })));
   const [checking, setChecking] = useState(false);
   const [expandedChannel, setExpandedChannel] = useState<string | null>("telegram");
+  const [togglingSystem, setTogglingSystem] = useState<string | null>(null);
 
   const plan = pricingPlans.find((p) => p.id === selectedPlan)!;
   const period = PAYMENT_PERIODS.find((p) => p.months === paymentPeriod)!;
-  const monthlyPrice = Math.round(plan.price * (1 - period.discount / 100));
+  const monthlyPrice = plan.customPrice ? 0 : Math.round(plan.price * (1 - period.discount / 100));
   const total = monthlyPrice * paymentPeriod;
-
-  const toggleModule = async (id: string) => {
-    const current = modules.find((m) => m.id === id);
-    if (!current) return;
-    const newEnabled = !current.enabled;
-    setModules((prev) => prev.map((m) => m.id === id ? { ...m, enabled: newEnabled } : m));
-    await callWebhook("modul_toggle", { module_id: id, enabled: newEnabled }, role);
-  };
 
   const toggleChannel = async (id: string) => {
     const current = channels.find((c) => c.id === id);
@@ -67,7 +62,34 @@ export default function SystemPage() {
     setTimeout(() => setChecking(false), 2000);
   };
 
-  const autoModules = modules.filter((m) => m.group === "auto");
+  const contactSupport = async () => {
+    await callWebhook("support_contact", { plan_id: plan.id }, role);
+  };
+
+  const autoSystems = systems.filter((system) => system.system_code !== "main_agent");
+
+  const toggleSystem = async (systemCode: string, currentEnabled: boolean) => {
+    if (togglingSystem) return;
+    setTogglingSystem(systemCode);
+    const newEnabled = !currentEnabled;
+    await callWebhook("sistema_toggle", { system_code: systemCode, enabled: newEnabled }, role);
+    setSystems((prev) => prev.map((system) => (
+      system.system_code === systemCode
+        ? { ...system, enabled: newEnabled }
+        : system
+    )));
+    await supabase
+      .from("system_states")
+      .update({ enabled: newEnabled, updated_at: new Date().toISOString() })
+      .eq("org_uid", ORG_UID)
+      .eq("system_code", systemCode);
+    setTogglingSystem(null);
+  };
+
+  const configureSystem = async (systemCode: string) => {
+    const result = await callWebhook("sistema_nastroit", { system_code: systemCode }, role);
+    if (!result.configured) alert("Вебхук не настроен. Добавьте адрес для действия «sistema_nastroit».");
+  };
 
   return (
     <div>
@@ -106,13 +128,20 @@ export default function SystemPage() {
         <div>
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Выбор тарифа</h3>
           <p className="text-[#5E7488] text-sm mb-4">Нажмите на тариф для выбора</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             {pricingPlans.map((p) => {
               const isSelected = selectedPlan === p.id;
-              const isCurrent = p.id === "voice-pro";
+              const isCurrent = p.id === "scaling";
+              const isUnavailable = p.id === "growth";
               return (
-                <button key={p.id} onClick={() => setSelectedPlan(p.id)}
-                  className={`text-left rounded-xl border p-5 transition-all ${isSelected ? "border-[#00FF00] bg-[#00FF00]/5" : "border-[#223444] bg-[#0F1622] hover:border-[#2C4460]"}`}>
+                <button
+                  key={p.id}
+                  onClick={() => !isUnavailable && setSelectedPlan(p.id)}
+                  disabled={isUnavailable}
+                  className={`text-left rounded-xl border p-5 transition-all ${
+                    isSelected ? "border-[#00FF00] bg-[#00FF00]/5" : "border-[#223444] bg-[#0F1622] hover:border-[#2C4460]"
+                  } ${isUnavailable ? "opacity-65 cursor-not-allowed hover:border-[#223444]" : ""}`}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isSelected ? "bg-[#00FF00]/20 text-[#00FF00]" : "bg-[#1A2535] text-[#8299B4]"}`}>
                       {PLAN_ICONS[p.id]}
@@ -123,9 +152,12 @@ export default function SystemPage() {
                     {(p as any).popular && !isCurrent && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">Популярный</span>
                     )}
+                    {isUnavailable && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">Скоро</span>
+                    )}
                   </div>
                   <p className={`font-bold text-lg mb-0.5 font-unbounded ${isSelected ? "text-[#00FF00]" : "text-[#EDF2FA]"}`}>{p.name}</p>
-                  <p className="text-[#EDF2FA] font-semibold text-lg mb-4">{formatCurrency(p.price)}<span className="text-[#5E7488] text-xs font-normal">/мес</span></p>
+                  <p className="text-[#5E7488] text-xs mb-4">{p.description}</p>
                   <ul className="space-y-1.5">
                     {p.features.map((f) => (
                       <li key={f} className="flex items-center gap-2">
@@ -173,9 +205,9 @@ export default function SystemPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#8299B4]">Цена/мес</span>
-                  <span className="text-[#EDF2FA] font-medium">{formatCurrency(monthlyPrice)}</span>
+                  <span className="text-[#EDF2FA] font-medium">{plan.customPrice ?? formatCurrency(monthlyPrice)}</span>
                 </div>
-                {period.discount > 0 && (
+                {period.discount > 0 && !plan.customPrice && (
                   <div className="flex justify-between text-sm">
                     <span className="text-[#8299B4]">Скидка</span>
                     <span className="text-[#00FF00] font-medium">−{period.discount}%</span>
@@ -183,13 +215,22 @@ export default function SystemPage() {
                 )}
                 <div className="border-t border-[#223444] pt-3 flex justify-between">
                   <span className="text-[#EDF2FA] font-semibold">Итого</span>
-                  <span className="text-[#00FF00] font-bold text-xl">{formatCurrency(total)}</span>
+                  <span className="text-[#00FF00] font-bold text-xl">{plan.customPrice ? `${plan.customPrice}${plan.priceSuffix ?? ""}` : formatCurrency(total)}</span>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
-                <button className="flex-1 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
-                  Оплатить
-                </button>
+                {plan.id === "scaling" ? (
+                  <button
+                    onClick={contactSupport}
+                    className="flex-1 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors"
+                  >
+                    Связаться с поддержкой
+                  </button>
+                ) : (
+                  <button className="flex-1 py-2.5 rounded-lg bg-[#00FF00] text-black text-sm font-semibold hover:bg-[#ccff33] transition-colors">
+                    Оплатить
+                  </button>
+                )}
                 <button onClick={handleCheck}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-[#223444] text-[#8299B4] text-sm font-medium hover:border-[#2C4460] transition-colors">
                   <RefreshCw size={14} className={checking ? "animate-spin" : ""} />
@@ -317,31 +358,49 @@ export default function SystemPage() {
           </div>
         </div>
 
-        {/* Automation modules */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автоматизация</h3>
-              <p className="text-[#5E7488] text-sm mt-0.5">Статус обновляется автоматически</p>
+        {isOwner && (
+          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Settings2 size={16} className="text-[#00FF00]" />
+              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автосистемы</h3>
+            </div>
+            <p className="text-[#5E7488] text-sm mb-6">Автоматические сценарии работы с клиентами</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {autoSystems.map((system) => (
+                <div key={system.system_code} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-5 card-hover flex flex-col">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
+                      <Bot size={18} className="text-[#00FF00]" />
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-md border ${system.enabled ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-[#1A2535] text-[#5E7488] border-[#223444]"}`}>
+                      {system.enabled ? "Активно" : "Выключено"}
+                    </span>
+                  </div>
+                  <p className="text-[#EDF2FA] font-semibold mb-1 text-sm">{system.name}</p>
+                  <p className="text-[#5E7488] text-xs mb-4 leading-relaxed flex-1">{system.description}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => configureSystem(system.system_code)}
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
+                      title="Настроить"
+                    >
+                      <Settings2 size={12} />
+                      Настроить
+                    </button>
+                    <button
+                      onClick={() => toggleSystem(system.system_code, system.enabled)}
+                      disabled={togglingSystem === system.system_code}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${system.enabled ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-[#00FF00]/30 text-[#00FF00] hover:bg-[#00FF00]/10"}`}
+                    >
+                      <Power size={12} />
+                      {system.enabled ? "Выключить" : "Включить"}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="space-y-3">
-            {autoModules.map((mod) => (
-              <div key={mod.id} className="flex items-center justify-between py-3 border-b border-[#1A2535] last:border-0">
-                <div>
-                  <p className="text-[#EDF2FA] text-sm font-medium">{mod.name}</p>
-                  <p className={`text-xs mt-0.5 ${mod.enabled ? "text-[#00FF00]" : "text-[#5E7488]"}`}>
-                    {mod.enabled ? "Активно" : "Отключено"}
-                  </p>
-                </div>
-                <button onClick={() => toggleModule(mod.id)}
-                  className={`relative inline-flex w-11 h-6 rounded-full transition-colors duration-200 ${mod.enabled ? "bg-[#00FF00]" : "bg-[#1A2535]"}`}>
-                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${mod.enabled ? "translate-x-6" : "translate-x-1"}`} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
       </div>
     </div>
