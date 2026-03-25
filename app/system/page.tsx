@@ -124,7 +124,7 @@ export default function SystemPage() {
         <div>
           <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Выбор тарифа</h3>
           <p className="text-[#5E7488] text-sm mb-4">Нажмите на тариф для выбора</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {pricingPlans.map((p) => {
               const isSelected = selectedPlan === p.id;
               const isCurrent = p.id === "scaling";
