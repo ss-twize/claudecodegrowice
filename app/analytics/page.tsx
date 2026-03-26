@@ -8,8 +8,8 @@ import { useAuth } from "@/lib/auth";
 import { ORG_UID, supabase } from "@/lib/supabase";
 import { Lock } from "lucide-react";
 import {
-  analyticsKPIs, dailyContactsData, cancellationsData,
-  noShowData, dailyKPITable, topDaysByRevenue,
+  analyticsKPIs, cancellationsData,
+  dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
   analyticsTrends, revenueData,
 } from "@/lib/mockData";
@@ -64,6 +64,80 @@ const PieTooltip = ({ active, payload }: any) => {
     </div>
   );
 };
+
+// ── Chart data helpers ────────────────────────────────────────────────────────
+
+const CHART_MONTHS = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
+const CHART_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+function chartSeed(n: number) {
+  const x = Math.sin(n * 9301 + 49297) * 10000;
+  return x - Math.floor(x);
+}
+
+function makeContactsData(period: AnalyticsPeriod) {
+  if (period === "year" || period === "all") {
+    return CHART_MONTHS.map((date, i) => ({
+      date,
+      contacts: Math.round(450 + chartSeed(i * 73) * 350),
+    }));
+  }
+  if (period === "quarter") {
+    const now = new Date();
+    const startMonth = Math.floor(now.getMonth() / 3) * 3;
+    return Array.from({ length: 3 }, (_, i) => ({
+      date: CHART_MONTHS[startMonth + i],
+      contacts: Math.round(150 + chartSeed((startMonth + i) * 31) * 150),
+    }));
+  }
+  if (period === "month") {
+    const now = new Date();
+    const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => ({
+      date: String(i + 1),
+      contacts: Math.round(15 + chartSeed((i + 1) * 17) * 30),
+    }));
+  }
+  // week
+  return CHART_DAYS.map((date, i) => ({
+    date,
+    contacts: Math.round(15 + chartSeed(i * 31) * 30),
+  }));
+}
+
+function makeNoShowData(period: AnalyticsPeriod) {
+  if (period === "year" || period === "all") {
+    return CHART_MONTHS.map((date, i) => ({
+      date,
+      came: Math.round(180 + chartSeed(i * 61) * 150),
+      noShow: Math.round(8 + chartSeed(i * 61 + 50) * 15),
+    }));
+  }
+  if (period === "quarter") {
+    const now = new Date();
+    const startMonth = Math.floor(now.getMonth() / 3) * 3;
+    return Array.from({ length: 3 }, (_, i) => ({
+      date: CHART_MONTHS[startMonth + i],
+      came: Math.round(65 + chartSeed((startMonth + i) * 43) * 55),
+      noShow: Math.round(3 + chartSeed((startMonth + i) * 43 + 50) * 7),
+    }));
+  }
+  if (period === "month") {
+    const now = new Date();
+    const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return Array.from({ length: days }, (_, i) => ({
+      date: String(i + 1),
+      came: Math.round(6 + chartSeed((i + 1) * 23) * 10),
+      noShow: chartSeed((i + 1) * 23 + 50) > 0.7 ? Math.round(1 + chartSeed((i + 1) * 23 + 100)) : 0,
+    }));
+  }
+  // week
+  return CHART_DAYS.map((date, i) => ({
+    date,
+    came: Math.round(6 + chartSeed(i * 19) * 10),
+    noShow: chartSeed(i * 19 + 30) > 0.6 ? 1 : 0,
+  }));
+}
 
 export default function AnalyticsPage() {
   const { isOwner } = useAuth();
@@ -153,6 +227,23 @@ export default function AnalyticsPage() {
     period === "all"
       ? `от ${registrationMonthLabel}`
       : dateOptions.find((option) => option.value === periodOffset)?.label ?? "Нет доступных дат";
+
+  const contactsChartData = useMemo(() => makeContactsData(period), [period]);
+  const noShowChartData = useMemo(() => makeNoShowData(period), [period]);
+
+  const contactsChartTitle =
+    period === "year" || period === "all"
+      ? "Уникальные обращения по месяцам"
+      : period === "quarter"
+      ? "Уникальные обращения по кварталу"
+      : period === "week"
+      ? "Уникальные обращения по дням недели"
+      : "Уникальные обращения по дням";
+
+  const contactsXInterval =
+    period === "month" ? Math.max(0, Math.floor(contactsChartData.length / 8) - 1) : 0;
+  const noShowXInterval =
+    period === "month" ? Math.max(0, Math.floor(noShowChartData.length / 8) - 1) : 0;
 
   if (!isOwner) {
     return (
@@ -330,12 +421,12 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Chart: Daily contacts */}
+        {/* Chart: Contacts */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Уникальные обращения по дням</h3>
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">{contactsChartTitle}</h3>
           <p className="text-[#5E7488] text-sm mb-5">Динамика входящих контактов</p>
           <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={dailyContactsData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <AreaChart data={contactsChartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
               <defs>
                 <linearGradient id="contactsGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#00FF00" stopOpacity={0.2} />
@@ -344,7 +435,7 @@ export default function AnalyticsPage() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
               <XAxis dataKey="date" tick={{ fill: "#5E7488", fontSize: 11 }} axisLine={false} tickLine={false}
-                interval={Math.floor(dailyContactsData.length / 7)} />
+                interval={contactsXInterval} />
               <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} width={30} />
               <Tooltip content={<AreaTooltip />} />
               <Area type="monotone" dataKey="contacts" stroke="#00FF00" strokeWidth={2}
@@ -399,9 +490,10 @@ export default function AnalyticsPage() {
             </div>
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={noShowData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <BarChart data={noShowChartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1A2535" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fill: "#5E7488", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="date" tick={{ fill: "#5E7488", fontSize: 11 }} axisLine={false} tickLine={false}
+                    interval={noShowXInterval} />
                   <YAxis tick={{ fill: "#5E7488", fontSize: 12 }} axisLine={false} tickLine={false} width={25} />
                   <Tooltip content={<StackTooltip />} cursor={{ fill: "rgba(0,255,0,0.05)" }} />
                   <Bar dataKey="came" name="Пришли" stackId="a" fill="#00FF00" radius={[0, 0, 0, 0]} />
