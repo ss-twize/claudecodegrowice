@@ -1,6 +1,8 @@
 // Mock data for GROWICE dashboard
 
 export const revenueData = [
+  { month: "Янв", revenue: 312000, expenses: 147000, profit: 165000 },
+  { month: "Фев", revenue: 344000, expenses: 162000, profit: 182000 },
   { month: "Мар", revenue: 284000, expenses: 142000, profit: 142000 },
   { month: "Апр", revenue: 315000, expenses: 158000, profit: 157000 },
   { month: "Май", revenue: 298000, expenses: 149000, profit: 149000 },
@@ -11,8 +13,6 @@ export const revenueData = [
   { month: "Окт", revenue: 456000, expenses: 210000, profit: 246000 },
   { month: "Ноя", revenue: 412000, expenses: 195000, profit: 217000 },
   { month: "Дек", revenue: 498000, expenses: 225000, profit: 273000 },
-  { month: "Янв", revenue: 387000, expenses: 182000, profit: 205000 },
-  { month: "Фев", revenue: 443000, expenses: 208000, profit: 235000 },
 ];
 
 export const servicesData = [
@@ -605,12 +605,18 @@ export const plExpenses = [
 ];
 
 export const cashFlowData = [
+  { month: "Янв", actual: 165000 },
+  { month: "Фев", actual: 182000 },
+  { month: "Мар", actual: 142000 },
+  { month: "Апр", actual: 157000 },
+  { month: "Май", actual: 149000 },
+  { month: "Июн", actual: 171000 },
+  { month: "Июл", actual: 204000 },
+  { month: "Авг", actual: 223000 },
   { month: "Сен", actual: 200000 },
   { month: "Окт", actual: 246000 },
   { month: "Ноя", actual: 217000 },
   { month: "Дек", actual: 273000 },
-  { month: "Янв", actual: 205000 },
-  { month: "Фев", actual: 235000 },
 ];
 
 // ─── ANALYTICS: FUNNEL + TRENDS + FORECAST ───────────────────────────────────

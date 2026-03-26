@@ -172,7 +172,7 @@ export default function FinancesPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Динамика выручки и расходов</h3>
-              <p className="text-[#5E7488] text-sm">Март 2025 — Февраль 2026</p>
+              <p className="text-[#5E7488] text-sm">2025 год, январь — декабрь</p>
             </div>
             <div className="flex items-center gap-4 text-xs">
               {[{ color: "#00FF00", label: "Выручка" }, { color: "#4a5568", label: "Расходы" }, { color: "#88CC00", label: "Прибыль" }].map((l) => (
@@ -271,7 +271,7 @@ export default function FinancesPage() {
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="mb-5">
             <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Движение средств</h3>
-            <p className="text-[#5E7488] text-sm">Чистая прибыль по месяцам, сентябрь 2025 — февраль 2026</p>
+            <p className="text-[#5E7488] text-sm">Чистая прибыль по месяцам, 2025 год</p>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={cashFlowData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
