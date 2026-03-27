@@ -268,50 +268,6 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* ── Auto-systems toggles ── */}
-        {isOwner && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Settings2 size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Автосистемы</h3>
-            </div>
-            <p className="text-[#5E7488] text-sm mb-6">Автоматические сценарии работы с клиентами</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {autoSystems.map((sys) => (
-                <div key={sys.system_code} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-5 card-hover flex flex-col">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
-                      <Bot size={18} className="text-[#00FF00]" />
-                    </div>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-md border ${sys.enabled ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-[#1A2535] text-[#5E7488] border-[#223444]"}`}>
-                      {sys.enabled ? "Активно" : "Выключено"}
-                    </span>
-                  </div>
-                  <p className="text-[#EDF2FA] font-semibold mb-1 text-sm">{sys.name}</p>
-                  <p className="text-[#5E7488] text-xs mb-4 leading-relaxed flex-1">{sys.description}</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => configureSystem(sys.system_code)}
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
-                      title="Настроить"
-                    >
-                      <Settings2 size={12} />
-                      Настроить
-                    </button>
-                    <button
-                      onClick={() => toggleSystem(sys.system_code, sys.enabled)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${sys.enabled ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-[#00FF00]/30 text-[#00FF00] hover:bg-[#00FF00]/10"}`}
-                    >
-                      <Power size={12} />
-                      {sys.enabled ? "Выключить" : "Включить"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* ── Profile (owner only) ── */}
         {isOwner && (
           <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
