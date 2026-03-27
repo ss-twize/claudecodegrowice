@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Header from "@/components/layout/Header";
-import { profileSettings, orgSettings, rolesData, notificationsConfig } from "@/lib/mockData";
+import { profileSettings, orgSettings, notificationsConfig } from "@/lib/mockData";
 import { callWebhook } from "@/lib/webhooks";
 import { supabase, ORG_UID } from "@/lib/supabase";
 import { useSystemStates } from "@/lib/hooks/useSystemStates";
@@ -13,8 +13,6 @@ import {
   Trash2,
   ExternalLink,
   CheckCircle2,
-  Shield,
-  Users,
   Bell,
   Upload,
   FileText,
@@ -53,7 +51,6 @@ export default function SettingsPage() {
 
   const [profile, setProfile] = useState({ ...profileSettings });
   const [org, setOrg] = useState({ ...orgSettings });
-  const [admins, setAdmins] = useState([...orgSettings.admins]);
   const [branches, setBranches] = useState<{ name: string; address: string }[]>([]);
   const [notifications, setNotifications] = useState(notificationsConfig.map((n) => ({ ...n })));
 
@@ -70,18 +67,9 @@ export default function SettingsPage() {
 
   const [togglingSystem, setTogglingSystem] = useState<string | null>(null);
 
-  const ROLE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-    owner:  { bg: "bg-[#00FF00]/10",  border: "border-[#00FF00]/20",  text: "text-[#00FF00]" },
-    admin:  { bg: "bg-blue-500/10",   border: "border-blue-500/20",   text: "text-blue-400" },
-    master: { bg: "bg-yellow-500/10", border: "border-yellow-500/20", text: "text-yellow-400" },
-  };
-
   const saveProfile = () => { setProfileSaved(true); setTimeout(() => setProfileSaved(false), 2000); };
   const saveOrg = () => { setOrgSaved(true); setTimeout(() => setOrgSaved(false), 2000); };
 
-  const addAdmin = () => setAdmins((prev) => [...prev, ""]);
-  const removeAdmin = (i: number) => setAdmins((prev) => prev.filter((_, idx) => idx !== i));
-  const updateAdmin = (i: number, val: string) => setAdmins((prev) => prev.map((a, idx) => idx === i ? val : a));
   const addBranch = () => setBranches((prev) => [...prev, { name: "", address: "" }]);
   const removeBranch = (i: number) => setBranches((prev) => prev.filter((_, idx) => idx !== i));
   const updateBranch = (i: number, field: "name" | "address", val: string) =>
@@ -181,7 +169,6 @@ export default function SettingsPage() {
     }
   };
 
-  const mainAgent = systems.find(s => s.system_code === 'main_agent');
   const autoSystems = systems.filter(s => s.system_code !== 'main_agent');
 
   return (
@@ -189,32 +176,8 @@ export default function SettingsPage() {
       <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
       <div className="p-6 space-y-6">
 
-        <div className={`grid gap-6 ${isOwner && mainAgent ? "xl:grid-cols-2 xl:items-start" : "grid-cols-1"}`}>
-          {/* ── Main agent toggle ── */}
-          {isOwner && mainAgent && (
-            <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full">
-              <div className="flex items-center gap-2 mb-4">
-                <Power size={16} className="text-[#00FF00]" />
-                <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Основной агент</h3>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[#EDF2FA] font-medium">{mainAgent.name}</p>
-                  <p className="text-[#5E7488] text-sm mt-0.5">{mainAgent.description}</p>
-                  <p className={`text-xs mt-1 font-medium ${mainAgent.enabled ? "text-[#00FF00]" : "text-red-400"}`}>
-                    {mainAgent.enabled ? "Активен — принимает обращения" : "Выключен — обращения не обрабатываются"}
-                  </p>
-                </div>
-                <Toggle
-                  enabled={mainAgent.enabled}
-                  onChange={() => toggleSystem(mainAgent.system_code, mainAgent.enabled)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ── Greeting message ── */}
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 h-full">
+        {/* ── Greeting message ── */}
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-1">
               <MessageSquare size={16} className="text-[#00FF00]" />
               <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Приветственное сообщение</h3>
@@ -239,7 +202,6 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
-        </div>
 
         {/* ── Knowledge base ── */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
@@ -392,10 +354,19 @@ export default function SettingsPage() {
                 <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Организация</h3>
                 <p className="text-[#5E7488] text-sm">Данные салона и контакты</p>
               </div>
-              <button onClick={addBranch}
-                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors">
-                <Plus size={14} />Добавить филиал
-              </button>
+              <div className="relative group/branch">
+                <button
+                  type="button"
+                  aria-disabled="true"
+                  onClick={(e) => e.preventDefault()}
+                  className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/25 cursor-not-allowed"
+                >
+                  <Plus size={14} />Добавить филиал
+                </button>
+                <div className="absolute top-full right-0 mt-1.5 w-72 bg-[#141E2B] border border-[#223444] rounded-xl p-3 shadow-xl z-20 text-xs text-[#8299B4] leading-relaxed opacity-0 group-hover/branch:opacity-100 transition-opacity pointer-events-none">
+                  В разработке — скоро будет доступно добавление нескольких филиалов!
+                </div>
+              </div>
             </div>
             <div className="space-y-4">
               <div>
@@ -426,24 +397,6 @@ export default function SettingsPage() {
                         className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors flex-shrink-0">
                         <ExternalLink size={14} className="text-[#8299B4]" />
                       </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[#8299B4] text-xs font-medium">Администраторы</label>
-                  <button onClick={addAdmin} className="text-[#00FF00] text-xs font-medium hover:text-[#ccff33] transition-colors">+ Добавить</button>
-                </div>
-                <div className="space-y-2">
-                  {admins.map((admin, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <input value={admin} onChange={(e) => updateAdmin(i, e.target.value)} placeholder="Введите ФИО"
-                        className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
-                      <button onClick={() => removeAdmin(i)}
-                        className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-red-500/40 hover:text-red-400 text-[#5E7488] transition-colors flex-shrink-0">
-                        <Trash2 size={14} />
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -482,49 +435,8 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* ── Roles (owner only) ── */}
-        {isOwner && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Shield size={16} className="text-[#00FF00]" />
-              <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Роли и права доступа</h3>
-            </div>
-            <p className="text-[#5E7488] text-sm mb-5">Управление уровнями доступа для сотрудников</p>
-            <div className="space-y-3">
-              {rolesData.map((roleItem) => {
-                const colors = ROLE_COLORS[roleItem.id];
-                return (
-                  <div key={roleItem.id} className={`border rounded-xl p-4 ${colors.border} ${colors.bg}`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <span className={`text-sm font-semibold ${colors.text}`}>{roleItem.name}</span>
-                      <div className="flex items-center gap-1.5">
-                        <Users size={13} className="text-[#5E7488]" />
-                        <span className="text-[#8299B4] text-xs">{roleItem.members.length} чел.</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {roleItem.permissions.map((perm) => (
-                        <span key={perm} className="text-xs px-2 py-0.5 rounded-md bg-[#0F1622] border border-[#223444] text-[#8299B4]">{perm}</span>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {roleItem.members.map((member) => (
-                        <div key={member} className="flex items-center gap-1.5 bg-[#0A0D14] border border-[#223444] rounded-lg px-2.5 py-1">
-                          <div className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold text-black ${roleItem.id === "owner" ? "bg-[#00FF00]" : roleItem.id === "admin" ? "bg-blue-400" : "bg-yellow-400"}`}>
-                            {member[0]}
-                          </div>
-                          <span className="text-[#8299B4] text-xs">{member}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Notifications ── */}
+        {/* ── Notifications (admin only) ── */}
+        {!isOwner && (
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Bell size={16} className="text-[#00FF00]" />
@@ -556,6 +468,7 @@ export default function SettingsPage() {
             </table>
           </div>
         </div>
+        )}
 
         {/* Admin-only access note */}
         {!isOwner && (
