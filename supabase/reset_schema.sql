@@ -9,10 +9,12 @@
 DROP TABLE IF EXISTS messages          CASCADE;
 DROP TABLE IF EXISTS clients_tg        CASCADE;
 DROP TABLE IF EXISTS about_business    CASCADE;
+DROP TABLE IF EXISTS client_channels   CASCADE;
 DROP TABLE IF EXISTS appointments      CASCADE;
 DROP TABLE IF EXISTS clients           CASCADE;
 DROP TABLE IF EXISTS telegram_users    CASCADE;
 DROP TABLE IF EXISTS whatsapp_users    CASCADE;
+DROP TABLE IF EXISTS max_users         CASCADE;
 
 -- ── 2. Удаляем платформенные таблицы (пересоздадим чистыми) ───────────────────
 
@@ -200,6 +202,7 @@ CREATE TABLE telegram_users (
   can_message      BOOLEAN DEFAULT true,
   last_message     TIMESTAMPTZ,
   created_at       TIMESTAMPTZ DEFAULT now(),
+  client_id        UUID REFERENCES clients(id) ON DELETE SET NULL,
   UNIQUE (org_uid, user_id)
 );
 
@@ -215,6 +218,23 @@ CREATE TABLE whatsapp_users (
   can_message      BOOLEAN DEFAULT true,
   last_message     TIMESTAMPTZ,
   created_at       TIMESTAMPTZ DEFAULT now(),
+  client_id        UUID REFERENCES clients(id) ON DELETE SET NULL,
+  UNIQUE (org_uid, user_id)
+);
+
+-- Пользователи Max (все, кто написал боту)
+CREATE TABLE max_users (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_uid          UUID NOT NULL DEFAULT '11111111-1111-1111-1111-111111111111',
+  user_id          TEXT NOT NULL,             -- Max user ID
+  first_name       TEXT,
+  last_name        TEXT,
+  blocked          BOOLEAN DEFAULT false,
+  allow_marketing  BOOLEAN DEFAULT true,
+  can_message      BOOLEAN DEFAULT true,
+  last_message     TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ DEFAULT now(),
+  client_id        UUID REFERENCES clients(id) ON DELETE SET NULL,
   UNIQUE (org_uid, user_id)
 );
 
@@ -224,7 +244,6 @@ CREATE TABLE clients (
   org_uid     UUID NOT NULL DEFAULT '11111111-1111-1111-1111-111111111111',
   fullname    TEXT NOT NULL,
   phone       TEXT,
-  user_id     TEXT,    -- мягкая связь с telegram_users.user_id или whatsapp_users.user_id
   gender      TEXT CHECK (gender IN ('мужской', 'женский') OR gender IS NULL),
   yc_id       TEXT,    -- ID клиента в YClients
   created_at  TIMESTAMPTZ DEFAULT now(),
@@ -271,22 +290,58 @@ CREATE TABLE appointments (
   UNIQUE (record_hash)
 );
 
+-- Каналы связи клиента (центральная таблица для приоритетной рассылки)
+-- priority=1 → самый приоритетный канал (обычно Telegram)
+-- can_notify=false → клиент отписался от уведомлений по этому каналу
+-- is_active=false  → канал заблокирован или недоступен
+CREATE TABLE client_channels (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id        UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  channel          TEXT NOT NULL CHECK (channel IN ('telegram', 'whatsapp', 'max', 'phone')),
+  channel_user_id  TEXT NOT NULL,  -- user_id из tg/wa/max таблицы, или номер для 'phone'
+  priority         INTEGER NOT NULL DEFAULT 99,
+  is_active        BOOLEAN NOT NULL DEFAULT true,
+  can_notify       BOOLEAN NOT NULL DEFAULT true,
+  identified_via   TEXT,           -- 'phone_match' | 'manual' | 'self_reported'
+  last_used        TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ DEFAULT now(),
+  updated_at       TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (client_id, channel)
+);
+
+CREATE OR REPLACE FUNCTION update_client_channels_ts()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER client_channels_ts
+  BEFORE UPDATE ON client_channels
+  FOR EACH ROW EXECUTE FUNCTION update_client_channels_ts();
+
 -- =============================================================================
 -- ИНДЕКСЫ
 -- =============================================================================
 
 CREATE INDEX idx_telegram_users_user_id     ON telegram_users (user_id);
 CREATE INDEX idx_telegram_users_org         ON telegram_users (org_uid);
+CREATE INDEX idx_telegram_users_client_id   ON telegram_users (client_id);
 CREATE INDEX idx_whatsapp_users_user_id     ON whatsapp_users (user_id);
 CREATE INDEX idx_whatsapp_users_org         ON whatsapp_users (org_uid);
+CREATE INDEX idx_whatsapp_users_client_id   ON whatsapp_users (client_id);
+CREATE INDEX idx_max_users_user_id          ON max_users (user_id);
+CREATE INDEX idx_max_users_org              ON max_users (org_uid);
+CREATE INDEX idx_max_users_client_id        ON max_users (client_id);
 CREATE INDEX idx_clients_org                ON clients (org_uid);
 CREATE INDEX idx_clients_phone              ON clients (phone);
-CREATE INDEX idx_clients_yc_id             ON clients (yc_id);
+CREATE INDEX idx_clients_yc_id              ON clients (yc_id);
 CREATE INDEX idx_appointments_org           ON appointments (org_uid);
 CREATE INDEX idx_appointments_client_id     ON appointments (client_id);
 CREATE INDEX idx_appointments_date          ON appointments (date);
 CREATE INDEX idx_appointments_status        ON appointments (status);
 CREATE INDEX idx_appointments_record_id     ON appointments (record_id);
+CREATE INDEX idx_client_channels_client     ON client_channels (client_id);
+CREATE INDEX idx_client_channels_routing    ON client_channels (client_id, is_active, can_notify, priority);
+CREATE INDEX idx_client_channels_lookup     ON client_channels (channel, channel_user_id);
 CREATE INDEX idx_action_log_org             ON action_log (org_uid, created_at DESC);
 CREATE INDEX idx_metrics_day_org_date       ON metrics_day (org_uid, date DESC);
 CREATE INDEX idx_metrics_month_org_month    ON metrics_month (org_uid, month DESC);
@@ -332,8 +387,10 @@ ALTER TABLE channel_connections       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE channel_connection_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE telegram_users            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_users            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE max_users                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients                   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_channels           ENABLE ROW LEVEL SECURITY;
 
 -- Платформенные таблицы — anon может читать и писать (фронтенд)
 CREATE POLICY "anon_all_org_settings"    ON org_settings    FOR ALL TO anon USING (true) WITH CHECK (true);
@@ -349,10 +406,12 @@ CREATE POLICY "anon_read_connections"    ON channel_connections       FOR SELECT
 CREATE POLICY "anon_read_events"         ON channel_connection_events FOR SELECT TO anon USING (true);
 
 -- Таблицы данных — anon читает (фронтенд), n8n пишет через service_role
-CREATE POLICY "anon_read_telegram_users"  ON telegram_users FOR SELECT TO anon USING (true);
-CREATE POLICY "anon_read_whatsapp_users"  ON whatsapp_users FOR SELECT TO anon USING (true);
-CREATE POLICY "anon_read_clients"         ON clients        FOR SELECT TO anon USING (true);
-CREATE POLICY "anon_read_appointments"    ON appointments   FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_telegram_users"   ON telegram_users   FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_whatsapp_users"   ON whatsapp_users   FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_max_users"        ON max_users        FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_clients"          ON clients          FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_appointments"     ON appointments     FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_read_client_channels"  ON client_channels  FOR SELECT TO anon USING (true);
 
 -- Service role (n8n) — полный доступ без RLS (автоматически обходит RLS)
 -- n8n должен использовать SUPABASE_SERVICE_ROLE_KEY, а не anon key
