@@ -23,10 +23,10 @@ async function getUrl(code: string): Promise<string | null> {
   return (process.env as any)[envKey] || DEFAULT_WEBHOOK_URLS[code] || null
 }
 
-async function log(code: string, params: any, status: string, error?: string, role?: string) {
+async function log(code: string, params: any, status: string, error?: string) {
   try {
     await supabase.from('action_log').insert({
-      org_uid: ORG_UID, action_code: code, params, status, error_message: error, role,
+      org_uid: ORG_UID, action_code: code, params, status, error_message: error,
     })
   } catch {}
 }
@@ -34,7 +34,6 @@ async function log(code: string, params: any, status: string, error?: string, ro
 export async function callWebhook(
   actionCode: string,
   params: Record<string, unknown> = {},
-  role?: string
 ): Promise<{ ok: boolean; configured: boolean; error?: string }> {
   const url = await getUrl(actionCode)
   if (!url) return { ok: false, configured: false }
@@ -43,7 +42,6 @@ export async function callWebhook(
     org_uid: ORG_UID,
     action_code: actionCode,
     params,
-    role,
     client_time: new Date().toISOString(),
   }
 
@@ -53,10 +51,10 @@ export async function callWebhook(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    await log(actionCode, params, res.ok ? 'успех' : 'ошибка', undefined, role)
+    await log(actionCode, params, res.ok ? 'успех' : 'ошибка')
     return { ok: res.ok, configured: true }
   } catch (err: any) {
-    await log(actionCode, params, 'ошибка', err.message, role)
+    await log(actionCode, params, 'ошибка', err.message)
     return { ok: false, configured: true, error: err.message }
   }
 }

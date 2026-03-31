@@ -836,7 +836,7 @@ export default function ClientsPage() {
                     filters: campaignFilters,
                     recipients_count: campaignRecipients.length,
                     recipient_ids: campaignRecipients.map((c) => c.id),
-                  }, role);
+                  });
                   setCampaignSending(false);
                   if (result.ok) {
                     setOptimisticCampaigns((prev) => [{

@@ -7,10 +7,7 @@ import { callWebhook } from "@/lib/webhooks";
 import { supabase, ORG_UID } from "@/lib/supabase";
 import { useSystemStates } from "@/lib/hooks/useSystemStates";
 import { useKnowledgeFiles } from "@/lib/hooks/useKnowledgeFiles";
-import { useAuth } from "@/lib/auth";
 import {
-  Plus,
-  Trash2,
   ExternalLink,
   CheckCircle2,
   Bell,
@@ -22,7 +19,6 @@ import {
   Power,
   Settings2,
   Bot,
-  AlertTriangle,
 } from "lucide-react";
 
 const FILE_TYPE_LABELS: Record<string, string> = {
@@ -45,13 +41,11 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
 }
 
 export default function SettingsPage() {
-  const { isOwner, role } = useAuth();
   const { systems, setSystems } = useSystemStates();
   const { files, setFiles } = useKnowledgeFiles();
 
   const [profile, setProfile] = useState({ ...profileSettings });
   const [org, setOrg] = useState({ ...orgSettings });
-  const [branches, setBranches] = useState<{ name: string; address: string }[]>([]);
   const [notifications, setNotifications] = useState(notificationsConfig.map((n) => ({ ...n })));
 
   const [profileSaved, setProfileSaved] = useState(false);
@@ -70,10 +64,6 @@ export default function SettingsPage() {
   const saveProfile = () => { setProfileSaved(true); setTimeout(() => setProfileSaved(false), 2000); };
   const saveOrg = () => { setOrgSaved(true); setTimeout(() => setOrgSaved(false), 2000); };
 
-  const addBranch = () => setBranches((prev) => [...prev, { name: "", address: "" }]);
-  const removeBranch = (i: number) => setBranches((prev) => prev.filter((_, idx) => idx !== i));
-  const updateBranch = (i: number, field: "name" | "address", val: string) =>
-    setBranches((prev) => prev.map((b, idx) => idx === i ? { ...b, [field]: val } : b));
   const toggleNotification = (id: string, channel: "telegram" | "email") =>
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, [channel]: !n[channel] } : n));
 
@@ -114,7 +104,7 @@ export default function SettingsPage() {
           file_name: file.name,
           file_type: ext,
           storage_url: storageUrl,
-        }, role);
+        });
 
         if (!result.configured) {
           // Update status back to loaded if no webhook
@@ -138,7 +128,7 @@ export default function SettingsPage() {
   // Greeting save
   const saveGreeting = async () => {
     setGreetingLoading(true);
-    const result = await callWebhook('privetstvie_sokhranit', { text: greeting }, role);
+    const result = await callWebhook('privetstvie_sokhranit', { text: greeting });
     if (result.configured) {
       await supabase.from('org_settings').update({ greeting_message: greeting }).eq('org_uid', ORG_UID);
     }
@@ -152,7 +142,7 @@ export default function SettingsPage() {
     if (togglingSystem) return;
     setTogglingSystem(systemCode);
     const newEnabled = !currentEnabled;
-    const result = await callWebhook('sistema_toggle', { system_code: systemCode, enabled: newEnabled }, role);
+    const result = await callWebhook('sistema_toggle', { system_code: systemCode, enabled: newEnabled });
     if (result.configured || !result.configured) {
       // Optimistic update
       setSystems(prev => prev.map(s => s.system_code === systemCode ? { ...s, enabled: newEnabled } : s));
@@ -163,7 +153,7 @@ export default function SettingsPage() {
   };
 
   const configureSystem = async (systemCode: string) => {
-    const result = await callWebhook('sistema_nastroit', { system_code: systemCode }, role);
+    const result = await callWebhook('sistema_nastroit', { system_code: systemCode });
     if (!result.configured) {
       alert("Вебхук не настроен. Добавьте адрес для действия «sistema_nastroit».");
     }
@@ -268,131 +258,85 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* ── Profile (owner only) ── */}
-        {isOwner && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Профиль</h3>
-            <p className="text-[#5E7488] text-sm mb-5">Личные данные владельца</p>
-            <div className="space-y-4">
-              {[
-                { label: "ФИО", field: "name" as const },
-                { label: "Телефон", field: "phone" as const },
-              ].map(({ label, field }) => (
-                <div key={field}>
-                  <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">{label}</label>
-                  <input value={profile[field]} onChange={(e) => setProfile((p) => ({ ...p, [field]: e.target.value }))}
-                    className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
-                </div>
-              ))}
-              <div>
-                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Роль</label>
-                <input value={profile.role} readOnly
-                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#8299B4] text-sm rounded-lg px-3 py-2.5 outline-none cursor-not-allowed" />
+        {/* ── Profile ── */}
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Профиль</h3>
+          <p className="text-[#5E7488] text-sm mb-5">Личные данные</p>
+          <div className="space-y-4">
+            {[
+              { label: "ФИО", field: "name" as const },
+              { label: "Телефон", field: "phone" as const },
+            ].map(({ label, field }) => (
+              <div key={field}>
+                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">{label}</label>
+                <input value={profile[field]} onChange={(e) => setProfile((p) => ({ ...p, [field]: e.target.value }))}
+                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
               </div>
-              <div className="flex justify-end pt-2">
-                <button onClick={saveProfile}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                    profileSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30" : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
-                  }`}>
-                  {profileSaved && <CheckCircle2 size={14} />}
-                  {profileSaved ? "Сохранено" : "Сохранить"}
-                </button>
-              </div>
+            ))}
+            <div className="flex justify-end pt-2">
+              <button onClick={saveProfile}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  profileSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30" : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                }`}>
+                {profileSaved && <CheckCircle2 size={14} />}
+                {profileSaved ? "Сохранено" : "Сохранить"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* ── Organization (owner only) ── */}
-        {isOwner && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Организация</h3>
-                <p className="text-[#5E7488] text-sm">Данные салона и контакты</p>
-              </div>
-              <div className="relative group/branch">
-                <button
-                  type="button"
-                  aria-disabled="true"
-                  onClick={(e) => e.preventDefault()}
-                  className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/25 cursor-not-allowed"
-                >
-                  <Plus size={14} />Добавить филиал
-                </button>
-                <div className="absolute top-full right-0 mt-1.5 w-72 bg-[#141E2B] border border-[#223444] rounded-xl p-3 shadow-xl z-20 text-xs text-[#8299B4] leading-relaxed opacity-0 group-hover/branch:opacity-100 transition-opacity pointer-events-none">
-                  В разработке — скоро будет доступно добавление нескольких филиалов!
-                </div>
-              </div>
+        {/* ── Organization ── */}
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div className="mb-5">
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Организация</h3>
+            <p className="text-[#5E7488] text-sm">Данные салона и контакты</p>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Название организации</label>
+              <input value={org.name} onChange={(e) => setOrg((o) => ({ ...o, name: e.target.value }))}
+                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Название организации</label>
-                <input value={org.name} onChange={(e) => setOrg((o) => ({ ...o, name: e.target.value }))}
-                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
-              </div>
-              <div>
-                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Адрес</label>
-                <input value={org.address} onChange={(e) => setOrg((o) => ({ ...o, address: e.target.value }))}
-                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
-              </div>
-              <div>
-                <label className="text-[#8299B4] text-xs font-medium mb-2 block">Страница на картах</label>
-                <div className="space-y-2">
-                  {[
-                    { key: "yandexMapsUrl" as const, label: "Я", placeholder: "Ссылка на Яндекс Карты" },
-                    { key: "dgisUrl" as const, label: "2Г", placeholder: "Ссылка на 2ГИС" },
-                  ].map((map) => (
-                    <div key={map.key} className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-[#EDF2FA]">{map.label}</span>
-                      </div>
-                      <input value={org[map.key]} onChange={(e) => setOrg((o) => ({ ...o, [map.key]: e.target.value }))}
-                        placeholder={map.placeholder}
-                        className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
-                      <a href={org[map.key]} target="_blank" rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors flex-shrink-0">
-                        <ExternalLink size={14} className="text-[#8299B4]" />
-                      </a>
+            <div>
+              <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Адрес</label>
+              <input value={org.address} onChange={(e) => setOrg((o) => ({ ...o, address: e.target.value }))}
+                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
+            </div>
+            <div>
+              <label className="text-[#8299B4] text-xs font-medium mb-2 block">Страница на картах</label>
+              <div className="space-y-2">
+                {[
+                  { key: "yandexMapsUrl" as const, label: "Я", placeholder: "Ссылка на Яндекс Карты" },
+                  { key: "dgisUrl" as const, label: "2Г", placeholder: "Ссылка на 2ГИС" },
+                ].map((map) => (
+                  <div key={map.key} className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-[#EDF2FA]">{map.label}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-              {branches.length > 0 && (
-                <div>
-                  <p className="text-[#8299B4] text-xs font-medium mb-3">Филиалы</p>
-                  <div className="space-y-3">
-                    {branches.map((branch, i) => (
-                      <div key={i} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[#8299B4] text-xs font-medium">Филиал {i + 1}</span>
-                          <button onClick={() => removeBranch(i)} className="text-[#5E7488] hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
-                        </div>
-                        <div className="space-y-2">
-                          <input value={branch.name} onChange={(e) => updateBranch(i, "name", e.target.value)} placeholder="Название"
-                            className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
-                          <input value={branch.address} onChange={(e) => updateBranch(i, "address", e.target.value)} placeholder="Адрес"
-                            className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
-                        </div>
-                      </div>
-                    ))}
+                    <input value={org[map.key]} onChange={(e) => setOrg((o) => ({ ...o, [map.key]: e.target.value }))}
+                      placeholder={map.placeholder}
+                      className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
+                    <a href={org[map.key]} target="_blank" rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors flex-shrink-0">
+                      <ExternalLink size={14} className="text-[#8299B4]" />
+                    </a>
                   </div>
-                </div>
-              )}
-              <div className="flex justify-end pt-2">
-                <button onClick={saveOrg}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                    orgSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30" : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
-                  }`}>
-                  {orgSaved && <CheckCircle2 size={14} />}
-                  {orgSaved ? "Сохранено" : "Сохранить"}
-                </button>
+                ))}
               </div>
             </div>
+            <div className="flex justify-end pt-2">
+              <button onClick={saveOrg}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  orgSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30" : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                }`}>
+                {orgSaved && <CheckCircle2 size={14} />}
+                {orgSaved ? "Сохранено" : "Сохранить"}
+              </button>
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* ── Notifications (admin only) ── */}
-        {!isOwner && (
+        {/* ── Notifications ── */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Bell size={16} className="text-[#00FF00]" />
@@ -424,19 +368,6 @@ export default function SettingsPage() {
             </table>
           </div>
         </div>
-        )}
-
-        {/* Admin-only access note */}
-        {!isOwner && (
-          <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-            <div className="flex items-center gap-3">
-              <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0" />
-              <p className="text-[#8299B4] text-sm">
-                Некоторые разделы настроек доступны только владельцу.
-              </p>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>

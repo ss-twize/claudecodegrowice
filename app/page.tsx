@@ -7,7 +7,6 @@ import RevenueChart from "@/components/charts/RevenueChart";
 import ServicesChart from "@/components/charts/ServicesChart";
 import AppointmentsChart from "@/components/charts/AppointmentsChart";
 import { formatCurrency } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
 import { useDashboardStats } from "@/lib/hooks/useDashboardStats";
 import { useRealtimePlatform } from "@/lib/hooks/useRealtimePlatform";
 import {
@@ -45,7 +44,6 @@ const activityIcons: Record<string, React.ReactNode> = {
 };
 
 export default function DashboardPage() {
-  const { isOwner } = useAuth();
   const { stats, loading } = useDashboardStats();
   const { revenueSeries, servicesSeries, appointmentsByDay, activity } = useRealtimePlatform();
 
@@ -54,19 +52,17 @@ export default function DashboardPage() {
       <Header title="Главная" subtitle="Обзор ключевых показателей" />
       <div className="p-6 space-y-6">
         {/* KPI Cards */}
-        <div className={`grid gap-4 ${isOwner ? "grid-cols-2 xl:grid-cols-4" : "grid-cols-2"}`}>
-          {isOwner && (
-            <MetricCard
-              title="Выручка за месяц"
-              value={loading ? "—" : formatCurrency(stats.monthlyRevenue)}
-              change={stats.monthlyRevenueGrowth}
-              changeLabel="к прошлому месяцу"
-              icon={<TrendingUp size={18} />}
-              accent
-              tooltip={TOOLTIPS.revenue}
-              compact
-            />
-          )}
+        <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            title="Выручка за месяц"
+            value={loading ? "—" : formatCurrency(stats.monthlyRevenue)}
+            change={stats.monthlyRevenueGrowth}
+            changeLabel="к прошлому месяцу"
+            icon={<TrendingUp size={18} />}
+            accent
+            tooltip={TOOLTIPS.revenue}
+            compact
+          />
           <MetricCard
             title="Новые клиенты"
             value={loading ? "—" : String(stats.newClients)}
@@ -85,15 +81,13 @@ export default function DashboardPage() {
             tooltip={TOOLTIPS.appointments}
             compact
           />
-          {isOwner && (
-            <MetricCard
-              title="Средний чек"
-              value={loading ? "—" : formatCurrency(stats.avgCheck)}
-              icon={<Receipt size={18} />}
-              tooltip={TOOLTIPS.avgCheck}
-              compact
-            />
-          )}
+          <MetricCard
+            title="Средний чек"
+            value={loading ? "—" : formatCurrency(stats.avgCheck)}
+            icon={<Receipt size={18} />}
+            tooltip={TOOLTIPS.avgCheck}
+            compact
+          />
         </div>
 
         <div className="flex flex-col gap-4 xl:flex-row">
@@ -122,7 +116,7 @@ export default function DashboardPage() {
                       <p className="text-[#EDF2FA] text-xs leading-relaxed">{activity.text}</p>
                       <p className="text-[#5E7488] text-xs mt-0.5">{activity.time}</p>
                     </div>
-                    {isOwner && activity.amount !== null && (
+                    {activity.amount !== null && (
                       <span
                         className={`text-xs font-bold flex-shrink-0 ${
                           activity.amount > 0 ? "text-[#00FF00]" : "text-red-400"
