@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
 import RevenueChart from "@/components/charts/RevenueChart";
 import MetricCard from "@/components/ui/MetricCard";
-import { useAuth } from "@/lib/auth";
 import { ORG_UID, supabase } from "@/lib/supabase";
-import { Lock } from "lucide-react";
 import {
   analyticsKPIs, cancellationsData,
   dailyKPITable, topDaysByRevenue,
@@ -140,7 +138,6 @@ function makeNoShowData(period: AnalyticsPeriod) {
 }
 
 export default function AnalyticsPage() {
-  const { isOwner } = useAuth();
   const [period, setPeriod] = useState<AnalyticsPeriod>("all");
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -244,21 +241,6 @@ export default function AnalyticsPage() {
     period === "month" ? Math.max(0, Math.floor(contactsChartData.length / 8) - 1) : 0;
   const noShowXInterval =
     period === "month" ? Math.max(0, Math.floor(noShowChartData.length / 8) - 1) : 0;
-
-  if (!isOwner) {
-    return (
-      <div>
-        <Header title="Аналитика" subtitle="Полная аналитика бизнеса и агента" />
-        <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="w-16 h-16 rounded-2xl bg-[#0F1622] border border-[#223444] flex items-center justify-center mb-5">
-            <Lock size={28} className="text-[#223444]" />
-          </div>
-          <h2 className="text-[#EDF2FA] text-xl font-semibold mb-2">Нет доступа</h2>
-          <p className="text-[#5E7488] text-sm">Этот раздел доступен только владельцу</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>

@@ -50,7 +50,7 @@ export default function SystemPage() {
     if (!current) return;
     const newEnabled = !current.enabled;
     setChannels((prev) => prev.map((c) => c.id === id ? { ...c, enabled: newEnabled } : c));
-    await callWebhook("kanal_toggle", { channel_id: id, enabled: newEnabled }, role);
+    await callWebhook("kanal_toggle", { channel_id: id, enabled: newEnabled });
   };
 
   const updateChannel = (id: string, field: string, value: string) => {
@@ -60,7 +60,7 @@ export default function SystemPage() {
   const saveChannelSettings = async (id: string) => {
     const ch = channels.find((c) => c.id === id);
     if (!ch) return;
-    await callWebhook("kanal_nastroit", { channel_id: id, bot_name: ch.botName, webhook_url: ch.webhookUrl, work_from: ch.workFrom, work_to: ch.workTo }, role);
+    await callWebhook("kanal_nastroit", { channel_id: id, bot_name: ch.botName, webhook_url: ch.webhookUrl, work_from: ch.workFrom, work_to: ch.workTo });
   };
 
   const handleCheck = () => {
@@ -69,7 +69,7 @@ export default function SystemPage() {
   };
 
   const contactSupport = async () => {
-    await callWebhook("support_contact", { plan_id: plan.id }, role);
+    await callWebhook("support_contact", { plan_id: plan.id });
   };
 
   const autoSystems = systems.filter((system) => system.system_code !== "main_agent");
@@ -78,7 +78,7 @@ export default function SystemPage() {
     if (togglingSystem) return;
     setTogglingSystem(systemCode);
     const newEnabled = !currentEnabled;
-    await callWebhook("sistema_toggle", { system_code: systemCode, enabled: newEnabled }, role);
+    await callWebhook("sistema_toggle", { system_code: systemCode, enabled: newEnabled });
     setSystems((prev) => prev.map((system) => (
       system.system_code === systemCode
         ? { ...system, enabled: newEnabled }
@@ -93,7 +93,7 @@ export default function SystemPage() {
   };
 
   const configureSystem = async (systemCode: string) => {
-    const result = await callWebhook("sistema_nastroit", { system_code: systemCode }, role);
+    const result = await callWebhook("sistema_nastroit", { system_code: systemCode });
     if (!result.configured) alert("Вебхук не настроен. Добавьте адрес для действия «sistema_nastroit».");
   };
 

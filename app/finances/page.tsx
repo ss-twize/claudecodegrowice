@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
-import { useAuth } from "@/lib/auth";
-import { Lock, Plus, X, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Plus, X, ChevronDown, CheckCircle2 } from "lucide-react";
 import MetricCard from "@/components/ui/MetricCard";
 import { revenueData, financesKPIs, serviceRevenueData, plRevenue, plExpenses, cashFlowData } from "@/lib/mockData";
 import type { MetricTooltipDef } from "@/components/ui/MetricCard";
@@ -188,7 +187,6 @@ function PeriodSelector({ period, onChange }: { period: FinancePeriod; onChange:
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function FinancesPage() {
-  const { isOwner } = useAuth();
 
   const [period, setPeriod] = useState<FinancePeriod>("year");
   const [plEntries, setPlEntries] = useState<PlEntry[]>([]);
@@ -226,20 +224,6 @@ export default function FinancesPage() {
   const addedTotalIncome = addedIncome.reduce((s, e) => s + e.amount, 0);
   const addedTotalExpenses = addedExpenses.reduce((s, e) => s + e.amount, 0);
 
-  if (!isOwner) {
-    return (
-      <div>
-        <Header title="Финансы" subtitle="Финансовые показатели салона" />
-        <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="w-16 h-16 rounded-2xl bg-[#0F1622] border border-[#223444] flex items-center justify-center mb-5">
-            <Lock size={28} className="text-[#223444]" />
-          </div>
-          <h2 className="text-[#EDF2FA] text-xl font-semibold mb-2">Нет доступа</h2>
-          <p className="text-[#5E7488] text-sm">Этот раздел доступен только владельцу</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>

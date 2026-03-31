@@ -26,7 +26,7 @@ DROP TABLE IF EXISTS webhooks                  CASCADE;
 DROP TABLE IF EXISTS system_states             CASCADE;
 DROP TABLE IF EXISTS map_ratings               CASCADE;
 DROP TABLE IF EXISTS org_settings              CASCADE;
-DROP TABLE IF EXISTS user_profiles             CASCADE;
+DROP TABLE IF EXISTS user_profiles             CASCADE;  -- удалена: профили/роли не используются
 
 -- ── 3. Удаляем функции/триггеры предыдущих миграций ───────────────────────────
 
@@ -35,16 +35,6 @@ DROP FUNCTION IF EXISTS update_channel_connections_ts() CASCADE;
 -- =============================================================================
 -- ПЛАТФОРМЕННЫЕ ТАБЛИЦЫ (для веб-интерфейса)
 -- =============================================================================
-
--- Профили пользователей платформы (владелец / администраторы)
-CREATE TABLE user_profiles (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_uid      UUID NOT NULL,
-  role         TEXT NOT NULL DEFAULT 'администратор'
-                 CHECK (role IN ('владелец', 'администратор')),
-  display_name TEXT,
-  created_at   TIMESTAMPTZ DEFAULT now()
-);
 
 -- Настройки организации / филиала
 CREATE TABLE org_settings (
@@ -100,7 +90,6 @@ CREATE TABLE knowledge_files (
 CREATE TABLE action_log (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_uid        UUID NOT NULL,
-  role           TEXT,
   action_code    TEXT NOT NULL,
   params         JSONB,
   status         TEXT DEFAULT 'успех',
@@ -331,7 +320,6 @@ ON CONFLICT (org_uid, system_code) DO NOTHING;
 -- RLS (Row Level Security)
 -- =============================================================================
 
-ALTER TABLE user_profiles             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE org_settings              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_states             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE map_ratings               ENABLE ROW LEVEL SECURITY;
@@ -348,7 +336,6 @@ ALTER TABLE clients                   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments              ENABLE ROW LEVEL SECURITY;
 
 -- Платформенные таблицы — anon может читать и писать (фронтенд)
-CREATE POLICY "anon_all_user_profiles"   ON user_profiles   FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all_org_settings"    ON org_settings    FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all_system_states"   ON system_states   FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_read_map_ratings"    ON map_ratings     FOR SELECT TO anon USING (true);
