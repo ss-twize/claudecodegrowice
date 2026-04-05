@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../supabase'
+import { ORG_UID, supabase } from '../supabase'
 
 export interface YclientsMaster {
   id: string
@@ -36,9 +36,9 @@ export function useYclientsMasters() {
   }
 
   const normalizeMaster = useCallback((row: any): YclientsMaster => ({
-    id: String(row.id),
-    name: String(row.name || '').trim() || 'Без имени',
-    specialization: String(row.specialization || '').trim() || 'Без должности',
+    id: String(firstDefined(row, ['id', 'master_id', 'yclients_id']) || ''),
+    name: String(firstDefined(row, ['name', 'full_name', 'master_name', 'display_name']) || '').trim() || 'Без имени',
+    specialization: String(firstDefined(row, ['specialization', 'position', 'post']) || '').trim() || 'Без должности',
     revenue: toNumber(firstDefined(row, ['revenue', 'revenue_month', 'total_revenue'])),
     clients: toNumber(firstDefined(row, ['clients', 'clients_count', 'unique_clients'])),
     appointments: toNumber(firstDefined(row, ['appointments', 'appointments_count', 'bookings_count'])),
@@ -57,10 +57,22 @@ export function useYclientsMasters() {
   ), [])
 
   const fetchMasters = useCallback(async () => {
-    const { data, error } = await supabase
+    const baseQuery = supabase
       .from('masters')
       .select('*')
       .order('name', { ascending: true })
+
+    // Most org-scoped setups store masters by org_uid, but keep fallback for schemas without this column.
+    let { data, error } = await baseQuery.eq('org_uid', ORG_UID)
+
+    if (error && /column .*org_uid/i.test(error.message)) {
+      const fallback = await supabase
+        .from('masters')
+        .select('*')
+        .order('name', { ascending: true })
+      data = fallback.data
+      error = fallback.error
+    }
 
     if (error) {
       console.error('useYclientsMasters error:', error.message)
@@ -68,7 +80,11 @@ export function useYclientsMasters() {
     }
 
     setMasters(
-      sortByName((data || []).map((row: any) => normalizeMaster(row))),
+      sortByName(
+        (data || [])
+          .map((row: any) => normalizeMaster(row))
+          .filter((item) => item.id && item.name),
+      ),
     )
   }, [normalizeMaster, sortByName])
 
