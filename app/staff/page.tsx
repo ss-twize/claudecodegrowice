@@ -3,8 +3,7 @@
 import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
-import { staffData, staffKPIData } from "@/lib/mockData";
-import { useYclientsMasters } from "@/lib/hooks/useYclientsMasters";
+import { useYclientsMasters, type YclientsMaster } from "@/lib/hooks/useYclientsMasters";
 import { formatCurrency } from "@/lib/utils";
 import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
 import {
@@ -28,33 +27,23 @@ const PERIOD_LABELS: Record<StaffPeriod, string> = {
 
 const DAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-// ── Seeded pseudo-random ───────────────────────────────────────────────────────
-
-function sr(seed: number): number {
-  const x = Math.sin(seed * 9301 + 49297) * 10000;
-  return x - Math.floor(x);
-}
-
-// ── Mock salaries (per staff id) ───────────────────────────────────────────────
-
-const MOCK_SALARIES: Record<string, number> = {
-  "1": 58000,
-  "2": 62000,
-  "3": 55000,
-  "4": 71000,
-};
-
-const totalSalaries = staffData.reduce((s, m) => s + (MOCK_SALARIES[m.id] ?? 0), 0);
-
 // ── Period-based chart data ────────────────────────────────────────────────────
 
-function periodRevenueData(period: StaffPeriod) {
-  const masters = staffData.map((m, mi) => {
-    const multiplier = period === "year" ? 12 : period === "quarter" ? 3 : 1;
-    const revenue = Math.round(m.revenue * multiplier * (0.85 + sr(mi * 17 + 1) * 0.3));
-    return { name: m.name.split(" ")[0], revenue };
-  });
-  return masters;
+function initials(name: string): string {
+  const cleaned = name.trim();
+  if (!cleaned) return "—";
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+}
+
+function periodRevenueData(masters: YclientsMaster[], period: StaffPeriod) {
+  const multiplier = period === "year" ? 12 : period === "quarter" ? 3 : 1;
+  return masters.map((m) => ({
+    id: m.id,
+    name: m.name.split(" ")[0] || m.name,
+    revenue: Math.round(m.revenue * multiplier),
+  }));
 }
 
 interface KpiRow {
@@ -67,25 +56,17 @@ interface KpiRow {
   avgSession: string;
 }
 
-function periodKpiData(period: StaffPeriod): KpiRow[] {
-  return staffData.map((m, mi) => {
-    const base = staffKPIData.find((k) => k.masterId === m.id);
-    const shift = period === "year" ? 5 : period === "quarter" ? 3 : 0;
-    const conv = Math.min(99, Math.round((base?.conversionRate ?? 70) + shift * sr(mi + 10)));
-    const noShow = Math.max(1, Math.round((base?.noShowPercent ?? 5) - shift * sr(mi + 20) * 0.5));
-    const noShowCnt = period === "year" ? (base?.noShowCount ?? 3) * 12
-      : period === "quarter" ? (base?.noShowCount ?? 3) * 3
-      : (base?.noShowCount ?? 3);
-    return {
-      id: m.id,
-      name: m.name,
-      avatar: m.avatar,
-      conversionRate: conv,
-      noShowPercent: noShow,
-      noShowCount: noShowCnt,
-      avgSession: base?.avgSession ?? "—",
-    };
-  });
+function periodKpiData(masters: YclientsMaster[], period: StaffPeriod): KpiRow[] {
+  const multiplier = period === "year" ? 12 : period === "quarter" ? 3 : 1;
+  return masters.map((m) => ({
+    id: m.id,
+    name: m.name,
+    avatar: initials(m.name),
+    conversionRate: m.conversionRate,
+    noShowPercent: m.noShowPercent,
+    noShowCount: Math.round(m.noShowCount * multiplier),
+    avgSession: m.avgSession || "—",
+  }));
 }
 
 function periodLabel(period: StaffPeriod): string {
@@ -204,26 +185,17 @@ export default function StaffPage() {
   const { masters: yclientsMasters } = useYclientsMasters();
 
   // Chart & table data
-  const revenueData = useMemo(() => periodRevenueData(period), [period]);
-  const kpiRows = useMemo(() => periodKpiData(period), [period]);
+  const revenueData = useMemo(() => periodRevenueData(yclientsMasters, period), [yclientsMasters, period]);
+  const kpiRows = useMemo(() => periodKpiData(yclientsMasters, period), [yclientsMasters, period]);
   const { sorted: sortedKPI, sortCol: kpiSortCol, sortDir: kpiSortDir, onSort: kpiOnSort } = useSortable(kpiRows);
 
-  const totalRevenue = staffData.reduce((s, m) => s + m.revenue, 0);
-  const totalClients = staffData.reduce((s, m) => s + m.clients, 0);
-  const avgWorkload = Math.round(staffData.reduce((s, m) => s + m.workload, 0) / staffData.length);
-  const cardMasters = useMemo(() => {
-    if (!yclientsMasters.length) return staffData;
-
-    return yclientsMasters.map((master, index) => {
-      const fallback = staffData[index % staffData.length];
-      return {
-        ...fallback,
-        id: master.id,
-        name: master.name,
-        role: master.specialization,
-      };
-    });
-  }, [yclientsMasters]);
+  const totalRevenue = yclientsMasters.reduce((s, m) => s + m.revenue, 0);
+  const totalClients = yclientsMasters.reduce((s, m) => s + m.clients, 0);
+  const avgWorkload = yclientsMasters.length > 0
+    ? Math.round(yclientsMasters.reduce((s, m) => s + m.workload, 0) / yclientsMasters.length)
+    : 0;
+  const totalSalaries = yclientsMasters.reduce((s, m) => s + m.salary, 0);
+  const cardMasters = yclientsMasters;
 
   // Admins state
   const [admins, setAdmins] = useState<AdminEntry[]>(INITIAL_ADMINS);
@@ -296,7 +268,7 @@ export default function StaffPage() {
             icon={<TrendingUp size={18} />}
             accent
           />
-          <MetricCard title="Мастеров" value={String(staffData.length)} icon={<UserCog size={18} />} />
+          <MetricCard title="Мастеров" value={String(yclientsMasters.length)} icon={<UserCog size={18} />} />
           <MetricCard
             title="Сумма зарплат"
             value={formatCurrency(totalSalaries)}
@@ -363,13 +335,12 @@ export default function StaffPage() {
                 </thead>
                 <tbody>
                   {sortedKPI.map((master, i) => {
-                    const colorIdx = staffData.findIndex((s) => String(s.id) === String(master.id));
                     return (
                       <tr key={master.id} className="border-b border-[#1A2535] last:border-0">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-black flex-shrink-0"
-                              style={{ backgroundColor: colors[colorIdx >= 0 ? colorIdx : i] }}>
+                              style={{ backgroundColor: colors[i % colors.length] }}>
                               {master.avatar}
                             </div>
                             <span className="text-[#EDF2FA] text-sm font-medium whitespace-nowrap">{master.name.split(" ")[0]}</span>
@@ -414,17 +385,18 @@ export default function StaffPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {cardMasters.map((master, index) => {
-              const kpi = staffKPIData[index % staffKPIData.length];
+              const kpi = kpiRows.find((row) => String(row.id) === String(master.id));
+              const accentColor = colors[index % colors.length];
               return (
                 <div key={`${master.id}-${index}`} className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 card-hover">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-shrink-0"
-                      style={{ backgroundColor: master.color }}>
-                      {master.avatar}
+                      style={{ backgroundColor: accentColor }}>
+                      {initials(master.name)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[#EDF2FA] font-semibold truncate">{master.name}</p>
-                      <p className="text-[#5E7488] text-xs">{master.role}</p>
+                      <p className="text-[#5E7488] text-xs">{master.specialization}</p>
                     </div>
                   </div>
                   <div className="mb-4">
@@ -433,7 +405,7 @@ export default function StaffPage() {
                       <span className="text-[#EDF2FA] text-xs font-medium">{master.workload}%</span>
                     </div>
                     <div className="h-1.5 bg-[#1A2535] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${master.workload}%`, backgroundColor: master.color }} />
+                      <div className="h-full rounded-full" style={{ width: `${master.workload}%`, backgroundColor: accentColor }} />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -453,7 +425,7 @@ export default function StaffPage() {
                       <span className="text-[#5E7488] text-xs">Рейтинг</span>
                       <div className="flex items-center gap-1">
                         <Star size={11} className="text-yellow-400 fill-yellow-400" />
-                        <span className="text-[#8299B4] text-xs">{master.rating}</span>
+                      <span className="text-[#8299B4] text-xs">{master.rating}</span>
                       </div>
                     </div>
                   </div>
