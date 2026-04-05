@@ -24,15 +24,15 @@ BEGIN
       SELECT '11111111-1111-1111-1111-111111111111'::uuid, v.yc_id, v.name, v.specialization
       FROM (
         VALUES
-          ('yc_master_test_1', 'Ирина Волкова', 'Парикмахер-стилист'),
-          ('yc_master_test_2', 'Мария Орлова', 'Мастер маникюра'),
-          ('yc_master_test_3', 'Ольга Синицина', 'Бровист'),
-          ('yc_master_test_4', 'Анна Корнеева', 'Косметолог')
+          (900000001, 'Ирина Волкова', 'Парикмахер-стилист'),
+          (900000002, 'Мария Орлова', 'Мастер маникюра'),
+          (900000003, 'Ольга Синицина', 'Бровист'),
+          (900000004, 'Анна Корнеева', 'Косметолог')
       ) AS v(yc_id, name, specialization)
       WHERE NOT EXISTS (
         SELECT 1
         FROM public.masters m
-        WHERE m.yc_id = v.yc_id
+        WHERE m.yc_id::text = v.yc_id::text
            OR (m.name = v.name AND m.specialization = v.specialization)
       );
     EXCEPTION
@@ -59,15 +59,15 @@ BEGIN
       SELECT v.yc_id, v.name, v.specialization
       FROM (
         VALUES
-          ('yc_master_test_1', 'Ирина Волкова', 'Парикмахер-стилист'),
-          ('yc_master_test_2', 'Мария Орлова', 'Мастер маникюра'),
-          ('yc_master_test_3', 'Ольга Синицина', 'Бровист'),
-          ('yc_master_test_4', 'Анна Корнеева', 'Косметолог')
+          (900000001, 'Ирина Волкова', 'Парикмахер-стилист'),
+          (900000002, 'Мария Орлова', 'Мастер маникюра'),
+          (900000003, 'Ольга Синицина', 'Бровист'),
+          (900000004, 'Анна Корнеева', 'Косметолог')
       ) AS v(yc_id, name, specialization)
       WHERE NOT EXISTS (
         SELECT 1
         FROM public.masters m
-        WHERE m.yc_id = v.yc_id
+        WHERE m.yc_id::text = v.yc_id::text
            OR (m.name = v.name AND m.specialization = v.specialization)
       );
     EXCEPTION
