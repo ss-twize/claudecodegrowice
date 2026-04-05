@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
 import MetricCard from "@/components/ui/MetricCard";
 import { staffData, staffKPIData } from "@/lib/mockData";
+import { useYclientsMasters } from "@/lib/hooks/useYclientsMasters";
 import { formatCurrency } from "@/lib/utils";
 import { SortableHeader, useSortable } from "@/components/ui/SortableHeader";
 import {
@@ -200,6 +201,7 @@ const colors = ["#00FF00", "#88CC00", "#66AA00", "#448800"];
 
 export default function StaffPage() {
   const [period, setPeriod] = useState<StaffPeriod>("month");
+  const { masters: yclientsMasters } = useYclientsMasters();
 
   // Chart & table data
   const revenueData = useMemo(() => periodRevenueData(period), [period]);
@@ -209,6 +211,19 @@ export default function StaffPage() {
   const totalRevenue = staffData.reduce((s, m) => s + m.revenue, 0);
   const totalClients = staffData.reduce((s, m) => s + m.clients, 0);
   const avgWorkload = Math.round(staffData.reduce((s, m) => s + m.workload, 0) / staffData.length);
+  const cardMasters = useMemo(() => {
+    if (!yclientsMasters.length) return staffData;
+
+    return yclientsMasters.map((master, index) => {
+      const fallback = staffData[index % staffData.length];
+      return {
+        ...fallback,
+        id: master.id,
+        name: master.name,
+        role: master.specialization,
+      };
+    });
+  }, [yclientsMasters]);
 
   // Admins state
   const [admins, setAdmins] = useState<AdminEntry[]>(INITIAL_ADMINS);
@@ -398,10 +413,10 @@ export default function StaffPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {staffData.map((master) => {
-              const kpi = staffKPIData.find((k) => k.masterId === master.id);
+            {cardMasters.map((master, index) => {
+              const kpi = staffKPIData[index % staffKPIData.length];
               return (
-                <div key={master.id} className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 card-hover">
+                <div key={`${master.id}-${index}`} className="bg-[#0F1622] border border-[#223444] rounded-xl p-5 card-hover">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black flex-shrink-0"
                       style={{ backgroundColor: master.color }}>
