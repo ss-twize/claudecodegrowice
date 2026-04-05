@@ -36,7 +36,10 @@ export function useYclientsMasters() {
   }
 
   const normalizeMaster = useCallback((row: any): YclientsMaster => ({
-    id: String(firstDefined(row, ['id', 'master_id', 'yclients_id']) || ''),
+    id: String(
+      firstDefined(row, ['id', 'master_id', 'yclients_id'])
+      || `${String(firstDefined(row, ['name', 'full_name', 'master_name', 'display_name']) || '').trim() || 'master'}-${String(firstDefined(row, ['specialization', 'position', 'post']) || '').trim() || 'role'}`,
+    ),
     name: String(firstDefined(row, ['name', 'full_name', 'master_name', 'display_name']) || '').trim() || 'Без имени',
     specialization: String(firstDefined(row, ['specialization', 'position', 'post']) || '').trim() || 'Без должности',
     revenue: toNumber(firstDefined(row, ['revenue', 'revenue_month', 'total_revenue'])),
@@ -93,7 +96,7 @@ export function useYclientsMasters() {
       sortByName(
         (data || [])
           .map((row: any) => normalizeMaster(row))
-          .filter((item) => item.id && item.name),
+          .filter((item) => item.name),
       ),
     )
   }, [normalizeMaster, sortByName])
