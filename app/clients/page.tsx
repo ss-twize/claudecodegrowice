@@ -671,8 +671,10 @@ export default function ClientsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+            <div className="left-accent-scrollbar max-h-[420px] overflow-y-auto" dir="rtl">
+              <div dir="ltr">
+                <table className="w-full">
+                  <thead className="sticky top-0 z-10 bg-[#0F1622]">
                 <tr className="border-b border-[#1A2535]">
                   <SortableHeader label="ФИО" col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Телефон" col="phone" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
@@ -688,31 +690,33 @@ export default function ClientsPage() {
                   <SortableHeader label="Риск оттока" col="churnRisk" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Услуги</th>
                 </tr>
-              </thead>
-              <tbody>
-                {filtered.map((client) => {
-                  const segColor = client.segment ? SEGMENT_COLORS[client.segment] : null;
-                  const riskColor = client.churnRisk ? RISK_COLORS[client.churnRisk] : null;
-                  return (
-                    <tr key={client.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors">
-                      <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-medium whitespace-nowrap">{client.name}</td>
-                      <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.phone}</td>
-                      <td className="px-5 py-3.5"><span className={`text-xs font-medium px-2 py-1 rounded-md ${client.gender === "Ж" ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>{client.gender}</span></td>
-                      <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
-                      <td className="px-5 py-3.5 text-[#EDF2FA] text-sm whitespace-nowrap">{formatCurrency(client.avgCheck)}</td>
-                      <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">{client.visits}</td>
-                      <td className="px-5 py-3.5"><span className="text-xs font-medium px-2 py-1 rounded-md bg-[#1A2535] text-[#EDF2FA] border border-[#223444]">{CLIENT_STATUS_LABELS[client.clientStatus]}</span></td>
-                      <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.branch}</td>
-                      <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.master}</td>
-                      <td className="px-5 py-3.5 text-sm whitespace-nowrap"><span className="text-xs px-2 py-1 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">{client.communicationChannel}</span></td>
-                      <td className="px-5 py-3.5">{client.segment && segColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>{SEGMENT_LABELS[client.segment]}</span> : <span className="text-[#5E7488]">—</span>}</td>
-                      <td className="px-5 py-3.5">{client.churnRisk && riskColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>{RISK_LABELS[client.churnRisk]}</span> : <span className="text-[#5E7488]">—</span>}</td>
-                      <td className="px-5 py-3.5"><ServicesCell services={client.services} /></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map((client) => {
+                      const segColor = client.segment ? SEGMENT_COLORS[client.segment] : null;
+                      const riskColor = client.churnRisk ? RISK_COLORS[client.churnRisk] : null;
+                      return (
+                        <tr key={client.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors">
+                          <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-medium whitespace-nowrap">{client.name}</td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.phone}</td>
+                          <td className="px-5 py-3.5"><span className={`text-xs font-medium px-2 py-1 rounded-md ${client.gender === "Ж" ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>{client.gender}</span></td>
+                          <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
+                          <td className="px-5 py-3.5 text-[#EDF2FA] text-sm whitespace-nowrap">{formatCurrency(client.avgCheck)}</td>
+                          <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">{client.visits}</td>
+                          <td className="px-5 py-3.5"><span className="text-xs font-medium px-2 py-1 rounded-md bg-[#1A2535] text-[#EDF2FA] border border-[#223444]">{CLIENT_STATUS_LABELS[client.clientStatus]}</span></td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.branch}</td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.master}</td>
+                          <td className="px-5 py-3.5 text-sm whitespace-nowrap"><span className="text-xs px-2 py-1 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">{client.communicationChannel}</span></td>
+                          <td className="px-5 py-3.5">{client.segment && segColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>{SEGMENT_LABELS[client.segment]}</span> : <span className="text-[#5E7488]">—</span>}</td>
+                          <td className="px-5 py-3.5">{client.churnRisk && riskColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>{RISK_LABELS[client.churnRisk]}</span> : <span className="text-[#5E7488]">—</span>}</td>
+                          <td className="px-5 py-3.5"><ServicesCell services={client.services} /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 

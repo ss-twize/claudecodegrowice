@@ -59,6 +59,35 @@ body {
   background: #223444;
 }
 
+/* Local left accent scrollbar (clients table) */
+.left-accent-scrollbar {
+  direction: rtl;
+  scrollbar-width: thin;
+  scrollbar-color: #00FF00 #0F1622;
+}
+
+.left-accent-scrollbar > * {
+  direction: ltr;
+}
+
+.left-accent-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-accent-scrollbar::-webkit-scrollbar-track {
+  background: #0F1622;
+  border-radius: 99px;
+}
+
+.left-accent-scrollbar::-webkit-scrollbar-thumb {
+  background: #00FF00;
+  border-radius: 99px;
+}
+
+.left-accent-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7dff7d;
+}
+
 /* ─── Card effects ─────────────────────────────────────────────────────────── */
 
 /* Card hover — subtle lift + accent border tint */
