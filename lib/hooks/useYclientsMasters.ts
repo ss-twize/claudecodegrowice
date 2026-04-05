@@ -74,6 +74,16 @@ export function useYclientsMasters() {
       error = fallback.error
     }
 
+    // If org-scoped query returned no rows, fallback to all masters.
+    if (!error && (!data || data.length === 0)) {
+      const fallback = await supabase
+        .from('masters')
+        .select('*')
+        .order('name', { ascending: true })
+      data = fallback.data
+      error = fallback.error
+    }
+
     if (error) {
       console.error('useYclientsMasters error:', error.message)
       return
