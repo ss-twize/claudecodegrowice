@@ -29,6 +29,8 @@ const PAYMENT_PERIODS = [
   { months: 12, label: "12 месяцев", discount: 20 },
 ];
 
+const IN_DEVELOPMENT_SYSTEM_CODES = new Set(["avto_sdvig", "analitika_otmeny", "obrabotchik_otzyvov"]);
+
 export default function SystemPage() {
   const { role, isOwner } = useAuth();
   const { systems, setSystems } = useSystemStates();
@@ -368,14 +370,20 @@ export default function SystemPage() {
             </div>
             <p className="text-[#5E7488] text-sm mb-6">Автоматические сценарии работы с клиентами</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {autoSystems.map((system) => (
-                <div key={system.system_code} className="bg-[#0A0D14] border border-[#223444] rounded-xl p-5 flex flex-col">
+              {autoSystems.map((system) => {
+                const isInDevelopment = IN_DEVELOPMENT_SYSTEM_CODES.has(system.system_code);
+
+                return (
+                <div
+                  key={system.system_code}
+                  className={`bg-[#0A0D14] border border-[#223444] rounded-xl p-5 flex flex-col ${isInDevelopment ? "opacity-60 pointer-events-none" : ""}`}
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-10 h-10 rounded-lg bg-[#00FF00]/10 border border-[#00FF00]/20 flex items-center justify-center flex-shrink-0">
                       <Bot size={18} className="text-[#00FF00]" />
                     </div>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-md border ${system.enabled ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-[#1A2535] text-[#5E7488] border-[#223444]"}`}>
-                      {system.enabled ? "Активно" : "Выключено"}
+                    <span className={`text-xs font-medium px-2 py-1 rounded-md border ${isInDevelopment ? "bg-[#1A2535] text-[#9AA9BB] border-[#31465D]" : system.enabled ? "bg-[#00FF00]/10 text-[#00FF00] border-[#00FF00]/20" : "bg-[#1A2535] text-[#5E7488] border-[#223444]"}`}>
+                      {isInDevelopment ? "В разработке" : system.enabled ? "Активно" : "Выключено"}
                     </span>
                   </div>
                   <p className="text-[#EDF2FA] font-semibold mb-1 text-sm">{system.name}</p>
@@ -383,22 +391,23 @@ export default function SystemPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => configureSystem(system.system_code)}
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors"
+                      disabled={isInDevelopment}
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#223444] text-[#8299B4] hover:text-[#EDF2FA] hover:border-[#2C4460] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <Settings2 size={12} />
                       Настроить
                     </button>
                     <button
                       onClick={() => toggleSystem(system.system_code, system.enabled)}
-                      disabled={togglingSystem === system.system_code}
+                      disabled={isInDevelopment || togglingSystem === system.system_code}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${system.enabled ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-[#00FF00]/30 text-[#00FF00] hover:bg-[#00FF00]/10"}`}
                     >
                       <Power size={12} />
-                      {system.enabled ? "Выключить" : "Включить"}
+                      {isInDevelopment ? "Недоступно" : system.enabled ? "Выключить" : "Включить"}
                     </button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         )}
