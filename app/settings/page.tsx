@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import { profileSettings, orgSettings, notificationsConfig } from "@/lib/mockData";
 import { callWebhook } from "@/lib/webhooks";
@@ -20,6 +20,8 @@ import {
   Settings2,
   Bot,
 } from "lucide-react";
+
+type ImportSource = "yclients" | "google_sheets";
 
 const FILE_TYPE_LABELS: Record<string, string> = {
   pdf: "PDF", txt: "Текст", doc: "Ворд", docx: "Ворд",
@@ -60,6 +62,26 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [togglingSystem, setTogglingSystem] = useState<string | null>(null);
+  const [importSource, setImportSource] = useState<ImportSource>("yclients");
+  const [importSourceSaving, setImportSourceSaving] = useState(false);
+  const [importSourceSaved, setImportSourceSaved] = useState(false);
+
+  useEffect(() => {
+    const loadImportSource = async () => {
+      const { data } = await supabase
+        .from("org_settings")
+        .select("contacts_import_source")
+        .eq("org_uid", ORG_UID)
+        .single();
+
+      const source = data?.contacts_import_source;
+      if (source === "yclients" || source === "google_sheets") {
+        setImportSource(source);
+      }
+    };
+
+    void loadImportSource();
+  }, []);
 
   const saveProfile = () => { setProfileSaved(true); setTimeout(() => setProfileSaved(false), 2000); };
   const saveOrg = () => { setOrgSaved(true); setTimeout(() => setOrgSaved(false), 2000); };
@@ -161,10 +183,66 @@ export default function SettingsPage() {
 
   const autoSystems = systems.filter(s => s.system_code !== 'main_agent');
 
+  const saveImportSource = async () => {
+    setImportSourceSaving(true);
+    await supabase
+      .from("org_settings")
+      .upsert(
+        {
+          org_uid: ORG_UID,
+          contacts_import_source: importSource,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "org_uid" },
+      );
+
+    setImportSourceSaved(true);
+    setTimeout(() => setImportSourceSaved(false), 2000);
+    setImportSourceSaving(false);
+  };
+
   return (
     <div>
       <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
       <div className="p-6 space-y-6">
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Bot size={16} className="text-[#00FF00]" />
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Источник переноса контактов</h3>
+          </div>
+          <p className="text-[#5E7488] text-sm mb-4">
+            На старте выберите источник: YClients или Google Таблицы. Данные из Google Таблиц будут адаптированы под схему clients (YClients-формат).
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[#5E7488] text-xs">Источник</label>
+            <select
+              value={importSource}
+              onChange={(e) => setImportSource(e.target.value as ImportSource)}
+              className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors"
+            >
+              <option value="yclients">YClients (прямой импорт клиентов)</option>
+              <option value="google_sheets">Google Таблицы (адаптация в схему clients)</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end mt-3">
+            <button
+              onClick={saveImportSource}
+              disabled={importSourceSaving}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                importSourceSaved
+                  ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                  : importSourceSaving
+                    ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                    : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+              }`}
+            >
+              {importSourceSaved && <CheckCircle2 size={14} />}
+              {importSourceSaved ? "Сохранено" : importSourceSaving ? "Сохранение..." : "Сохранить источник"}
+            </button>
+          </div>
+        </div>
 
         {/* ── Greeting message ── */}
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
