@@ -261,6 +261,9 @@ CREATE TABLE clients (
   gender      TEXT CHECK (gender IN ('мужской', 'женский') OR gender IS NULL),
   yc_id       TEXT,    -- ID клиента в YClients
   yclients_id BIGINT,  -- числовой ID клиента в YClients
+  telegram_user_id BIGINT, -- связь с telegram_users.user_id
+  whatsapp_user_id TEXT,   -- связь с whatsapp_users.user_id
+  max_user_id      TEXT,   -- связь с max_users.user_id
   created_at  TIMESTAMPTZ DEFAULT now(),
   UNIQUE (org_uid, yc_id)
 );
