@@ -1,0 +1,515 @@
+{
+  "name": "sync clientbase from YC to Supabase",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 36
+            }
+          ]
+        }
+      },
+      "id": "d530c6dd-f803-4201-b90b-8692f83ac398",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        7168,
+        -624
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "39963f74-9d22-4a8d-b84c-96ac98f79a52",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        7168,
+        -464
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Синхронизация клиентов филиала YClients в Supabase. Workflow запускается вручную или по расписанию, получает общее число клиентов, разворачивает пагинацию, забирает полный профиль каждого клиента через YClients REST API и делает batch upsert в таблицу `public.clients`. Лог в отдельную таблицу отключен, потому что `public.yclients_sync_runs` сейчас отсутствует в schema cache.",
+        "height": 116,
+        "width": 3540
+      },
+      "id": "19006eeb-ef33-4057-843e-d0de34800648",
+      "name": "YClients Sync Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        7104,
+        -784
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst orgUid = '9f5a0e68-7f42-4ca6-bf0d-3ed6bb0c6bf1';\nconst pageSize = 100;\n\nreturn [{\n  json: {\n    workflow_name: '12_YClients_Clients_To_Clients',\n    sync_started_at: now.toISOString(),\n    org_uid: orgUid,\n    company_id: 1647948,\n    page_size: pageSize\n  }\n}];"
+      },
+      "id": "e677fad9-2f6d-42d5-ad89-d84812f96155",
+      "name": "Подготовить конфиг синхронизации",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7456,
+        -544
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.yclients.com/api/v1/company/{{$json.company_id}}/clients/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { page: 1, page_size: $json.page_size, fields: ['id'] } }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "68b73b8c-7042-4b61-8ac4-4d86628c2e15",
+      "name": "YClients: получить количество клиентов",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7760,
+        -544
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json || {};\nconst base = $('Подготовить конфиг синхронизации').first().json || {};\nconst totalCount = Number(response.meta?.total_count || 0);\nconst totalPages = totalCount > 0 ? Math.ceil(totalCount / base.page_size) : 0;\n\nif (totalPages === 0) {\n  return [{\n    json: {\n      ...base,\n      total_count: 0,\n      total_pages: 0,\n      page: 0,\n      is_noop: true\n    }\n  }];\n}\n\nconst out = [];\nfor (let page = 1; page <= totalPages; page += 1) {\n  out.push({\n    json: {\n      ...base,\n      total_count: totalCount,\n      total_pages: totalPages,\n      page,\n      is_noop: false\n    }\n  });\n}\nreturn out;"
+      },
+      "id": "c2312358-3c50-47da-a2f9-6fc369712fee",
+      "name": "Собрать очередь страниц",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8048,
+        -544
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.is_noop}}",
+              "operation": "isFalse"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "227d53e7-c0bc-44cb-addc-6dcea4044d93",
+      "name": "Есть страницы для загрузки",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        8304,
+        -544
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.yclients.com/api/v1/company/{{$json.company_id}}/clients/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { page: $json.page, page_size: $json.page_size, fields: ['id'] } }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "5d725db0-5148-4471-8800-8a6098d21fd2",
+      "name": "YClients: получить IDs клиентов по странице",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8560,
+        -624
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const pageItems = $input.all();\nconst shared = $('Собрать очередь страниц').first().json || $('Подготовить конфиг синхронизации').first().json || {};\nconst seen = new Set();\nconst out = [];\n\nfor (const item of pageItems) {\n  const rows = Array.isArray(item.json.data) ? item.json.data : [];\n  for (const row of rows) {\n    const clientId = Number(row?.id || 0);\n    if (!Number.isFinite(clientId) || clientId <= 0) continue;\n    if (seen.has(clientId)) continue;\n    seen.add(clientId);\n    out.push({\n      json: {\n        ...shared,\n        client_id: clientId\n      }\n    });\n  }\n}\n\nreturn out;"
+      },
+      "id": "047c4497-4cdb-4164-ac18-39b25e031a85",
+      "name": "Собрать уникальные IDs клиентов",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8816,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.yclients.com/api/v1/client/{{$json.company_id}}/{{$json.client_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "d5667b78-4dd0-4c63-9285-963fe0c9c1a9",
+      "name": "YClients: получить карточку клиента",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9088,
+        -624
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "function normalizeTimestamp(value) {\n  if (!value) return null;\n  const date = new Date(String(value));\n  return Number.isNaN(date.getTime()) ? null : date.toISOString();\n}\n\nfunction toDateString(value) {\n  if (!value) return null;\n  const date = new Date(String(value));\n  if (Number.isNaN(date.getTime())) return null;\n  return date.toISOString().slice(0, 10);\n}\n\nfunction cleanText(value) {\n  const result = String(value ?? '').trim();\n  return result || null;\n}\n\nfunction cleanInteger(value, fallback = 0) {\n  const parsed = Number(value);\n  return Number.isFinite(parsed) ? parsed : fallback;\n}\n\nfunction cleanNumber(value, fallback = 0) {\n  const parsed = Number(value);\n  return Number.isFinite(parsed) ? parsed : fallback;\n}\n\nconst shared = $('Подготовить конфиг синхронизации').first().json || {};\nconst out = [];\n\nfor (const item of $input.all()) {\n  const data = item.json?.data || {};\n  const ycId = Number(data.id || 0);\n  if (!Number.isFinite(ycId) || ycId <= 0) continue;\n\n  const firstName = cleanText(data.name);\n  const surname = cleanText(data.surname);\n  const patronymic = cleanText(data.patronymic);\n  const fullname = cleanText(\n    data.display_name\n      || [firstName, patronymic, surname].filter(Boolean).join(' ')\n      || [firstName, surname].filter(Boolean).join(' ')\n      || firstName\n      || ''\n  );\n  if (!fullname) continue;\n\n  const lastChangeDate = normalizeTimestamp(data.last_change_date);\n  const fallbackLastVisit = toDateString(lastChangeDate) || new Date().toISOString().slice(0, 10);\n  const sex = cleanText(data.sex);\n\n  out.push({\n    json: {\n      org_uid: shared.org_uid,\n      yc_id: String(ycId),\n      yclients_id: ycId,\n      fullname,\n      display_name: fullname,\n      name: firstName,\n      surname,\n      patronymic,\n      phone: cleanText(data.phone),\n      email: cleanText(data.email),\n      birth_date: cleanText(data.birth_date),\n      gender: null,\n      sex,\n      sex_id: cleanInteger(data.sex_id, 0),\n      comment: cleanText(data.comment),\n      discount: cleanNumber(data.discount, 0),\n      visits: cleanInteger(data.visits, 0),\n      spent: cleanNumber(data.spent, 0),\n      paid: cleanNumber(data.paid, 0),\n      balance: cleanNumber(data.balance, 0),\n      sms_not: cleanInteger(data.sms_not, 0),\n      sms_check: cleanInteger(data.sms_check, 0),\n      sms_bot: cleanInteger(data.sms_bot, 0),\n      importance: cleanText(data.importance),\n      importance_id: cleanInteger(data.importance_id, 0),\n      card: cleanText(data.card),\n      categories: Array.isArray(data.categories) ? data.categories : [],\n      custom_fields: data.custom_fields && typeof data.custom_fields === 'object' && !Array.isArray(data.custom_fields) ? data.custom_fields : {},\n      last_change_date: lastChangeDate,\n      last_visit: fallbackLastVisit\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "81980882-b639-4364-b8bb-dfa5f514610d",
+      "name": "Нормализовать клиентов для Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9344,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json).filter(Boolean);\nconst shared = $('Подготовить конфиг синхронизации').first().json || {};\nreturn [{\n  json: {\n    ...shared,\n    total_count: rows.length,\n    synced_clients: rows.length,\n    rows\n  }\n}];"
+      },
+      "id": "f7495abc-b778-4549-a274-179a2ba71b75",
+      "name": "Собрать upsert batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9600,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ugocvtuomyopullvilim.supabase.co/rest/v1/clients?on_conflict=org_uid,yc_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjA5NzEyMiwiZXhwIjoyMDg3NjczMTIyfQ.d91fw0hhpwr7dPU33ixPeEWkNhonv-tO0h8DfM8wvbQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjA5NzEyMiwiZXhwIjoyMDg3NjczMTIyfQ.d91fw0hhpwr7dPU33ixPeEWkNhonv-tO0h8DfM8wvbQ"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.rows}}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "96ff493c-7911-4c7e-aea6-6270ad635d26",
+      "name": "Supabase: upsert clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9856,
+        -624
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const batch = $('Собрать upsert batch').first().json || {};\nconst response = $input.first().json;\nconst insertedOrUpdated = Array.isArray(response) ? response.length : (response ? 1 : 0);\nreturn [{\n  json: {\n    ok: true,\n    status: 'success',\n    data: {\n      org_uid: batch.org_uid,\n      workflow_name: batch.workflow_name,\n      total_clients: batch.total_count || 0,\n      synced_clients: batch.synced_clients || 0,\n      inserted_or_updated: insertedOrUpdated,\n      company_id: batch.company_id,\n      sync_started_at: batch.sync_started_at,\n      sync_finished_at: new Date().toISOString()\n    },\n    errors: []\n  }\n}];"
+      },
+      "id": "9c9fc7ee-e6cf-4ac8-a583-721098990b2b",
+      "name": "Собрать лог успешной синхронизации",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        10128,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Собрать очередь страниц').first().json || $('Подготовить конфиг синхронизации').first().json || {};\nreturn [{\n  json: {\n    ok: true,\n    status: 'noop',\n    data: {\n      org_uid: input.org_uid,\n      workflow_name: input.workflow_name || '12_YClients_Clients_To_Clients',\n      total_clients: 0,\n      synced_clients: 0,\n      inserted_or_updated: 0,\n      company_id: input.company_id,\n      sync_started_at: input.sync_started_at,\n      sync_finished_at: new Date().toISOString(),\n      reason: 'No clients returned by YClients search'\n    },\n    errors: []\n  }\n}];"
+      },
+      "id": "c9e43261-f2fc-4e13-8a68-ce21dda1fe49",
+      "name": "Собрать noop лог",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8560,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all();"
+      },
+      "id": "8755640d-f036-428c-be2f-35725b9ad73e",
+      "name": "Собрать финальный ответ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        10384,
+        -416
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Подготовить конфиг синхронизации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Подготовить конфиг синхронизации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовить конфиг синхронизации": {
+      "main": [
+        [
+          {
+            "node": "YClients: получить количество клиентов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YClients: получить количество клиентов": {
+      "main": [
+        [
+          {
+            "node": "Собрать очередь страниц",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать очередь страниц": {
+      "main": [
+        [
+          {
+            "node": "Есть страницы для загрузки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть страницы для загрузки": {
+      "main": [
+        [
+          {
+            "node": "YClients: получить IDs клиентов по странице",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Собрать noop лог",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YClients: получить IDs клиентов по странице": {
+      "main": [
+        [
+          {
+            "node": "Собрать уникальные IDs клиентов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать уникальные IDs клиентов": {
+      "main": [
+        [
+          {
+            "node": "YClients: получить карточку клиента",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YClients: получить карточку клиента": {
+      "main": [
+        [
+          {
+            "node": "Нормализовать клиентов для Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Нормализовать клиентов для Supabase": {
+      "main": [
+        [
+          {
+            "node": "Собрать upsert batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать upsert batch": {
+      "main": [
+        [
+          {
+            "node": "Supabase: upsert clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: upsert clients": {
+      "main": [
+        [
+          {
+            "node": "Собрать лог успешной синхронизации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать лог успешной синхронизации": {
+      "main": [
+        [
+          {
+            "node": "Собрать финальный ответ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать noop лог": {
+      "main": [
+        [
+          {
+            "node": "Собрать финальный ответ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "yNxFIi6JUCI0vOzJ",
+    "timezone": "Asia/Novosibirsk",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "47ec0343-9ae2-4dee-80c2-7a0568b5002d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "GA4gUKr8Oz99Q4dI",
+  "tags": []
+}

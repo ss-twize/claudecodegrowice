@@ -1,0 +1,163 @@
+{
+  "name": "create_client",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "fullname",
+              "type": "any"
+            },
+            {
+              "name": "phone",
+              "type": "any"
+            },
+            {
+              "name": "chat_id",
+              "type": "any"
+            },
+            {
+              "name": "Gender",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "dc04f7c3-121a-43ff-bb9a-ac7a9c38e0ef",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.yclients.com/api/v1/clients/1647948",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.fullname }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.phone }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.fullname }}\",\n  \"phone\": \"{{ $json.phone }}\",\n  \"sex\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ba6c5261-a0b5-4363-a3a7-f71f9353c411",
+      "name": "HTTP Request",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "clients_tg",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "YC_ID",
+              "fieldValue": "={{ $json.data.id }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.phone }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.fullname }}"
+            },
+            {
+              "fieldId": "tg_id",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat_id }}"
+            },
+            {
+              "fieldId": "Gender",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Gender }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "e2cc122f-9d99-4ff8-82da-3b270822b4bf",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "1cf7066a-5f23-4f15-93b8-369e0177a36f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "itTbB4I1zLVJUnxx",
+  "tags": []
+}
