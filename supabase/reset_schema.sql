@@ -43,6 +43,8 @@ CREATE TABLE org_settings (
   id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_uid                  UUID UNIQUE NOT NULL,
   salon_name               TEXT DEFAULT 'Салон красоты',
+  contacts_import_source   TEXT DEFAULT 'yclients' CHECK (contacts_import_source IN ('yclients', 'google_sheets')),
+  contacts_source_meta     JSONB DEFAULT '{}'::jsonb,
   greeting_message         TEXT DEFAULT 'Привет! Чем могу помочь?',
   work_start               TIME DEFAULT '09:00',
   work_end                 TIME DEFAULT '21:00',
@@ -259,6 +261,9 @@ CREATE TABLE clients (
   gender      TEXT CHECK (gender IN ('мужской', 'женский') OR gender IS NULL),
   yc_id       TEXT,    -- ID клиента в YClients
   yclients_id BIGINT,  -- числовой ID клиента в YClients
+  telegram_user_id BIGINT, -- связь с telegram_users.user_id
+  whatsapp_user_id TEXT,   -- связь с whatsapp_users.user_id
+  max_user_id      TEXT,   -- связь с max_users.user_id
   created_at  TIMESTAMPTZ DEFAULT now(),
   UNIQUE (org_uid, yc_id)
 );
