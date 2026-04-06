@@ -6,7 +6,7 @@ export type ClientStatus = 'new' | 'regular' | 'sleeping' | 'lost' | 'vip'
 export type VisitFrequency = 'weekly' | 'biweekly' | 'monthly' | 'rare'
 export type ValueCategory = 'high' | 'medium' | 'low'
 export type CommunicationActivity = 'opened' | 'replied' | 'ignored'
-export type ContactChannel = 'Telegram' | 'WhatsApp' | 'SMS' | 'Звонок'
+export type ContactChannel = 'Telegram' | 'Whatsapp' | 'Max' | 'Телефон'
 
 export interface Client {
   id: string
@@ -19,6 +19,7 @@ export interface Client {
   ltv: number
   visits: number
   avgCheck: number
+  discount: number
   birthday: string | null
   firstVisitAt: string | null
   lastVisitAt: string | null
@@ -57,7 +58,6 @@ export interface Client {
   reactedToOffers: boolean
 }
 
-const SERVICE_POOL = ['Маникюр', 'Педикюр', 'Окрашивание', 'Стрижка', 'Брови', 'Косметология', 'Массаж']
 const SERVICE_CATEGORY_MAP: Record<string, string> = {
   Маникюр: 'Ногтевой сервис',
   Педикюр: 'Ногтевой сервис',
@@ -67,17 +67,6 @@ const SERVICE_CATEGORY_MAP: Record<string, string> = {
   Косметология: 'Косметология',
   Массаж: 'SPA',
 }
-const MASTER_POOL = ['Анна', 'Мария', 'София', 'Екатерина', 'Дарья']
-const BRANCH_POOL = ['Центр', 'Парк', 'Север']
-const TAG_POOL = ['VIP', 'Лояльный', 'Реактивация', 'Акция', 'Premium']
-const SOURCE_POOL = ['Instagram', 'Сайт', 'Рекомендация', 'Карты', 'Telegram']
-const NOTES_POOL = [
-  'Любит вечерние окна и быстрые подтверждения.',
-  'Чаще выбирает комплексные услуги.',
-  'Нужна мягкая коммуникация без навязчивых предложений.',
-  'Хорошо реагирует на персональные скидки.',
-  'Предпочитает запись к одному мастеру.',
-]
 
 function computeSegment(createdAt: string | null, lastVisitAt: string | null): string {
   const now = new Date()
@@ -132,18 +121,6 @@ function toDateString(value: any): string | null {
   return d.toISOString()
 }
 
-function hashString(value: string): number {
-  let hash = 0
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0
-  }
-  return hash
-}
-
-function pickByHash<T>(items: T[], seed: number, offset = 0): T {
-  return items[(seed + offset) % items.length]
-}
-
 function boolFromAny(value: unknown, fallback: boolean): boolean {
   if (typeof value === 'boolean') return value
   if (typeof value === 'number') return value > 0
@@ -160,14 +137,6 @@ function diffInDays(value: string | null): number {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 999
   return Math.max(0, Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)))
-}
-
-function addDays(base: string | null, days: number): string | null {
-  if (!base) return null
-  const date = new Date(base)
-  if (Number.isNaN(date.getTime())) return null
-  date.setDate(date.getDate() + days)
-  return date.toISOString()
 }
 
 function computeAge(birthday: string | null): number | null {
@@ -226,69 +195,76 @@ function computeMarketingSegment(status: ClientStatus, daysAbsent: number): stri
 }
 
 function mapRow(row: any): Client {
-  const id = String(firstDefined(row, ['tg_id', 'id', 'client_id']) || '')
-  const seed = hashString(id || JSON.stringify(row))
+  const id = String(firstDefined(row, ['id', 'client_id']) || '')
   const fullName =
-    firstDefined<string>(row, ['name']) ||
-    [row.first_name, row.last_name].filter(Boolean).join(' ') ||
+    firstDefined<string>(row, ['display_name', 'name', 'fullname']) ||
+    [row.name, row.surname, row.patronymic].filter(Boolean).join(' ') ||
     'Без имени'
 
-  const createdAt = toDateString(firstDefined(row, ['created_at', 'createdAt', 'created']))
-  const firstVisitAt = toDateString(firstDefined(row, ['first_visit', 'first_visit_at', 'created_at', 'createdAt', 'created']))
-  const lastVisitAt = toDateString(firstDefined(row, ['last_visit', 'last_visit_at', 'last_appointment_at', 'last_contact_at']))
-  const lastMessageAt = toDateString(firstDefined(row, ['last_message', 'last_message_at', 'last_contact_at', 'last_visit']))
+  const createdAt = toDateString(firstDefined(row, ['created_at', 'createdAt']))
+  const firstVisitAt = toDateString(firstDefined(row, ['first_visit', 'first_visit_at', 'created_at']))
+  const lastVisitAt = toDateString(firstDefined(row, ['last_visit', 'last_visit_at', 'last_change_date']))
+  const lastMessageAt = toDateString(firstDefined(row, ['last_message', 'last_message_at']))
 
-  const revenue = toNumber(firstDefined(row, ['Revenue', 'revenue', 'total_revenue']))
-  const visits = toNumber(firstDefined(row, ['visits', 'visits_count', 'total_visits']), (seed % 12) + 1)
+  const revenue = toNumber(firstDefined(row, ['spent', 'Revenue', 'revenue', 'total_revenue']))
+  const visits = toNumber(firstDefined(row, ['visits', 'visits_count', 'total_visits']), 0)
   const avgCheck = toNumber(firstDefined(row, ['avg_check', 'average_check', 'avg_ticket']), visits > 0 ? Math.round(revenue / Math.max(visits, 1)) : 0)
-  const ltv = toNumber(firstDefined(row, ['LTV', 'ltv', 'client_ltv']), revenue || avgCheck * visits)
-  const birthday = toDateString(firstDefined(row, ['birthday', 'birth_date', 'date_of_birth']))
+  const ltv = toNumber(firstDefined(row, ['paid', 'LTV', 'ltv', 'client_ltv']), revenue || avgCheck * visits)
+  const birthday = toDateString(firstDefined(row, ['birth_date', 'birthday', 'date_of_birth']))
 
   const servicesRaw = firstDefined<any>(row, ['services', 'service_names'])
   const services = Array.isArray(servicesRaw) && servicesRaw.length > 0
     ? servicesRaw.map((item) => String(item)).filter(Boolean)
-    : [pickByHash(SERVICE_POOL, seed), pickByHash(SERVICE_POOL, seed, 2)].filter((item, index, arr) => arr.indexOf(item) === index)
+    : []
 
-  const favoriteService = String(firstDefined(row, ['favorite_service', 'top_service']) || services[0] || pickByHash(SERVICE_POOL, seed))
-  const serviceCategory = SERVICE_CATEGORY_MAP[favoriteService] || pickByHash(Object.values(SERVICE_CATEGORY_MAP), seed)
-  const source = String(firstDefined(row, ['source', 'traffic_source', 'acquisition_source']) || pickByHash(SOURCE_POOL, seed))
-  const city = String(firstDefined(row, ['city', 'client_city', 'location']) || 'Москва')
-  const master = String(firstDefined(row, ['master', 'master_name', 'favorite_master']) || pickByHash(MASTER_POOL, seed))
-  const branch = String(firstDefined(row, ['branch', 'branch_name', 'salon_branch']) || pickByHash(BRANCH_POOL, seed))
-  const communicationChannel = firstDefined<ContactChannel>(row, ['communication_channel', 'preferred_channel']) || pickByHash<ContactChannel>(['Telegram', 'WhatsApp', 'SMS', 'Звонок'], seed)
-  const channel = row.tg_username ? 'Telegram' : communicationChannel
-  const telegram = row.tg_username ? `@${row.tg_username}` : null
+  const favoriteService = String(firstDefined(row, ['favorite_service', 'top_service']) || services[0] || '—')
+  const serviceCategory = SERVICE_CATEGORY_MAP[favoriteService] || '—'
+  const source = String(firstDefined(row, ['source', 'traffic_source', 'acquisition_source']) || 'Не указан')
+  const city = String(firstDefined(row, ['city', 'client_city', 'location']) || 'Не указан')
+  const master = String(firstDefined(row, ['master', 'master_name', 'favorite_master']) || '—')
+  const branch = String(firstDefined(row, ['branch', 'branch_name', 'salon_branch']) || '—')
+  const rawChannel = String(firstDefined(row, ['channel', 'communication_channel', 'preferred_channel', 'contact']) || '').toLowerCase()
+  const communicationChannel: ContactChannel =
+    rawChannel.includes('telegram') || rawChannel === 'tg' ? 'Telegram'
+      : rawChannel.includes('whatsapp') || rawChannel.includes('whats') || rawChannel === 'wa' ? 'Whatsapp'
+        : rawChannel.includes('max') ? 'Max'
+          : 'Телефон'
+  const channel = communicationChannel
+  const telegram = null
   const daysAbsent = diffInDays(lastVisitAt)
   const clientStatus = computeClientStatus(revenue, visits, daysAbsent)
   const segment = computeSegment(createdAt, lastVisitAt)
-  const cancellationCount = toNumber(firstDefined(row, ['cancel_count', 'cancellations_count']), seed % 3)
-  const noShowCount = toNumber(firstDefined(row, ['no_show_count', 'missed_count']), seed % 2)
-  const communicationActivity = firstDefined<CommunicationActivity>(row, ['communication_activity', 'message_activity']) || pickByHash<CommunicationActivity>(['opened', 'replied', 'ignored'], seed)
-  const hasBonuses = boolFromAny(firstDefined(row, ['has_bonuses', 'bonuses_available']), seed % 2 === 0)
-  const hasSubscription = boolFromAny(firstDefined(row, ['has_subscription', 'subscription_active']), seed % 4 === 0)
-  const hasDeposit = boolFromAny(firstDefined(row, ['has_deposit', 'deposit_balance']), seed % 5 === 0)
-  const upcomingAppointment = boolFromAny(firstDefined(row, ['has_upcoming_appointment', 'future_appointment']), seed % 3 === 0)
-  const consentToMarketing = boolFromAny(firstDefined(row, ['consent_to_marketing', 'marketing_consent']), Boolean(telegram) || seed % 4 !== 0)
-  const lastCampaignAt = toDateString(firstDefined(row, ['last_campaign_at', 'last_mailing_at'])) || addDays(lastMessageAt, -((seed % 40) + 1))
+  const cancellationCount = toNumber(firstDefined(row, ['cancel_count', 'cancellations_count']), 0)
+  const noShowCount = toNumber(firstDefined(row, ['no_show_count', 'missed_count']), 0)
+  const communicationActivity = firstDefined<CommunicationActivity>(row, ['communication_activity', 'message_activity']) || 'ignored'
+  const hasBonuses = boolFromAny(firstDefined(row, ['has_bonuses', 'bonuses_available']), false)
+  const hasSubscription = boolFromAny(firstDefined(row, ['has_subscription', 'subscription_active']), false)
+  const hasDeposit = boolFromAny(firstDefined(row, ['has_deposit', 'deposit_balance']), false)
+  const upcomingAppointment = boolFromAny(firstDefined(row, ['has_upcoming_appointment', 'future_appointment']), false)
+  const consentToMarketing = boolFromAny(firstDefined(row, ['consent_to_marketing', 'marketing_consent']), true)
+  const lastCampaignAt = toDateString(firstDefined(row, ['last_campaign_at', 'last_mailing_at']))
   const age = computeAge(birthday)
   const tagsRaw = firstDefined<any>(row, ['tags'])
   const tags = Array.isArray(tagsRaw) && tagsRaw.length > 0
     ? tagsRaw.map((item) => String(item))
-    : [pickByHash(TAG_POOL, seed), pickByHash(TAG_POOL, seed, 1)].filter((item, index, arr) => arr.indexOf(item) === index)
-  const notes = String(firstDefined(row, ['notes', 'comment', 'comments']) || pickByHash(NOTES_POOL, seed))
-  const reactedToOffers = boolFromAny(firstDefined(row, ['reacted_to_offers', 'offer_response']), seed % 2 === 0)
+    : Array.isArray(row.categories)
+      ? row.categories.map((item: any) => String(item))
+      : []
+  const notes = String(firstDefined(row, ['notes', 'comment', 'comments']) || '')
+  const reactedToOffers = boolFromAny(firstDefined(row, ['reacted_to_offers', 'offer_response']), false)
 
   return {
     id,
     name: fullName,
     phone: String(firstDefined(row, ['phone', 'phone_number']) || ''),
-    gender: normalizeGender(firstDefined(row, ['Gender', 'gender'])),
+    gender: normalizeGender(firstDefined(row, ['sex', 'Gender', 'gender'])),
     age,
     ageGroup: computeAgeGroup(age),
     revenue,
     ltv,
     visits,
     avgCheck,
+    discount: toNumber(firstDefined(row, ['discount']), 0),
     birthday,
     firstVisitAt,
     lastVisitAt,
@@ -335,7 +311,7 @@ export function useClients() {
 
   const fetchClients = async () => {
     const { data, error: err } = await supabase
-      .from('clients_tg')
+      .from('clients')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(2000)
@@ -353,8 +329,8 @@ export function useClients() {
   useEffect(() => {
     fetchClients()
     const ch = supabase
-      .channel('clients_tg_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients_tg' }, fetchClients)
+      .channel('clients_ch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, fetchClients)
       .subscribe()
     return () => {
       supabase.removeChannel(ch)
