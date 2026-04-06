@@ -1,0 +1,353 @@
+{
+  "name": "21_YClients_Masters_To_Supabase",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 35
+            }
+          ]
+        }
+      },
+      "id": "dc299c69-9e06-4eca-a28a-6a95247a966f",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        224
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c1d77b54-b1f1-4e49-b74a-20d0e4de3c26",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Синхронизация мастеров филиала YClients в таблицу `public.masters`. Workflow запускается вручную или по расписанию, забирает мастеров через `GET /book_staff/{company_id}`, нормализует данные и делает batch upsert в Supabase.",
+        "height": 220,
+        "width": 820
+      },
+      "id": "957a17d7-13b6-4a54-bdf0-0158effeeb54",
+      "name": "YClients Masters Sync Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { workflow_name: '21_YClients_Masters_To_Supabase', sync_started_at: new Date().toISOString(), org_uid: '9f5a0e68-7f42-4ca6-bf0d-3ed6bb0c6bf1', company_id: 1647948 } }];"
+      },
+      "id": "25773926-beea-4376-aa99-60a4df3b2f00",
+      "name": "Подготовить конфиг синхронизации",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.yclients.com/api/v1/book_staff/{{$json.company_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "3425ff7b-710b-43c1-9cfc-9188bf2bdcaf",
+      "name": "YClients: получить мастеров",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        304
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json || {};\nconst base = $('Подготовить конфиг синхронизации').first().json || {};\nconst rows = Array.isArray(response.data) ? response.data : [];\nreturn [{ json: { ...base, masters_count: rows.length, is_noop: rows.length === 0, rows } }];"
+      },
+      "id": "082ab114-b072-4783-9dbc-518f0cfd2c0a",
+      "name": "Собрать список мастеров",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.is_noop}}",
+              "operation": "isFalse"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c8066f28-fa3f-4474-a10b-58c58e6508c7",
+      "name": "Есть мастера для загрузки",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function cleanText(value) {\n  const result = String(value ?? '').trim();\n  return result || null;\n}\n\nfunction cleanInteger(value, fallback = 0) {\n  const parsed = Number(value);\n  return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;\n}\n\nfunction cleanNumber(value, fallback = 0) {\n  const parsed = Number(value);\n  return Number.isFinite(parsed) ? parsed : fallback;\n}\n\nfunction cleanDate(value) {\n  const result = cleanText(value);\n  if (!result) return null;\n  const date = new Date(result);\n  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);\n}\n\nfunction cleanBoolean(value) {\n  if (typeof value === 'boolean') return value;\n  const parsed = Number(value);\n  return Number.isFinite(parsed) ? parsed === 1 : false;\n}\n\nconst shared = $('Собрать список мастеров').first().json || $('Подготовить конфиг синхронизации').first().json || {};\nconst sourceRows = Array.isArray($input.first().json.rows) ? $input.first().json.rows : [];\n\nreturn sourceRows\n  .map((row) => {\n    const ycId = Number(row?.id || 0);\n    const name = cleanText(row?.name);\n    if (!Number.isFinite(ycId) || ycId <= 0 || !name) return null;\n\n    return {\n      json: {\n        org_uid: shared.org_uid,\n        yc_id: ycId,\n        company_id: Number(shared.company_id),\n        name,\n        specialization: cleanText(row?.specialization),\n        bookable: cleanBoolean(row?.bookable),\n        fired: cleanBoolean(row?.fired),\n        hidden: cleanBoolean(row?.hidden),\n        status: cleanInteger(row?.status, 0),\n        user_id: row?.user_id == null ? null : cleanInteger(row.user_id, 0),\n        api_id: cleanText(row?.api_id),\n        avatar: cleanText(row?.avatar),\n        avatar_big: cleanText(row?.avatar_big),\n        information: cleanText(row?.information),\n        position: Array.isArray(row?.position) ? row.position : [],\n        position_id: cleanInteger(row?.position_id, 0),\n        prepaid: cleanText(row?.prepaid),\n        rating: cleanNumber(row?.rating, 0),\n        show_rating: cleanBoolean(row?.show_rating),\n        votes_count: cleanInteger(row?.votes_count, 0),\n        comments_count: cleanInteger(row?.comments_count, 0),\n        schedule_till: cleanDate(row?.schedule_till),\n        weight: cleanInteger(row?.weight, 0),\n        image_group: Array.isArray(row?.image_group) ? row.image_group : [],\n        raw_payload: row\n      }\n    };\n  })\n  .filter(Boolean);"
+      },
+      "id": "d09a6335-7eb8-4959-8eba-d31cd5b50e43",
+      "name": "Нормализовать мастеров для Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json).filter(Boolean);\nconst shared = $('Собрать список мастеров').first().json || $('Подготовить конфиг синхронизации').first().json || {};\nreturn [{ json: { ...shared, synced_masters: rows.length, rows } }];"
+      },
+      "id": "3d2c2e97-28d7-4406-b584-0d1ad0499e41",
+      "name": "Собрать upsert batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ugocvtuomyopullvilim.supabase.co/rest/v1/masters?on_conflict=org_uid,yc_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjA5NzEyMiwiZXhwIjoyMDg3NjczMTIyfQ.d91fw0hhpwr7dPU33ixPeEWkNhonv-tO0h8DfM8wvbQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjA5NzEyMiwiZXhwIjoyMDg3NjczMTIyfQ.d91fw0hhpwr7dPU33ixPeEWkNhonv-tO0h8DfM8wvbQ"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.rows}}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ad7eacb5-daf5-4e67-bcc9-749b00051564",
+      "name": "Supabase: upsert masters",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        224
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const batch = $('Собрать upsert batch').first().json || {};\nconst response = $input.first().json;\nconst insertedOrUpdated = Array.isArray(response) ? response.length : (response ? 1 : 0);\nreturn [{ json: { ok: true, status: 'success', data: { org_uid: batch.org_uid, workflow_name: batch.workflow_name, total_masters: batch.masters_count || 0, synced_masters: batch.synced_masters || 0, inserted_or_updated: insertedOrUpdated, company_id: batch.company_id, sync_started_at: batch.sync_started_at, sync_finished_at: new Date().toISOString() }, errors: [] } }];"
+      },
+      "id": "d47fd4d4-6585-4e65-818d-21492e644a51",
+      "name": "Собрать успешный ответ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Собрать список мастеров').first().json || $('Подготовить конфиг синхронизации').first().json || {};\nreturn [{ json: { ok: true, status: 'noop', data: { org_uid: input.org_uid, workflow_name: input.workflow_name || '21_YClients_Masters_To_Supabase', total_masters: 0, synced_masters: 0, inserted_or_updated: 0, company_id: input.company_id, sync_started_at: input.sync_started_at, sync_finished_at: new Date().toISOString(), reason: 'No masters returned by YClients book_staff' }, errors: [] } }];"
+      },
+      "id": "8c1c7d46-271d-47d2-ba8a-47af000c2db2",
+      "name": "Собрать noop ответ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        432
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Подготовить конфиг синхронизации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Подготовить конфиг синхронизации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовить конфиг синхронизации": {
+      "main": [
+        [
+          {
+            "node": "YClients: получить мастеров",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YClients: получить мастеров": {
+      "main": [
+        [
+          {
+            "node": "Собрать список мастеров",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать список мастеров": {
+      "main": [
+        [
+          {
+            "node": "Есть мастера для загрузки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть мастера для загрузки": {
+      "main": [
+        [
+          {
+            "node": "Нормализовать мастеров для Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Собрать noop ответ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Нормализовать мастеров для Supabase": {
+      "main": [
+        [
+          {
+            "node": "Собрать upsert batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать upsert batch": {
+      "main": [
+        [
+          {
+            "node": "Supabase: upsert masters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: upsert masters": {
+      "main": [
+        [
+          {
+            "node": "Собрать успешный ответ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "yNxFIi6JUCI0vOzJ",
+    "timezone": "Asia/Novosibirsk",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "e4a217b0-8dbe-4f26-9436-03eb9e464182",
+  "meta": {
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "xaxrBlEkUgfMK13e",
+  "tags": []
+}

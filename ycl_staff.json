@@ -1,0 +1,111 @@
+{
+  "name": "ycl_staff",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0b42d77f-fad9-45a8-9928-c97299ec6141",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "url": "https://api.yclients.com/api/v1/company/1647948/staff",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "db85c8ea-f4e0-427c-aa5d-fa6b21e959d8",
+      "name": "get_staff_list"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.yclients.com/api/v1/company/1647948/staff/{{staff_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        432,
+        0
+      ],
+      "id": "f64861d5-6a32-40d6-b39e-186e3480a51d",
+      "name": "get_staff_list1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "get_staff_list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_staff_list": {
+      "main": [
+        [
+          {
+            "node": "get_staff_list1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "297c1338-d356-4191-b9ad-2e9960ebd66b",
+  "meta": {
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "zYaO2ojBSY4UHBxA",
+  "tags": []
+}

@@ -1,0 +1,134 @@
+{
+  "name": "ycl get bookings",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "phone",
+              "type": "any"
+            },
+            {
+              "name": "date_from",
+              "type": "any"
+            },
+            {
+              "name": "date_to",
+              "type": "any"
+            },
+            {
+              "name": "record_id",
+              "type": "any"
+            },
+            {
+              "name": "company_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "97471cac-3f06-414c-96dd-dc945d9005b4",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.yclients.com/api/v1/user/records/{{ $json.record_id }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "date_from",
+              "value": "={{ $json.date_from }}"
+            },
+            {
+              "name": "date_to",
+              "value": "={{ $json.date_to }}"
+            },
+            {
+              "name": "record_id",
+              "value": "={{ $json.record_id }}"
+            },
+            {
+              "name": "company_id",
+              "value": "={{ $json.company_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer sdf64d8bdazumg2b49a9, User 080cf0c8d6bdc3a85d984ef9a6b33628"
+            },
+            {
+              "name": "Accept",
+              "value": "=application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7a8e1e5d-0f00-4164-8f56-ae5b366f7612",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "phone": "79039063796",
+          "date_from": "2026-01-09",
+          "date_to": "2026-01-09",
+          "record_id": "",
+          "company_id": "1709560"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "983c8dbd-4de0-4055-9d13-cceea035e9ab",
+  "meta": {
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "o9la7KcB4iO5K8yS",
+  "tags": []
+}
