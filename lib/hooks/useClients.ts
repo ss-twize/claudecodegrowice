@@ -6,7 +6,7 @@ export type ClientStatus = 'new' | 'regular' | 'sleeping' | 'lost' | 'vip'
 export type VisitFrequency = 'weekly' | 'biweekly' | 'monthly' | 'rare'
 export type ValueCategory = 'high' | 'medium' | 'low'
 export type CommunicationActivity = 'opened' | 'replied' | 'ignored'
-export type ContactChannel = 'Telegram' | 'WhatsApp' | 'SMS' | 'Звонок'
+export type ContactChannel = 'Telegram' | 'Whatsapp' | 'Max' | 'Телефон'
 
 export interface Client {
   id: string
@@ -19,6 +19,7 @@ export interface Client {
   ltv: number
   visits: number
   avgCheck: number
+  discount: number
   birthday: string | null
   firstVisitAt: string | null
   lastVisitAt: string | null
@@ -222,7 +223,12 @@ function mapRow(row: any): Client {
   const city = String(firstDefined(row, ['city', 'client_city', 'location']) || 'Не указан')
   const master = String(firstDefined(row, ['master', 'master_name', 'favorite_master']) || '—')
   const branch = String(firstDefined(row, ['branch', 'branch_name', 'salon_branch']) || '—')
-  const communicationChannel = firstDefined<ContactChannel>(row, ['communication_channel', 'preferred_channel']) || 'SMS'
+  const rawChannel = String(firstDefined(row, ['channel', 'communication_channel', 'preferred_channel', 'contact']) || '').toLowerCase()
+  const communicationChannel: ContactChannel =
+    rawChannel.includes('telegram') || rawChannel === 'tg' ? 'Telegram'
+      : rawChannel.includes('whatsapp') || rawChannel.includes('whats') || rawChannel === 'wa' ? 'Whatsapp'
+        : rawChannel.includes('max') ? 'Max'
+          : 'Телефон'
   const channel = communicationChannel
   const telegram = null
   const daysAbsent = diffInDays(lastVisitAt)
@@ -258,6 +264,7 @@ function mapRow(row: any): Client {
     ltv,
     visits,
     avgCheck,
+    discount: toNumber(firstDefined(row, ['discount']), 0),
     birthday,
     firstVisitAt,
     lastVisitAt,

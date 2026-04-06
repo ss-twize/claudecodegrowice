@@ -48,6 +48,10 @@ type ClientFilterOptions = {
   maxRevenue: number | null;
   minAvgCheck: number | null;
   minVisits: number | null;
+  minAge: number | null;
+  maxAge: number | null;
+  minDiscount: number | null;
+  maxDiscount: number | null;
   lastVisitFrom: string;
   lastVisitTo: string;
   firstVisitFrom: string;
@@ -122,6 +126,10 @@ const EMPTY_CLIENT_FILTERS: ClientFilterOptions = {
   maxRevenue: null,
   minAvgCheck: null,
   minVisits: null,
+  minAge: null,
+  maxAge: null,
+  minDiscount: null,
+  maxDiscount: null,
   lastVisitFrom: "",
   lastVisitTo: "",
   firstVisitFrom: "",
@@ -196,10 +204,6 @@ const SEGMENT_COLORS: Record<string, { bg: string; text: string; border: string 
   inactive: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20" },
 };
 
-const SEGMENT_LABELS: Record<string, string> = {
-  new: "Новый", active: "Активный", atRisk: "Под риском", inactive: "Неактивный",
-};
-
 const RISK_COLORS: Record<string, { bg: string; text: string }> = {
   low: { bg: "bg-[#00FF00]/10", text: "text-[#00FF00]" },
   medium: { bg: "bg-yellow-500/10", text: "text-yellow-400" },
@@ -216,6 +220,13 @@ const CLIENT_STATUS_LABELS: Record<string, string> = {
   sleeping: "Спящий",
   lost: "Потерянный",
   vip: "VIP",
+};
+
+const TABLE_STATUS_BY_SEGMENT: Record<string, string> = {
+  new: "Новый",
+  active: "Постоянный",
+  atRisk: "Под риском",
+  inactive: "Потерянный",
 };
 
 const VISIT_FREQUENCY_LABELS: Record<string, string> = {
@@ -324,6 +335,10 @@ function matchesClientFilter(client: Client, options: ClientFilterOptions): bool
   if (options.maxRevenue !== null && client.revenue > options.maxRevenue) return false;
   if (options.minAvgCheck !== null && client.avgCheck < options.minAvgCheck) return false;
   if (options.minVisits !== null && client.visits < options.minVisits) return false;
+  if (options.minAge !== null && (client.age ?? -1) < options.minAge) return false;
+  if (options.maxAge !== null && (client.age ?? 999) > options.maxAge) return false;
+  if (options.minDiscount !== null && client.discount < options.minDiscount) return false;
+  if (options.maxDiscount !== null && client.discount > options.maxDiscount) return false;
   if (!matchesDateRange(client.lastVisitAt, options.lastVisitFrom, options.lastVisitTo)) return false;
   if (!matchesDateRange(client.firstVisitAt, options.firstVisitFrom, options.firstVisitTo)) return false;
   if (!matchesDateRange(client.birthday, options.birthdayFrom, options.birthdayTo)) return false;
@@ -608,8 +623,12 @@ export default function ClientsPage() {
               <FilterSelect value={clientFilters.gender} onChange={(e) => setClientFilters((prev) => ({ ...prev, gender: e.target.value }))}><option value="all">Пол: любой</option><option value="Ж">Ж</option><option value="М">М</option></FilterSelect>
               <FilterInput type="date" value={clientFilters.lastVisitFrom} onChange={(e) => setClientFilters((prev) => ({ ...prev, lastVisitFrom: e.target.value }))} placeholder="Дата последнего визита от" />
               <FilterInput type="number" min="0" value={clientFilters.minVisits ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, minVisits: toNumberOrNull(e.target.value) }))} placeholder="Визитов от" />
+              <FilterInput type="number" min="0" value={clientFilters.minAge ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, minAge: toNumberOrNull(e.target.value) }))} placeholder="Возраст от" />
+              <FilterInput type="number" min="0" value={clientFilters.maxAge ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, maxAge: toNumberOrNull(e.target.value) }))} placeholder="Возраст до" />
               <FilterInput type="number" min="0" value={clientFilters.minAvgCheck ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, minAvgCheck: toNumberOrNull(e.target.value) }))} placeholder="Средний чек от" />
               <FilterInput type="number" min="0" value={clientFilters.minRevenue ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, minRevenue: toNumberOrNull(e.target.value) }))} placeholder="Сумма покупок от" />
+              <FilterInput type="number" min="0" value={clientFilters.minDiscount ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, minDiscount: toNumberOrNull(e.target.value) }))} placeholder="Скидка от, %" />
+              <FilterInput type="number" min="0" value={clientFilters.maxDiscount ?? ""} onChange={(e) => setClientFilters((prev) => ({ ...prev, maxDiscount: toNumberOrNull(e.target.value) }))} placeholder="Скидка до, %" />
               <FilterSelect value={clientFilters.channel} onChange={(e) => setClientFilters((prev) => ({ ...prev, channel: e.target.value }))}><option value="all">Канал связи: любой</option>{channels.map((channel) => <option key={channel} value={channel}>{channel}</option>)}</FilterSelect>
               <FilterSelect value={clientFilters.consentToMarketing} onChange={(e) => setClientFilters((prev) => ({ ...prev, consentToMarketing: e.target.value as BinaryFilter }))}><option value="all">Согласие на рассылку: любое</option><option value="yes">Есть согласие</option><option value="no">Без согласия</option></FilterSelect>
             </div>
@@ -678,38 +697,41 @@ export default function ClientsPage() {
                 <tr className="border-b border-[#1A2535]">
                   <SortableHeader label="ФИО" col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Телефон" col="phone" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Пол</th>
-                  <SortableHeader label="Выручка" col="revenue" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Средний чек</th>
-                  <SortableHeader label="Визиты" col="visits" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Статус клиента</th>
-                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Филиал</th>
-                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Мастер</th>
-                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Канал</th>
-                  <SortableHeader label="Статус" col="segment" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Статус</th>
                   <SortableHeader label="Риск оттока" col="churnRisk" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Визиты" col="visits" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Последний визит" col="lastVisitAt" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Выручка" col="revenue" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <SortableHeader label="Средний чек" col="avgCheck" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Скидка</th>
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Услуги</th>
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Канал</th>
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Мастер</th>
+                  <SortableHeader label="День рождения" col="age" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Комментарий</th>
                 </tr>
                   </thead>
                   <tbody>
                     {filtered.map((client) => {
                       const segColor = client.segment ? SEGMENT_COLORS[client.segment] : null;
                       const riskColor = client.churnRisk ? RISK_COLORS[client.churnRisk] : null;
+                      const tableStatus = TABLE_STATUS_BY_SEGMENT[client.segment] || "Постоянный";
                       return (
                         <tr key={client.id} className="border-b border-[#1A2535] hover:bg-[#141E2B] transition-colors">
                           <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-medium whitespace-nowrap">{client.name}</td>
                           <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.phone}</td>
-                          <td className="px-5 py-3.5"><span className={`text-xs font-medium px-2 py-1 rounded-md ${client.gender === "Ж" ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>{client.gender}</span></td>
+                          <td className="px-5 py-3.5"><span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor?.bg || "bg-[#1A2535]"} ${segColor?.text || "text-[#EDF2FA]"} ${segColor?.border || "border-[#223444]"}`}>{tableStatus}</span></td>
+                          <td className="px-5 py-3.5">{client.churnRisk && riskColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>{RISK_LABELS[client.churnRisk]}</span> : <span className="text-[#5E7488]">—</span>}</td>
+                          <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">{client.visits}</td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.lastVisitAt ? new Date(client.lastVisitAt).toLocaleDateString("ru-RU") : "—"}</td>
                           <td className="px-5 py-3.5 text-[#00FF00] text-sm font-semibold whitespace-nowrap">{formatCurrency(client.revenue)}</td>
                           <td className="px-5 py-3.5 text-[#EDF2FA] text-sm whitespace-nowrap">{formatCurrency(client.avgCheck)}</td>
-                          <td className="px-5 py-3.5 text-[#EDF2FA] text-sm font-semibold whitespace-nowrap">{client.visits}</td>
-                          <td className="px-5 py-3.5"><span className="text-xs font-medium px-2 py-1 rounded-md bg-[#1A2535] text-[#EDF2FA] border border-[#223444]">{CLIENT_STATUS_LABELS[client.clientStatus]}</span></td>
-                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.branch}</td>
-                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.master}</td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.discount}%</td>
+                          <td className="px-5 py-3.5"><ServicesCell services={client.services.slice(-3)} /></td>
                           <td className="px-5 py-3.5 text-sm whitespace-nowrap"><span className="text-xs px-2 py-1 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">{client.communicationChannel}</span></td>
-                          <td className="px-5 py-3.5">{client.segment && segColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md border ${segColor.bg} ${segColor.text} ${segColor.border}`}>{SEGMENT_LABELS[client.segment]}</span> : <span className="text-[#5E7488]">—</span>}</td>
-                          <td className="px-5 py-3.5">{client.churnRisk && riskColor ? <span className={`text-xs font-medium px-2 py-1 rounded-md ${riskColor.bg} ${riskColor.text}`}>{RISK_LABELS[client.churnRisk]}</span> : <span className="text-[#5E7488]">—</span>}</td>
-                          <td className="px-5 py-3.5"><ServicesCell services={client.services} /></td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.master}</td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.birthday ? new Date(client.birthday).toLocaleDateString("ru-RU") : "—"}</td>
+                          <td className="px-5 py-3.5 text-[#8299B4] text-sm max-w-[260px] truncate" title={client.notes}>{client.notes || "—"}</td>
                         </tr>
                       );
                     })}
