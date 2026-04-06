@@ -61,13 +61,8 @@ body {
 
 /* Local left accent scrollbar (clients table) */
 .left-accent-scrollbar {
-  direction: rtl;
   scrollbar-width: thin;
   scrollbar-color: #00FF00 #0F1622;
-}
-
-.left-accent-scrollbar > * {
-  direction: ltr;
 }
 
 .left-accent-scrollbar::-webkit-scrollbar {

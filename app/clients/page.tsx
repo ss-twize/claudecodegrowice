@@ -483,6 +483,7 @@ export default function ClientsPage() {
   const [campaignToast, setCampaignToast] = useState<{ type: "success" | "error"; title: string; message: string } | null>(null);
   const [campaignSending, setCampaignSending] = useState(false);
   const [optimisticCampaigns, setOptimisticCampaigns] = useState<CampaignPreview[]>([]);
+  const clientsTableScrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -502,6 +503,24 @@ export default function ClientsPage() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
+
+  useEffect(() => {
+    const scrollContainer = clientsTableScrollRef.current;
+    if (!scrollContainer) return;
+
+    const resetScroll = () => {
+      scrollContainer.scrollLeft = 0;
+    };
+
+    resetScroll();
+    const animationFrameId = requestAnimationFrame(resetScroll);
+    const timeoutId = window.setTimeout(resetScroll, 0);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   const insertEmoji = (emoji: string) => {
     const ta = textareaRef.current;
