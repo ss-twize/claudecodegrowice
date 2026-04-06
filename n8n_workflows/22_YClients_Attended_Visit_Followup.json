@@ -1,0 +1,842 @@
+{
+  "name": "22_YClients_Attended_Visit_Followup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "5a94843a-4576-4628-a227-a04b5ac6a745",
+      "name": "Schedule Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        21600,
+        208
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "b94a2d61-45c8-4238-82a6-b6a17a86a2e1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        21600,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Attended-visit follow-up without client_channels/channel_connections. The workflow polls recent YClients records, keeps only `attendance = 1`, then resolves the best messenger using only `clients`, `telegram_users`, `whatsapp_users`, `max_users`. Delivery priority: telegram -> whatsapp -> max.",
+        "height": 260,
+        "width": 1160
+      },
+      "id": "59a38c8d-3bf0-4248-acf7-7bdae91ac94c",
+      "name": "YClients Visit Follow-up Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        21488,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = {\n  org_id: '9f5a0e68-7f42-4ca6-bf0d-3ed6bb0c6bf1',\n  company_id: 1647948,\n  yclients_partner_token: 'ccg63r8xemyb6fm99c2k',\n  yclients_user_token: '3a3fac28a1cda42c028b46426004b68f',\n  supabase_url: 'https://ugocvtuomyopullvilim.supabase.co',\n  supabase_service_role_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjA5NzEyMiwiZXhwIjoyMDg3NjczMTIyfQ.d91fw0hhpwr7dPU33ixPeEWkNhonv-tO0h8DfM8wvbQ',\n  fetch_count: 100,\n  lookback_minutes: 180,\n  yandex_maps_url: 'https://yandex.ru/maps/org/PLACEHOLDER',\n  two_gis_url: 'https://go.2gis.com/PLACEHOLDER',\n  whatsapp_send_url: 'https://green-api.example/send-whatsapp',\n  max_send_url: 'https://green-api.example/send-max',\n  followup_template: '{{name}}, спасибо за визит на {{service}}. Будем благодарны за отзыв: Яндекс Карты {{yandex_maps_url}} 2ГИС {{two_gis_url}}. Если захотите записаться снова, просто ответьте на это сообщение.'\n};\n\nif (!config.org_id) throw new Error('org_id is required in Build Follow-up Config');\nif (!Number.isFinite(Number(config.company_id)) || Number(config.company_id) <= 0) throw new Error('company_id must be positive');\nif (!config.yclients_partner_token || !config.yclients_user_token) throw new Error('YClients tokens are required');\nif (!config.supabase_url || !config.supabase_service_role_key) throw new Error('Supabase credentials are required');\nif (!String(config.followup_template || '').trim()) throw new Error('followup_template is required');\nif (!String(config.yandex_maps_url || '').trim()) throw new Error('yandex_maps_url is required');\nif (!String(config.two_gis_url || '').trim()) throw new Error('two_gis_url is required');\nif (!String(config.whatsapp_send_url || '').trim()) throw new Error('whatsapp_send_url is required');\nif (!String(config.max_send_url || '').trim()) throw new Error('max_send_url is required');\n\nreturn [{\n  json: {\n    request_id: `yclients_visit_followup_${Date.now()}`,\n    workflow_name: '22_YClients_Attended_Visit_Followup',\n    org_id: config.org_id,\n    company_id: Number(config.company_id),\n    yclients_partner_token: config.yclients_partner_token,\n    yclients_user_token: config.yclients_user_token,\n    supabase_url: config.supabase_url,\n    supabase_service_role_key: config.supabase_service_role_key,\n    fetch_count: Number(config.fetch_count) > 0 ? Math.min(Number(config.fetch_count), 200) : 100,\n    lookback_minutes: Number(config.lookback_minutes) > 0 ? Number(config.lookback_minutes) : 180,\n    yandex_maps_url: String(config.yandex_maps_url).trim(),\n    two_gis_url: String(config.two_gis_url).trim(),\n    whatsapp_send_url: String(config.whatsapp_send_url).trim(),\n    max_send_url: String(config.max_send_url).trim(),\n    followup_template: String(config.followup_template).trim()\n  }\n}];"
+      },
+      "id": "1030219a-ae15-4be2-af3b-7c76ded4312b",
+      "name": "Build Follow-up Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        21888,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.yclients.com/api/v1/records/{{$json.company_id}}?count={{$json.fetch_count}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$json.yclients_partner_token}}, User {{$json.yclients_user_token}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "07a6737e-4f98-42cf-a250-a8c6683bf1b5",
+      "name": "YClients: Get Recent Records",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        22192,
+        288
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseDate(value) {\n  if (!value) return null;\n  const date = new Date(String(value));\n  return Number.isNaN(date.getTime()) ? null : date;\n}\n\nfunction formatDateTime(value) {\n  const date = parseDate(value);\n  if (!date) return '';\n  return new Intl.DateTimeFormat('ru-RU', {\n    day: '2-digit',\n    month: '2-digit',\n    year: 'numeric',\n    hour: '2-digit',\n    minute: '2-digit',\n    timeZone: 'Asia/Novosibirsk'\n  }).format(date);\n}\n\nfunction renderTemplate(template, row) {\n  return String(template || '')\n    .replace(/{{\\s*name\\s*}}/gi, row.first_name || row.client_display_name || 'Здравствуйте')\n    .replace(/{{\\s*service\\s*}}/gi, row.service_name || 'услуга')\n    .replace(/{{\\s*master\\s*}}/gi, row.master_name || 'мастер')\n    .replace(/{{\\s*datetime\\s*}}/gi, row.record_datetime_label || '')\n    .replace(/{{\\s*yandex_maps_url\\s*}}/gi, row.yandex_maps_url || '')\n    .replace(/{{\\s*two_gis_url\\s*}}/gi, row.two_gis_url || '');\n}\n\nconst cfg = $('Build Follow-up Config').first().json || {};\nconst response = $input.first().json || {};\nconst rows = Array.isArray(response.data) ? response.data : [];\nconst cutoff = new Date(Date.now() - Number(cfg.lookback_minutes || 180) * 60 * 1000);\nconst seen = new Set();\nconst records = [];\n\nfor (const row of rows) {\n  const recordId = Number(row?.id || 0);\n  const attendance = Number(row?.attendance ?? row?.visit_attendance ?? 0);\n  const clientId = Number(row?.client?.id || 0);\n  const lastChange = parseDate(row?.last_change_date);\n  if (!Number.isFinite(recordId) || recordId <= 0) continue;\n  if (seen.has(recordId)) continue;\n  if (attendance !== 1) continue;\n  if (!Number.isFinite(clientId) || clientId <= 0) continue;\n  if (!lastChange || lastChange < cutoff) continue;\n  seen.add(recordId);\n\n  const clientDisplayName = String(row?.client?.display_name || row?.client?.name || '').trim();\n  const firstName = clientDisplayName.split(/\\s+/).filter(Boolean)[0] || 'Здравствуйте';\n  const serviceName = Array.isArray(row?.services) && row.services.length > 0 ? String(row.services[0]?.title || '').trim() : '';\n  const masterName = String(row?.staff?.name || '').trim();\n  const recordDatetime = row?.datetime || row?.date || null;\n  const recordDatetimeLabel = formatDateTime(recordDatetime);\n  const messageText = renderTemplate(cfg.followup_template, {\n    first_name: firstName,\n    client_display_name: clientDisplayName,\n    service_name: serviceName,\n    master_name: masterName,\n    record_datetime_label: recordDatetimeLabel,\n    yandex_maps_url: cfg.yandex_maps_url,\n    two_gis_url: cfg.two_gis_url\n  }).trim();\n  if (!messageText) continue;\n\n  records.push({\n    org_id: cfg.org_id,\n    request_id: cfg.request_id,\n    yclients_record_id: recordId,\n    yclients_client_id: clientId,\n    yclients_visit_id: Number(row?.visit_id || 0) || null,\n    attendance,\n    message_text: messageText,\n    service_name: serviceName || null,\n    master_name: masterName || null,\n    record_date: recordDatetime ? new Date(recordDatetime).toISOString() : null,\n    last_change_date: lastChange.toISOString()\n  });\n}\n\nreturn [{ json: { ...cfg, records } }];"
+      },
+      "id": "0d4e4abe-a14a-4255-9501-ac108e65adf7",
+      "name": "Normalize Attended Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        22448,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{($json.records || []).length}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8cb78a26-399f-46a4-9fe5-2f4a2eedc7cc",
+      "name": "Has Fresh Attended Records",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        22720,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "clients",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "org_uid",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Attended Records').first().json.org_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        22976,
+        64
+      ],
+      "id": "57ddadbe-0b49-4cec-b110-0529dc6b547c",
+      "name": "Get Clients",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "telegram_users",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "org_uid",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Attended Records').first().json.org_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        22976,
+        208
+      ],
+      "id": "e4bcea6f-e3f8-4426-8894-ea2bb76192a3",
+      "name": "Get Telegram Users",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "whatsapp_users",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "org_uid",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Attended Records').first().json.org_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        22976,
+        352
+      ],
+      "id": "23230954-76e2-43a4-8777-96906164a685",
+      "name": "Get WhatsApp Users",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "max_users",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "org_uid",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Attended Records').first().json.org_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        22976,
+        496
+      ],
+      "id": "7c9fa525-5d51-4f54-8a6f-7901c828959b",
+      "name": "Get Max Users",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function getRows(name) {\n  try {\n    return $(name).all().map((item) => item.json || {});\n  } catch (error) {\n    return [];\n  }\n}\n\nfunction normalizeDigits(value) {\n  return String(value || '').replace(/\\D+/g, '');\n}\n\nfunction isTelegramAllowed(row) {\n  const blocked = String(row?.blocked || '').toLowerCase();\n  const allowMarketing = String(row?.allow_marketing || '').toLowerCase();\n  const canMessage = String(row?.can_message || '').toLowerCase();\n  if (['true', 'yes', '1'].includes(blocked)) return false;\n  if (['false', 'no', '0'].includes(allowMarketing)) return false;\n  if (['false', 'no', '0'].includes(canMessage)) return false;\n  return true;\n}\n\nconst batch = $('Normalize Attended Records').first().json || {};\nconst records = Array.isArray(batch.records) ? batch.records : [];\nconst clients = getRows('Get Clients');\nconst telegramUsers = getRows('Get Telegram Users');\nconst whatsappUsers = getRows('Get WhatsApp Users');\nconst maxUsers = getRows('Get Max Users');\n\nconst ycIds = new Set(records.map((row) => String(row.yclients_client_id || '')).filter(Boolean));\nconst clientsByYcId = new Map();\nfor (const row of clients) {\n  const ycId = String(row.yc_id || '').trim();\n  if (!ycId || !ycIds.has(ycId)) continue;\n  if (!clientsByYcId.has(ycId)) clientsByYcId.set(ycId, row);\n}\n\nconst tgByClient = new Map();\nfor (const row of telegramUsers) {\n  if (!row.client_id || !row.user_id) continue;\n  if (!isTelegramAllowed(row)) continue;\n  if (!tgByClient.has(row.client_id)) tgByClient.set(row.client_id, String(row.user_id));\n}\n\nconst waByClient = new Map();\nfor (const row of whatsappUsers) {\n  if (!row.client_id || !row.user_id) continue;\n  if (row.blocked === true) continue;\n  if (row.allow_marketing === false) continue;\n  if (row.can_message === false) continue;\n  if (!waByClient.has(row.client_id)) waByClient.set(row.client_id, String(row.user_id));\n}\n\nconst maxByClient = new Map();\nfor (const row of maxUsers) {\n  const clientId = row.client_id;\n  const userId = row.user_id || row.channel_user_id;\n  if (!clientId || !userId) continue;\n  const blocked = String(row.blocked || '').toLowerCase();\n  const allowMarketing = String(row.allow_marketing || '').toLowerCase();\n  const canMessage = String(row.can_message || '').toLowerCase();\n  if (['true', 'yes', '1'].includes(blocked)) continue;\n  if (['false', 'no', '0'].includes(allowMarketing)) continue;\n  if (['false', 'no', '0'].includes(canMessage)) continue;\n  if (!maxByClient.has(clientId)) maxByClient.set(clientId, String(userId));\n}\n\nconst messages = [];\nlet missingClientCount = 0;\nlet missingMessengerCount = 0;\nlet duplicateCount = 0;\n\nfor (const row of records) {\n  const client = clientsByYcId.get(String(row.yclients_client_id));\n  if (!client) {\n    missingClientCount += 1;\n    continue;\n  }\n\n  const lastRecordId = String(client.last_yclients_followup_record_id || '').trim();\n  const currentRecordId = String(row.yclients_record_id || '').trim();\n  if (lastRecordId && currentRecordId && lastRecordId === currentRecordId) {\n    duplicateCount += 1;\n    continue;\n  }\n\n  let selectedChannel = null;\n  let selectedTarget = null;\n\n  const clientTelegramId = String(client.telegram_user_id || '').trim();\n  if (clientTelegramId) {\n    selectedChannel = 'telegram';\n    selectedTarget = clientTelegramId;\n  } else if (tgByClient.has(client.id)) {\n    selectedChannel = 'telegram';\n    selectedTarget = tgByClient.get(client.id);\n  } else if (waByClient.has(client.id)) {\n    selectedChannel = 'whatsapp';\n    const raw = String(waByClient.get(client.id));\n    selectedTarget = raw.includes('@') ? raw : `${normalizeDigits(raw)}@c.us`;\n  } else if (maxByClient.has(client.id)) {\n    selectedChannel = 'max';\n    selectedTarget = maxByClient.get(client.id);\n  }\n\n  if (!selectedChannel || !selectedTarget) {\n    missingMessengerCount += 1;\n    continue;\n  }\n\n  messages.push({\n    org_id: row.org_id,\n    client_id: client.id,\n    client_fullname: client.fullname || null,\n    selected_channel: selectedChannel,\n    selected_target: selectedTarget,\n    yclients_record_id: row.yclients_record_id,\n    yclients_visit_id: row.yclients_visit_id,\n    yclients_client_id: row.yclients_client_id,\n    message_text: row.message_text,\n    whatsapp_send_url: batch.whatsapp_send_url,\n    max_send_url: batch.max_send_url,\n    supabase_url: batch.supabase_url,\n    supabase_service_role_key: batch.supabase_service_role_key\n  });\n}\n\nreturn [{\n  json: {\n    request_id: batch.request_id,\n    org_id: batch.org_id,\n    source_records_count: records.length,\n    missing_client_count: missingClientCount,\n    missing_messenger_count: missingMessengerCount,\n    duplicate_count: duplicateCount,\n    messages_count: messages.length,\n    messages\n  }\n}];"
+      },
+      "id": "a73cd4d1-6617-4446-9120-7b5fd5896edd",
+      "name": "Assemble Messages Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        23248,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.messages_count}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "094772d3-28ef-4845-93bf-ab7574ec41f2",
+      "name": "Has Messages To Send",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        23520,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const batch = $input.first().json || {};\nreturn (batch.messages || []).map((message) => ({ json: message }));"
+      },
+      "id": "8cbd297b-5b22-4570-a285-bfda99852f4c",
+      "name": "Explode Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        23776,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$json.supabase_url + '/rest/v1/clients?id=eq.' + $json.client_id + '&or=(last_yclients_followup_record_id.is.null,last_yclients_followup_record_id.neq.' + $json.yclients_record_id + ')'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$json.supabase_service_role_key}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$json.supabase_service_role_key}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { last_yclients_followup_record_id: $json.yclients_record_id, last_yclients_followup_sent_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "id": "179cbdde-84d2-4a64-b69f-9382e750ca8f",
+      "name": "Claim Client Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "position": [
+        24032,
+        208
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $('Explode Messages').item.json || {};\nconst claimRows = $input.all().map((item) => item.json || {}).filter(Boolean);\nif (claimRows.length === 0) return [];\nreturn [{ json: { ...source, claim_row: claimRows[0] } }];"
+      },
+      "id": "54316fbc-2117-4dc5-9af5-229e44385f75",
+      "name": "Build Claimed Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        24288,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.selected_channel}}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.selected_channel}}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.selected_channel}}",
+                    "rightValue": "max",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "max"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbe77cc5-159d-4228-bbd2-37df691ac445",
+      "name": "Switch By Messenger",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        24560,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.selected_target}}",
+        "text": "={{$json.message_text}}",
+        "additionalFields": {}
+      },
+      "id": "45f86b33-5716-4b4e-b283-9a5c8bd0344e",
+      "name": "Telegram: Send Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        24816,
+        64
+      ],
+      "webhookId": "d1816c6a-0989-48a4-85ee-22fda0339ff9",
+      "credentials": {
+        "telegramApi": {
+          "id": "56b5PgNwe1YoXmQn",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.whatsapp_send_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { chatId: $json.selected_target, message: $json.message_text } }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "e95f93c6-24ad-4a03-b799-93de7ed79f6d",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        24816,
+        208
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.max_send_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { chatId: $json.selected_target, message: $json.message_text } }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "1cf53bf6-edb1-4360-81fc-77e2bdd9fad4",
+      "name": "Send Max",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        24816,
+        352
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const count = $input.all().length;\nconst batch = $('Assemble Messages Batch').first().json || {};\nreturn [{ json: { ok: true, status: 'completed', request_id: batch.request_id, org_id: batch.org_id, source_records_count: batch.source_records_count || 0, missing_client_count: batch.missing_client_count || 0, missing_messenger_count: batch.missing_messenger_count || 0, duplicate_count: batch.duplicate_count || 0, sent_count: count, errors: [] } }];"
+      },
+      "id": "b38bf92f-1ef9-4c13-b444-82a045f24606",
+      "name": "Build Success Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        25072,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const batch = $('Assemble Messages Batch').first().json || {};\nreturn [{ json: { ok: true, status: 'noop', request_id: batch.request_id, org_id: batch.org_id, source_records_count: batch.source_records_count || 0, missing_client_count: batch.missing_client_count || 0, missing_messenger_count: batch.missing_messenger_count || 0, duplicate_count: batch.duplicate_count || 0, sent_count: 0, reason: 'No eligible messages after dedupe, client and messenger resolution', errors: [] } }];"
+      },
+      "id": "6c6ac1dd-ab70-4de8-8ce3-cfcc0ace3561",
+      "name": "Build Noop Eligible Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        23776,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Normalize Attended Records').first().json || {};\nreturn [{ json: { ok: true, status: 'noop', request_id: cfg.request_id, org_id: cfg.org_id, source_records_count: 0, missing_client_count: 0, missing_messenger_count: 0, sent_count: 0, reason: 'No fresh attended YClients records found', errors: [] } }];"
+      },
+      "id": "6247e182-78c2-4615-b201-f140239520c7",
+      "name": "Build Noop Fresh Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        22976,
+        656
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Build Follow-up Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Follow-up Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Follow-up Config": {
+      "main": [
+        [
+          {
+            "node": "YClients: Get Recent Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YClients: Get Recent Records": {
+      "main": [
+        [
+          {
+            "node": "Normalize Attended Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Attended Records": {
+      "main": [
+        [
+          {
+            "node": "Has Fresh Attended Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Fresh Attended Records": {
+      "main": [
+        [
+          {
+            "node": "Get Clients",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Telegram Users",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get WhatsApp Users",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Max Users",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Noop Fresh Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Clients": {
+      "main": [
+        [
+          {
+            "node": "Assemble Messages Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telegram Users": {
+      "main": [
+        [
+          {
+            "node": "Assemble Messages Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WhatsApp Users": {
+      "main": [
+        [
+          {
+            "node": "Assemble Messages Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Max Users": {
+      "main": [
+        [
+          {
+            "node": "Assemble Messages Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Messages Batch": {
+      "main": [
+        [
+          {
+            "node": "Has Messages To Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Messages To Send": {
+      "main": [
+        [
+          {
+            "node": "Explode Messages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Noop Eligible Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Explode Messages": {
+      "main": [
+        [
+          {
+            "node": "Claim Client Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Client Follow-up": {
+      "main": [
+        [
+          {
+            "node": "Build Claimed Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Claimed Message": {
+      "main": [
+        [
+          {
+            "node": "Switch By Messenger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch By Messenger": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Max",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Message": {
+      "main": [
+        [
+          {
+            "node": "Build Success Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Build Success Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Max": {
+      "main": [
+        [
+          {
+            "node": "Build Success Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "43896690-6df2-4973-80df-438b6d8ccecd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "FDFyvtbDWgDakcCA",
+  "tags": []
+}

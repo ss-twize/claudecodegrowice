@@ -1,0 +1,134 @@
+{
+  "name": "booking_dates",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "service_ids",
+              "type": "any"
+            },
+            {
+              "name": "staff_id",
+              "type": "any"
+            },
+            {
+              "name": "services",
+              "type": "any"
+            },
+            {
+              "name": "date",
+              "type": "any"
+            },
+            {
+              "name": "date_from",
+              "type": "any"
+            },
+            {
+              "name": "date_to",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "56a2784b-91d7-4130-8047-613417230066",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.yclients.com/api/v1/book_dates/1647948",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "staff_id",
+              "value": "={{ $json.staff_id }}"
+            },
+            {
+              "name": "service_ids",
+              "value": "={{ $json.service_ids }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "58b95b5d-8229-4a90-92a3-e3f33e5017fa",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "service_ids": null,
+          "staff_id": null,
+          "services": null,
+          "date": null,
+          "date_from": null,
+          "date_to": null
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "31429747-599b-4f48-87e0-da6b34b3304c",
+  "meta": {
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "BAZyYLjb1XYEBaS2",
+  "tags": [
+    {
+      "updatedAt": "2025-12-21T05:00:38.092Z",
+      "createdAt": "2025-12-21T05:00:38.092Z",
+      "id": "aLNYQPH4e3SF2eTa",
+      "name": "yclients"
+    }
+  ]
+}
