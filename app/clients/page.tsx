@@ -692,7 +692,7 @@ export default function ClientsPage() {
           <div className="overflow-x-auto">
             <div className="left-accent-scrollbar max-h-[420px] overflow-y-auto" dir="rtl">
               <div dir="ltr">
-                <table className="w-full">
+                <table className="w-full min-w-[2200px]">
                   <thead className="sticky top-0 z-10 bg-[#0F1622]">
                 <tr className="border-b border-[#1A2535]">
                   <SortableHeader label="ФИО" col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
