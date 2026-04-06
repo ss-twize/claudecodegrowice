@@ -689,10 +689,9 @@ export default function ClientsPage() {
             )}
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="left-accent-scrollbar max-h-[420px] overflow-y-auto" dir="rtl">
-              <div dir="ltr">
-                <table className="w-full min-w-[2200px]">
+          <div className="left-accent-scrollbar max-h-[420px] overflow-auto" dir="rtl">
+              <div dir="ltr" className="min-w-[2200px]">
+                <table className="w-full">
                   <thead className="sticky top-0 z-10 bg-[#0F1622]">
                 <tr className="border-b border-[#1A2535]">
                   <SortableHeader label="ФИО" col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
@@ -737,9 +736,8 @@ export default function ClientsPage() {
                     })}
                   </tbody>
                 </table>
-              </div>
-            </div>
           </div>
+        </div>
         </div>
 
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
