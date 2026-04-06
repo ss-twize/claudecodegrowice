@@ -694,10 +694,10 @@ export default function ClientsPage() {
                 <table className="w-full">
                   <thead className="sticky top-0 z-10 bg-[#0F1622]">
                 <tr className="border-b border-[#1A2535]">
-                  <SortableHeader label="ФИО" col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <SortableHeader label="Телефон" col="phone" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">ФИО</th>
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Телефон</th>
                   <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Статус</th>
-                  <SortableHeader label="Риск оттока" col="churnRisk" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <th className="text-left text-[#5E7488] text-xs font-medium px-5 py-3 whitespace-nowrap">Риск оттока</th>
                   <SortableHeader label="Визиты" col="visits" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Последний визит" col="lastVisitAt" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
                   <SortableHeader label="Выручка" col="revenue" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
