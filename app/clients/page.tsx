@@ -708,8 +708,8 @@ export default function ClientsPage() {
             )}
           </div>
 
-          <div ref={clientsTableScrollRef} className="left-accent-scrollbar max-h-[420px] overflow-auto">
-              <div className="min-w-[2200px]">
+          <div className="left-accent-scrollbar max-h-[420px] overflow-auto" dir="rtl">
+              <div dir="ltr" className="min-w-[2200px]">
                 <table className="w-full">
                   <thead className="sticky top-0 z-10 bg-[#0F1622]">
                 <tr className="border-b border-[#1A2535]">
