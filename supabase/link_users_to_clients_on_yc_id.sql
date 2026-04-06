@@ -206,3 +206,44 @@ BEFORE INSERT OR UPDATE OF yc_id, yclients_id, client_fullname, client_phone, fi
 ON public.max_users
 FOR EACH ROW
 EXECUTE FUNCTION public.sync_user_to_clients_by_yc_id();
+
+-- 5) Обратная синхронизация: clients -> user tables по org_uid + *_user_id
+CREATE OR REPLACE FUNCTION public.sync_client_links_to_user_tables()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.telegram_user_id IS NOT NULL THEN
+    UPDATE public.telegram_users
+    SET client_id = NEW.id
+    WHERE org_uid = NEW.org_uid
+      AND user_id = NEW.telegram_user_id
+      AND (client_id IS DISTINCT FROM NEW.id);
+  END IF;
+
+  IF NEW.whatsapp_user_id IS NOT NULL THEN
+    UPDATE public.whatsapp_users
+    SET client_id = NEW.id
+    WHERE org_uid = NEW.org_uid
+      AND user_id = NEW.whatsapp_user_id
+      AND (client_id IS DISTINCT FROM NEW.id);
+  END IF;
+
+  IF NEW.max_user_id IS NOT NULL THEN
+    UPDATE public.max_users
+    SET client_id = NEW.id
+    WHERE org_uid = NEW.org_uid
+      AND user_id = NEW.max_user_id
+      AND (client_id IS DISTINCT FROM NEW.id);
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS clients_sync_links_to_users ON public.clients;
+CREATE TRIGGER clients_sync_links_to_users
+AFTER INSERT OR UPDATE OF telegram_user_id, whatsapp_user_id, max_user_id, org_uid
+ON public.clients
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_client_links_to_user_tables();
