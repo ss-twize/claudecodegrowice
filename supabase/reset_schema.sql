@@ -194,6 +194,10 @@ CREATE TABLE telegram_users (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_uid          UUID NOT NULL DEFAULT '11111111-1111-1111-1111-111111111111',
   user_id          BIGINT NOT NULL,           -- Telegram user_id
+  yc_id            TEXT,                      -- появляется после первой записи в YClients
+  yclients_id      BIGINT,                    -- числовой ID клиента из YClients
+  client_fullname  TEXT,                      -- имя клиента из диалога/бота до полной синхронизации
+  client_phone     TEXT,
   tg_username      TEXT,
   first_name       TEXT,
   last_name        TEXT,
@@ -211,6 +215,10 @@ CREATE TABLE whatsapp_users (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_uid          UUID NOT NULL DEFAULT '11111111-1111-1111-1111-111111111111',
   user_id          TEXT NOT NULL,             -- номер телефона или WA ID
+  yc_id            TEXT,                      -- появляется после первой записи в YClients
+  yclients_id      BIGINT,                    -- числовой ID клиента из YClients
+  client_fullname  TEXT,
+  client_phone     TEXT,
   first_name       TEXT,
   last_name        TEXT,
   blocked          BOOLEAN DEFAULT false,
@@ -227,6 +235,10 @@ CREATE TABLE max_users (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_uid          UUID NOT NULL DEFAULT '11111111-1111-1111-1111-111111111111',
   user_id          TEXT NOT NULL,             -- Max user ID
+  yc_id            TEXT,                      -- появляется после первой записи в YClients
+  yclients_id      BIGINT,                    -- числовой ID клиента из YClients
+  client_fullname  TEXT,
+  client_phone     TEXT,
   first_name       TEXT,
   last_name        TEXT,
   blocked          BOOLEAN DEFAULT false,
@@ -246,6 +258,7 @@ CREATE TABLE clients (
   phone       TEXT,
   gender      TEXT CHECK (gender IN ('мужской', 'женский') OR gender IS NULL),
   yc_id       TEXT,    -- ID клиента в YClients
+  yclients_id BIGINT,  -- числовой ID клиента в YClients
   created_at  TIMESTAMPTZ DEFAULT now(),
   UNIQUE (org_uid, yc_id)
 );
