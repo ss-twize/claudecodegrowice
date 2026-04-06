@@ -1,0 +1,143 @@
+{
+  "name": "delete_book",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "record_id",
+              "type": "any"
+            },
+            {
+              "name": "record_hash",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0f3a986f-9b0d-4c5d-a83f-70c04e0c2b24",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.yclients.com/api/v1/user/records/{{ $json.record_id }}/{{ $json.record_hash }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.yclients.v2+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+            },
+            {
+              "name": "Content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f5179599-30bb-4b3c-af31-cd3732f11295",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "record_id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.record_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "Canceled"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "a1d2ee22-ee8f-44dd-8690-551711fa68a7",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "N1rBeU14IHpmSfYS",
+          "name": "GrowicePlatform"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "record_id": "1538040291",
+          "record_hash": "96375619fb726db70f850f2ee2bd5b32"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b87244e0-7370-4133-9c53-cb45d75639e0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
+  },
+  "id": "pbWtCriTuU1ozq91",
+  "tags": []
+}
