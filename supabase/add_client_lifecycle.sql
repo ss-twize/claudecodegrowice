@@ -63,25 +63,9 @@ ALTER TABLE public.clients
   ALTER COLUMN updated_at DROP NOT NULL;
 
 -- -----------------------------------------------------------------------------
--- 4. Исправить тип telegram_users.blocked: TEXT → BOOLEAN
+-- 4. telegram_users.blocked — уже BOOLEAN в live DB (проверено 2026-04-07)
+--    Конвертация TEXT → BOOLEAN пропущена — не нужна
 -- -----------------------------------------------------------------------------
--- Шаг 4.1: добавить временную колонку
-ALTER TABLE public.telegram_users
-  ADD COLUMN IF NOT EXISTS blocked_bool BOOLEAN DEFAULT FALSE;
-
--- Шаг 4.2: мигрировать данные
-UPDATE public.telegram_users
-SET blocked_bool = CASE
-  WHEN LOWER(TRIM(COALESCE(blocked, ''))) IN ('true', '1', 'yes', 'да', 'y') THEN TRUE
-  ELSE FALSE
-END;
-
--- Шаг 4.3: удалить старую TEXT колонку и переименовать
-ALTER TABLE public.telegram_users DROP COLUMN IF EXISTS blocked;
-ALTER TABLE public.telegram_users RENAME COLUMN blocked_bool TO blocked;
-
--- whatsapp_users и max_users уже имеют BOOLEAN — проверочный ALTER (идемпотентен):
--- ничего не делаем
 
 -- -----------------------------------------------------------------------------
 -- 5. Индексы для lifecycle_status и source_channel
