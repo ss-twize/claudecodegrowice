@@ -5,57 +5,19 @@
       "parameters": {
         "workflowInputs": {
           "values": [
-            {
-              "name": "fullname",
-              "type": "any"
-            },
-            {
-              "name": "phone",
-              "type": "any"
-            },
-            {
-              "name": "services",
-              "type": "any"
-            },
-            {
-              "name": "email",
-              "type": "any"
-            },
-            {
-              "name": "comment",
-              "type": "any"
-            },
-            {
-              "name": "staff_id",
-              "type": "any"
-            },
-            {
-              "name": "datetime",
-              "type": "any"
-            },
-            {
-              "name": "chat_id",
-              "type": "any"
-            },
-            {
-              "name": "service_name",
-              "type": "any"
-            },
-            {
-              "name": "duration_min",
-              "type": "number"
-            },
-            {
-              "name": "price",
-              "type": "any"
-            },
-            {
-              "name": "service_id",
-              "type": "any"
-            },
-            {
-              "name": "staff_name"
-            }
+            {"name": "fullname", "type": "any"},
+            {"name": "phone", "type": "any"},
+            {"name": "services", "type": "any"},
+            {"name": "email", "type": "any"},
+            {"name": "comment", "type": "any"},
+            {"name": "staff_id", "type": "any"},
+            {"name": "datetime", "type": "any"},
+            {"name": "chat_id", "type": "any"},
+            {"name": "service_name", "type": "any"},
+            {"name": "duration_min", "type": "number"},
+            {"name": "price", "type": "any"},
+            {"name": "service_id", "type": "any"},
+            {"name": "staff_name"}
           ]
         }
       },
@@ -63,10 +25,7 @@
       "typeVersion": 1.1,
       "name": "When Executed by Another Workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "position": [
-        48,
-        -160
-      ]
+      "position": [48, -160]
     },
     {
       "parameters": {
@@ -75,14 +34,8 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "Accept",
-              "value": "application/vnd.yclients.v2+json"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
-            }
+            {"name": "Accept", "value": "application/vnd.yclients.v2+json"},
+            {"name": "Authorization", "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"}
           ]
         },
         "sendBody": true,
@@ -93,10 +46,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        256,
-        -80
-      ],
+      "position": [256, -80],
       "id": "3f834a78-9da3-4eb4-a7c8-16711e6cabf8",
       "name": "HTTP Request",
       "retryOnFail": false,
@@ -105,171 +55,14 @@
       "onError": "continueRegularOutput"
     },
     {
+      "id": "CHECK_BOOK_SUCCESS",
+      "name": "Проверка ответа YClients",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [464, -160],
       "parameters": {
-        "useCustomSchema": true,
-        "tableId": "appointments",
-        "fieldsUi": {
-          "fieldValues": [
-            {
-              "fieldId": "status",
-              "fieldValue": "waiting"
-            },
-            {
-              "fieldId": "service_name",
-              "fieldValue": "={{ $json.service_name }}"
-            },
-            {
-              "fieldId": "service_id",
-              "fieldValue": "={{ $json.services }}"
-            },
-            {
-              "fieldId": "master_id",
-              "fieldValue": "={{ $json.staff_id }}"
-            },
-            {
-              "fieldId": "master_name",
-              "fieldValue": "={{ $json.staff_name }}"
-            },
-            {
-              "fieldId": "date",
-              "fieldValue": "={{ $json.datetime }}"
-            },
-            {
-              "fieldId": "duration_min",
-              "fieldValue": "={{ $json.duration_min }}"
-            },
-            {
-              "fieldId": "price (rub)",
-              "fieldValue": "={{ $json.price }}"
-            },
-            {
-              "fieldId": "clientName",
-              "fieldValue": "={{ $json.fullname }}"
-            },
-            {
-              "fieldId": "phone",
-              "fieldValue": "={{ $json.phone }}"
-            },
-            {
-              "fieldId": "tg_id",
-              "fieldValue": "={{ $json.chat_id }}"
-            },
-            {
-              "fieldId": "comment",
-              "fieldValue": "={{ $json.comment }}"
-            },
-            {
-              "fieldId": "record_id",
-              "fieldValue": "={{ $('HTTP Request').item.json.data[0].record_id }}"
-            },
-            {
-              "fieldId": "record_hash",
-              "fieldValue": "={{ $('HTTP Request').item.json.data[0].record_hash }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        1100,
-        -200
-      ],
-      "id": "22533b07-4bc2-42b5-9843-1bf68e0663b3",
-      "name": "Create a row",
-      "credentials": {
-        "supabaseApi": {
-          "id": "N1rBeU14IHpmSfYS",
-          "name": "GrowicePlatform"
-        }
+        "jsCode": "const resp = $input.item.json;\nif (!resp.success) {\n  const msg = resp.meta?.message || resp.data?.message || 'YClients отклонил запись';\n  return [{ json: { _book_error: true, error: msg, yclients_response: resp } }];\n}\nconst record = resp.data?.[0];\nif (!record?.record_id) {\n  return [{ json: { _book_error: true, error: 'YClients не вернул record_id', yclients_response: resp } }];\n}\nreturn [{ json: {\n  _book_ok: true,\n  record_id: record.record_id,\n  record_hash: record.record_hash,\n  yclients_client_id: String(record.client?.id ?? record.yclients_client_id ?? record.client_id ?? ''),\n  yclients_data: record\n}}];\n"
       }
-    },
-    {
-      "parameters": {
-        "tableId": "YC_Bookings",
-        "fieldsUi": {
-          "fieldValues": [
-            {
-              "fieldId": "status",
-              "fieldValue": "waiting"
-            },
-            {
-              "fieldId": "service_name",
-              "fieldValue": "={{ $json.service_name }}"
-            },
-            {
-              "fieldId": "service_id",
-              "fieldValue": "={{ $json.services }}"
-            },
-            {
-              "fieldId": "master_id",
-              "fieldValue": "={{ $json.staff_id }}"
-            },
-            {
-              "fieldId": "master_name",
-              "fieldValue": "={{ $json.staff_name }}"
-            },
-            {
-              "fieldId": "date",
-              "fieldValue": "={{ $json.datetime }}"
-            },
-            {
-              "fieldId": "duration_min",
-              "fieldValue": "={{ $json.duration_min }}"
-            },
-            {
-              "fieldId": "price (rub)",
-              "fieldValue": "={{ $json.price }}"
-            },
-            {
-              "fieldId": "clientName",
-              "fieldValue": "={{ $json.fullname }}"
-            },
-            {
-              "fieldId": "phone",
-              "fieldValue": "={{ $json.phone }}"
-            },
-            {
-              "fieldId": "tg_id",
-              "fieldValue": "={{ $json.chat_id }}"
-            },
-            {
-              "fieldId": "comment",
-              "fieldValue": "={{ $json.comment }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        752,
-        0
-      ],
-      "id": "aedc8c83-7411-4bf2-a66f-050120ee1033",
-      "name": "Create a row2",
-      "credentials": {
-        "supabaseApi": {
-          "id": "N1rBeU14IHpmSfYS",
-          "name": "GrowicePlatform"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        704,
-        -80
-      ],
-      "id": "19732d15-7254-4eba-934c-3baeb7d5b70e",
-      "name": "Merge"
     },
     {
       "parameters": {
@@ -286,150 +79,214 @@
               "name": "data[0].record_hash",
               "value": "={{ $json.data[0].record_hash }}",
               "type": "string"
+            },
+            {
+              "id": "yclient-client-id",
+              "name": "yclients_client_id",
+              "value": "={{ String($json.data[0].client?.id ?? $json.data[0].yclients_client_id ?? '') }}",
+              "type": "string"
             }
           ]
         },
-        "options": {
-          "ignoreConversionErrors": false
-        }
+        "options": {"ignoreConversionErrors": false}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        464,
-        80
-      ],
+      "position": [464, 80],
       "id": "ce1ecda5-5d55-4619-bf9a-909ad4946c4d",
       "name": "Edit Fields"
     },
     {
-      "id": "VALIDATE_INPUT",
-      "name": "Проверка данных",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        48,
-        80
-      ],
       "parameters": {
-        "jsCode": "\n// Проверка обязательных полей перед созданием записи\nconst inp = $input.item.json;\nconst errors = [];\n\nif (!inp.phone || String(inp.phone).replace(/\\D/g,'').length < 10) {\n  errors.push('phone: отсутствует или некорректный номер телефона');\n}\nif (!inp.fullname || inp.fullname.trim().length < 2) {\n  errors.push('fullname: имя клиента обязательно');\n}\nif (!inp.services && !inp.service_id) {\n  errors.push('services: не указана услуга');\n}\nif (!inp.staff_id) {\n  errors.push('staff_id: не указан мастер');\n}\nif (!inp.datetime) {\n  errors.push('datetime: не указаны дата и время');\n} else {\n  const dt = new Date(inp.datetime);\n  if (isNaN(dt.getTime())) {\n    errors.push('datetime: некорректный формат даты');\n  } else if (dt < new Date()) {\n    errors.push('datetime: нельзя создать запись на прошедшее время');\n  }\n}\n\nif (errors.length > 0) {\n  return [{ json: { \n    _validation_error: true, \n    error: 'Некорректные данные: ' + errors.join('; '),\n    errors\n  }}];\n}\n\n// Нормализация телефона\nconst phone = String(inp.phone).replace(/\\D/g,'');\nreturn [{ json: { \n  ...inp, \n  phone: phone.startsWith('8') ? '7' + phone.slice(1) : phone,\n  _validation_ok: true\n}}];\n"
-      }
-    },
-    {
-      "id": "CHECK_BOOK_SUCCESS",
-      "name": "Проверка ответа YClients",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        464,
-        -160
-      ],
-      "parameters": {
-        "jsCode": "\n// Проверяем что YClients вернул успех и record_id\nconst resp = $input.item.json;\n\n// YClients возвращает: { success: true/false, data: [...], meta: {message: '...'} }\nif (!resp.success) {\n  const msg = resp.meta?.message || resp.data?.message || 'YClients отклонил запись';\n  return [{ json: { \n    _book_error: true,\n    error: msg,\n    yclients_response: resp\n  }}];\n}\n\nconst record = resp.data?.[0];\nif (!record?.record_id) {\n  return [{ json: { \n    _book_error: true,\n    error: 'YClients не вернул record_id',\n    yclients_response: resp\n  }}];\n}\n\nreturn [{ json: {\n  _book_ok: true,\n  record_id: record.record_id,\n  record_hash: record.record_hash,\n  yclients_data: record\n}}];\n"
-      }
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [704, -80],
+      "id": "19732d15-7254-4eba-934c-3baeb7d5b70e",
+      "name": "Merge"
     },
     {
       "id": "ROUTE_BOOK",
       "name": "Запись создана?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [
-        896,
-        -144
-      ],
+      "position": [896, -144],
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
+          "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "loose"},
           "conditions": [
             {
               "id": "check_ok",
               "leftValue": "={{ $json.record_id }}",
               "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
+              "operator": {"type": "string", "operation": "notEmpty"}
             }
           ],
           "combinator": "and"
         }
       }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "tableId": "appointments",
+        "fieldsUi": {
+          "fieldValues": [
+            {"fieldId": "status", "fieldValue": "waiting"},
+            {"fieldId": "service_name", "fieldValue": "={{ $json.service_name }}"},
+            {"fieldId": "service_id", "fieldValue": "={{ $json.services }}"},
+            {"fieldId": "master_id", "fieldValue": "={{ $json.staff_id }}"},
+            {"fieldId": "master_name", "fieldValue": "={{ $json.staff_name }}"},
+            {"fieldId": "date", "fieldValue": "={{ $json.datetime }}"},
+            {"fieldId": "duration_min", "fieldValue": "={{ $json.duration_min }}"},
+            {"fieldId": "price", "fieldValue": "={{ $json.price }}"},
+            {"fieldId": "client_name", "fieldValue": "={{ $json.fullname }}"},
+            {"fieldId": "phone", "fieldValue": "={{ $json.phone }}"},
+            {"fieldId": "tg_id", "fieldValue": "={{ $json.chat_id }}"},
+            {"fieldId": "comment", "fieldValue": "={{ $json.comment }}"},
+            {"fieldId": "record_id", "fieldValue": "={{ $json['data[0].record_id'] }}"},
+            {"fieldId": "record_hash", "fieldValue": "={{ $json['data[0].record_hash'] }}"},
+            {"fieldId": "yc_id", "fieldValue": "={{ $json.yclients_client_id }}"}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1100, -200],
+      "id": "22533b07-4bc2-42b5-9843-1bf68e0663b3",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {"id": "N1rBeU14IHpmSfYS", "name": "GrowicePlatform"}
+      }
+    },
+    {
+      "id": "CHECK_CHAT_ID",
+      "name": "Есть chat_id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, -200],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "has_chat_id",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.chat_id }}",
+              "rightValue": "",
+              "operator": {"type": "string", "operation": "notEmpty"}
+            },
+            {
+              "id": "has_yc_client",
+              "leftValue": "={{ $json.yclients_client_id }}",
+              "rightValue": "",
+              "operator": {"type": "string", "operation": "notEmpty"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "UPDATE_TG_USER",
+      "name": "Обновить TG пользователя",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, -300],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://ugocvtuomyopullvilim.supabase.co/rest/v1/telegram_users?org_uid=eq.11111111-1111-1111-1111-111111111111&user_id=eq.{{ $('When Executed by Another Workflow').item.json.chat_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "Prefer", "value": "return=minimal"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"yc_id\": \"{{ $json.yclients_client_id }}\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "YC_Bookings",
+        "fieldsUi": {
+          "fieldValues": [
+            {"fieldId": "status", "fieldValue": "waiting"},
+            {"fieldId": "service_name", "fieldValue": "={{ $json.service_name }}"},
+            {"fieldId": "service_id", "fieldValue": "={{ $json.services }}"},
+            {"fieldId": "master_id", "fieldValue": "={{ $json.staff_id }}"},
+            {"fieldId": "master_name", "fieldValue": "={{ $json.staff_name }}"},
+            {"fieldId": "date", "fieldValue": "={{ $json.datetime }}"},
+            {"fieldId": "duration_min", "fieldValue": "={{ $json.duration_min }}"},
+            {"fieldId": "price (rub)", "fieldValue": "={{ $json.price }}"},
+            {"fieldId": "clientName", "fieldValue": "={{ $json.fullname }}"},
+            {"fieldId": "phone", "fieldValue": "={{ $json.phone }}"},
+            {"fieldId": "tg_id", "fieldValue": "={{ $json.chat_id }}"},
+            {"fieldId": "comment", "fieldValue": "={{ $json.comment }}"}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [752, 0],
+      "id": "aedc8c83-7411-4bf2-a66f-050120ee1033",
+      "name": "Create a row2",
+      "credentials": {
+        "supabaseApi": {"id": "N1rBeU14IHpmSfYS", "name": "GrowicePlatform"}
+      },
+      "disabled": true
+    },
+    {
+      "id": "VALIDATE_INPUT",
+      "name": "Проверка данных",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [48, 80],
+      "parameters": {
+        "jsCode": "const inp = $input.item.json;\nconst errors = [];\nif (!inp.phone || String(inp.phone).replace(/\\D/g,'').length < 10) {\n  errors.push('phone: отсутствует или некорректный номер телефона');\n}\nif (!inp.fullname || inp.fullname.trim().length < 2) {\n  errors.push('fullname: имя клиента обязательно');\n}\nif (!inp.services && !inp.service_id) {\n  errors.push('services: не указана услуга');\n}\nif (!inp.staff_id) {\n  errors.push('staff_id: не указан мастер');\n}\nif (!inp.datetime) {\n  errors.push('datetime: не указаны дата и время');\n} else {\n  const dt = new Date(inp.datetime);\n  if (isNaN(dt.getTime())) {\n    errors.push('datetime: некорректный формат даты');\n  } else if (dt < new Date()) {\n    errors.push('datetime: нельзя создать запись на прошедшее время');\n  }\n}\nif (errors.length > 0) {\n  return [{ json: { _validation_error: true, error: 'Некорректные данные: ' + errors.join('; '), errors } }];\n}\nconst phone = String(inp.phone).replace(/\\D/g,'');\nreturn [{ json: { ...inp, phone: phone.startsWith('8') ? '7' + phone.slice(1) : phone, _validation_ok: true } }];\n"
+      }
     }
   ],
   "connections": {
     "When Executed by Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[
+        {"node": "HTTP Request", "type": "main", "index": 0},
+        {"node": "Merge", "type": "main", "index": 0}
+      ]]
     },
     "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Проверка ответа YClients",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Проверка ответа YClients", "type": "main", "index": 0}]]
     },
     "Проверка ответа YClients": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Edit Fields", "type": "main", "index": 0}]]
     },
     "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
+      "main": [[{"node": "Merge", "type": "main", "index": 1}]]
     },
     "Merge": {
-      "main": [
-        [
-          {
-            "node": "Запись создана?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Запись создана?", "type": "main", "index": 0}]]
     },
     "Запись создана?": {
       "main": [
-        [
-          {
-            "node": "Create a row",
-            "type": "main",
-            "index": 0
-          }
-        ],
+        [{"node": "Create a row", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Create a row": {
+      "main": [[{"node": "Есть chat_id?", "type": "main", "index": 0}]]
+    },
+    "Есть chat_id?": {
+      "main": [
+        [{"node": "Обновить TG пользователя", "type": "main", "index": 0}],
         []
       ]
     }
@@ -442,6 +299,5 @@
     "availableInMCP": false,
     "errorWorkflow": "yNxFIi6JUCI0vOzJ",
     "saveExecutionProgress": true
-  },
-  "active": true
+  }
 }

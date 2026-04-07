@@ -20,6 +20,7 @@
 | 8 | Зачистка секретов: 97 замен в 16 workflow JSON, webhooks.ts, TECH Data.md | ✅ | 2 |
 | 9 | Error handling для 7 booking workflows + фикс company_id 1700961→1647948 | ✅ | 2 |
 | 10 | Реструктуризация модели клиентов: lifecycle_status, source_channel, lead→client | ✅ | 3 |
+| 11 | Автолинковка мессенджер→клиент при создании записи: client_channels + trigger | ✅ | 4 |
 
 ### Ожидает действий от владельца
 
@@ -34,6 +35,7 @@
 3. 🟡 Заполнить таблицу `webhooks` URL-ами n8n
 4. 🟡 Начать Волну 0 миграции (organizations, branches)
 5. 🟡 **Выполнить миграцию `add_client_lifecycle.sql`** вручную в Supabase SQL editor
+6. ✅ `add_booking_client_link.sql` — **уже применена** через Supabase MCP
 
 ---
 
@@ -228,6 +230,81 @@
 |---|---|
 | `telegram_users.blocked` TYPE migration — если есть неожиданные значения, конверсия вернёт FALSE | НИЗКИЙ |
 | Лиды, созданные через trigger без yc_id, могут дублироваться при race conditions | НИЗКИЙ (unique по channel_user_id + org_uid защищает) |
+
+---
+
+## [2026-04-07] Сессия 4 — Автолинковка мессенджер→клиент при создании записи
+
+### Статус: ЗАВЕРШЕНО
+
+### Что сделано
+
+**Цель:** Пользователь мессенджера автоматически становится клиентом при первой записи. Без дублей.
+
+**Проблемы, обнаруженные в процессе:**
+| Проблема | Последствие |
+|---|---|
+| `client_channels` не существовала в live DB | Все ссылки на канонический маршрутизатор были нерабочими |
+| n8n вставлял `clientName`, `price (rub)`, `tg_id` — в DB нет таких колонок | `appointments` всегда было 0 строк (INSERT падал) |
+| `yc_id` клиента из ответа YClients никуда не сохранялся | Нет связи appointment → YClients client |
+| `telegram_users.yc_id` не обновлялся после бронирования | Тригер `sync_user_to_clients_by_yc_id` не срабатывал |
+
+**SQL миграция `supabase/add_booking_client_link.sql`** (применена через Supabase MCP):
+- `CREATE TABLE client_channels` — с RLS, индексами, updated_at триггером
+- `ALTER TABLE appointments ADD COLUMN tg_id BIGINT` — чтобы n8n insert работал
+- Индексы на `appointments.client_id`, `appointments.tg_id`, `appointments.phone`
+- Функция `link_appointment_to_client()` + триггер `appointments_link_client` (BEFORE INSERT):
+  - Путь A (есть tg_id): telegram_user → client (или создаёт нового) → lifecycle='client' → client_channels
+  - Путь B (нет tg_id, есть phone): ищет/создаёт client по телефону
+  - Всегда проставляет `appointments.client_id`
+  - Upsert в `client_channels` с identified_via='booking'
+
+**n8n: `create YCLIENTS record` (ID: 3ZcJYOVdftZjNa3r)** — обновлён через API (11 нод):
+| Изменение | Было | Стало |
+|---|---|---|
+| Колонка имени | `clientName` | `client_name` |
+| Колонка цены | `price (rub)` | `price` |
+| Колонка telegram ID | `tg_id` (колонки не было) | `tg_id` (теперь есть) |
+| YClients client ID | не сохранялся | `yc_id` из `data[0].client.id` |
+| Код `Проверка ответа YClients` | без `yclients_client_id` | извлекает `data[0].client.id` |
+| `Edit Fields` | 2 поля | 3 поля + `yclients_client_id` |
+| Новая нода `Есть chat_id?` | нет | IF check перед обновлением |
+| Новая нода `Обновить TG пользователя` | нет | PATCH telegram_users.yc_id → триггер создаёт clients запись |
+
+**Полная цепочка при создании записи:**
+```
+AI Admin → create YCLIENTS record
+  → POST YClients API → получаем record_id + yc_client_id
+  → INSERT appointments (с tg_id, yc_id, phone)
+      → DB trigger link_appointment_to_client()
+           → находит/создаёт clients (lifecycle='client')
+           → проставляет appointments.client_id
+           → upsert client_channels (channel='telegram', priority=1)
+           → UPDATE telegram_users SET client_id = ...
+  → если есть chat_id + yc_client_id:
+      → PATCH telegram_users SET yc_id = ...
+           → DB trigger sync_user_to_clients_by_yc_id()
+                → обновляет clients.yc_id → promote_lead_to_client → lifecycle='client'
+```
+
+### Принятые решения
+
+| Решение | Обоснование |
+|---|---|
+| Триггер BEFORE INSERT (не AFTER) | Чтобы `appointments.client_id` был сразу в той же транзакции |
+| Поиск сначала по telegram_user.client_id, потом по phone | Минимум дублей, приоритет существующей связи |
+| Upsert client_channels с `identified_via='booking'` | Всегда обновляем канал, но не перезаписываем ручные настройки |
+| n8n PATCH через HTTP Request, не Supabase node | Supabase node не поддерживает PATCH с условием в стиле REST |
+| `onError: continueRegularOutput` на PATCH ноде | Ошибка обновления TG-юзера не должна ломать основной флоу |
+
+### Изменённые файлы
+- `supabase/add_booking_client_link.sql` — новый файл (уже применён в live DB)
+- `n8n_workflows/create YCLIENTS record.json` — 11 нод, исправлены колонки, добавлены 2 новых ноды
+
+### Что осталось
+- [ ] Применить `add_client_lifecycle.sql` вручную (lifecycle_status из сессии 3 — ещё не в live DB)
+- [ ] Настроить env vars на n8n VPS: `SUPABASE_SERVICE_ROLE_KEY` (нужна для PATCH ноды)
+- [ ] Протестировать полный флоу: отправить запись через AI Admin → проверить client_channels
 
 ---
 
