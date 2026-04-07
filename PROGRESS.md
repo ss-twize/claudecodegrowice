@@ -10,14 +10,28 @@
 
 | # | Задача | Статус | Сессия |
 |---|---|---|---|
-| 1 | Полный аудит схемы БД (16 таблиц, все колонки/индексы/триггеры/RLS) | ✅ | 1 |
+| 1 | Полный аудит схемы БД (16 таблиц, колонки/индексы/триггеры/RLS) | ✅ | 1 |
 | 2 | Аудит кода: org_uid (32 вхождения, 15 файлов), n8n workflows (19 шт) | ✅ | 1 |
-| 3 | Проектирование целевой архитектуры (organizations → branches → все сущности) | ✅ | 1 |
+| 3 | Проектирование целевой архитектуры (organizations → branches → сущности) | ✅ | 1 |
 | 4 | Классификация таблиц: TARGET/KEEP/EXTEND/CLEAN/RETIRE/NEW | ✅ | 1 |
 | 5 | Порядок волн миграции (0–6) с правилами совместимости | ✅ | 1 |
-| 6 | Создание CLAUDE.md — постоянный контекст проекта | ✅ | 1 |
-| 7 | Создание PROGRESS.md — журнал задач | ✅ | 1 |
-| 8 | Обновление CLAUDE.md/PROGRESS.md: саммари + переход на ветку main | ✅ | 1 |
+| 6 | Создание CLAUDE.md + PROGRESS.md | ✅ | 1 |
+| 7 | Полный аудит системы (37 таблиц live, 40 active workflows, row counts) | ✅ | 2 |
+| 8 | Зачистка секретов: 97 замен в 16 workflow JSON, webhooks.ts, TECH Data.md | ✅ | 2 |
+| 9 | Error handling для 7 booking workflows + фикс company_id 1700961→1647948 | ✅ | 2 |
+
+### Ожидает действий от владельца
+
+- [ ] Настроить env vars на VPS n8n: `SUPABASE_SERVICE_ROLE_KEY`, `YCLIENTS_PARTNER_TOKEN`, `YCLIENTS_USER_TOKEN`, `GREENAPI_WA_INSTANCE`, `GREENAPI_WA_INSTANCE_2`, `GREENAPI_MAX_INSTANCE`, `N8N_BASE_URL`
+- [ ] Добавить `NEXT_PUBLIC_N8N_WEBHOOK_BASE` в Vercel Dashboard
+- [ ] Ротировать Supabase `service_role` key (был в git-истории коммита `0db4ebe`)
+
+### Следующие приоритеты (технические)
+
+1. 🔴 Синхронизация `appointments` из YClients — таблица пустая, дашборд мёртвый
+2. 🔴 Подключить метрики дашборда к `clients` вместо `clients_tg`
+3. 🟡 Заполнить таблицу `webhooks` URL-ами n8n
+4. 🟡 Начать Волну 0 миграции (organizations, branches)
 
 ---
 
@@ -35,76 +49,125 @@
 **2. Аудит кода**
 - Проверено использование `ORG_UID` во всех .ts/.tsx файлах (32 вхождения, 15 файлов)
 - Подтверждено: `ORG_UID = '11111111-1111-1111-1111-111111111111'` — хардкод в `lib/supabase.ts`
-- Проверено: branches в коде отсутствует полностью (только git-ветки в .git)
 - Зафиксированы 19 n8n workflow файлов в `n8n_workflows/`
 
-**3. Целевая архитектура данных (Target Schema)**
-- Спроектирована полная целевая схема с иерархией: organizations → branches → все сущности
-- Разделены сущности на: TARGET / KEEP / EXTEND / CLEAN / RETIRE / NEW
-- Определён порядок волн миграции (0–6) с принципом совместимости
-- Зафиксированы 5 критических правил миграции (org_uid, nullable → not null, backfill, UNIQUE, RLS)
+**3. Целевая архитектура данных**
+- Спроектирована иерархия: organizations → branches → все сущности
+- Определён порядок волн миграции (0–6)
+- Зафиксированы 5 критических правил совместимости
 
 **4. Создание файлов контекста**
-- Создан `CLAUDE.md` — постоянный контекст проекта для AI-сессий
-- Создан `PROGRESS.md` — этот файл
-- Оба файла закоммичены в `claude/servex-project-setup-i8xfk`, влиты в `main`
-- Рабочая ветка переключена на `main`
+- Создан `CLAUDE.md` + `PROGRESS.md`, закоммичены в main
 
----
-
-### Принятые архитектурные решения
+### Принятые решения
 
 | Решение | Обоснование |
 |---|---|
-| `org_uid` остаётся денормализованным полем во всех таблицах | 19 n8n workflows жёстко зависят от него |
+| `org_uid` остаётся во всех таблицах | 19 n8n workflows жёстко зависят от него |
 | `branch_id` добавляется nullable в Волне 1 | Нельзя сломать данные одним ALTER |
-| Три отдельные таблицы для каналов (tg/wa/max) | Слияние в `contact_users` — Волна 5+, сейчас риск |
 | `masters` — отдельная таблица кэша | Нужна для аналитики без live API calls |
-| `campaign_logs` отдельно от `action_log` | Разные retention и access pattern |
 | `integration_settings` — новая таблица | YClients creds должны быть в БД, не в n8n env |
-| `channel_connections.api_token` — проблема безопасности | Токены хранятся в открытом тексте, читаются anon |
 
----
-
-### Выявленные риски
+### Риски на момент сессии
 
 | Риск | Уровень | Статус |
 |---|---|---|
-| `TECH Data.md` содержит реальные токены в git | КРИТИЧЕСКИЙ | Не закрыт |
-| `channel_connections.api_token` в открытом поле + anon RLS | ВЫСОКИЙ | Не закрыт |
-| RLS политики `anon_all_*` — нет реальной авторизации | ВЫСОКИЙ | Не закрыт |
-| `clients_tg` — потенциально мертвый дубль, зависимости неизвестны | СРЕДНИЙ | Не проверен |
-| n8n workflows завязаны на org_uid — нельзя просто переключить | СРЕДНИЙ | Учтён в плане |
+| `TECH Data.md` содержал реальные токены в git | КРИТИЧЕСКИЙ | ✅ Закрыт в сессии 2 |
+| `channel_connections.api_token` в открытом поле + anon RLS | ВЫСОКИЙ | Открыт |
+| RLS политики `anon_all_*` — нет реальной авторизации | ВЫСОКИЙ | Открыт |
+| n8n workflows завязаны на org_uid | СРЕДНИЙ | Учтён в плане миграции |
 
 ---
 
-### Что осталось (следующие задачи)
+## [2026-04-07] Сессия 2 — Аудит системы + Зачистка секретов + Booking fixes
 
-#### Приоритет 1 — Основа multi-tenant (Волна 0)
-- [ ] Написать SQL миграцию: CREATE organizations, branches, user_profiles
-- [ ] Написать SQL миграцию: CREATE integration_settings, branch_settings
-- [ ] Написать SQL миграцию: CREATE masters, campaign_logs
-- [ ] INSERT default org + default branch с правильными UUID
-- [ ] Добавить в `supabase/` папку с пронумерованными файлами миграций
+### Статус: ЗАВЕРШЕНО
 
-#### Приоритет 2 — Расширение таблиц (Волна 1)
-- [ ] ADD COLUMN branch_id на все таблицы (nullable)
-- [ ] Backfill branch_id = default_branch_id
-- [ ] ADD NOT NULL constraint
+### Задачи сессии
 
-#### Приоритет 3 — Frontend multi-branch
-- [ ] Реализовать переключатель филиалов в UI
-- [ ] Обновить все хуки на branch_id вместо/вместе с org_uid
-- [ ] Обновить `lib/supabase.ts` для работы с branches
+1. Полный аудит проекта (фронт, Supabase live schema, n8n workflows)
+2. Найти и вынести все захардкоженные секреты
+3. Проверить все сценарии записи, добавить error handling
 
-#### Приоритет 4 — Безопасность
-- [ ] Ротировать токены из TECH Data.md
-- [ ] Убрать api_token из открытого хранения в channel_connections
-- [ ] Включить proper auth + переписать RLS
+---
 
-#### Приоритет 5 — n8n обновление (Волна 5)
-- [ ] Обновить workflows на branch_id
-- [ ] Перенести YClients creds в integration_settings
+### 2а. Полный аудит системы
+
+**Что сделано:**
+- Live-схема Supabase через REST introspection: 37 таблиц + 7 RPC-функций
+- Все 100 n8n workflows через API (40 active, 60 inactive)
+- Подсчёт строк в каждой таблице
+- Полная карта зависимостей фронта на таблицы
+
+**Ключевые находки:**
+- `appointments` — 0 строк (YClients не синхронизируется)
+- `webhooks` — 0 строк (callWebhook работает только через env vars)
+- Dashboard читает `clients_tg` (legacy) → метрики нулевые
+- `find YCLIENTS client` — **company_id 1700961 (неправильный!)**
+- `create_client` — пишет в `clients_tg` вместо `clients`
+- ~60 чужих шаблонных workflows на n8n инстансе
+
+---
+
+### 2б. Зачистка секретов
+
+**Изменения в коде:**
+- `TECH Data.md` — все секреты заменены на заглушки, добавлен в `.gitignore`
+- `lib/webhooks.ts` — hardcoded n8n URL → `NEXT_PUBLIC_N8N_WEBHOOK_BASE` env var
+- `n8n_workflows/*.json` (16 файлов) — **97 замен**: Supabase JWT, YClients токены, GREEN-API instances, n8n URL → `{{$env.VARIABLE_NAME}}`
+- `.env.example` — создан шаблон всех переменных
+- `.env.local` — добавлена `NEXT_PUBLIC_N8N_WEBHOOK_BASE`
+
+**Коммит:** `49e28cf`
+
+**Решения:**
+- Формат `{{$env.NAME}}` — n8n native expression, не ломает импорт workflows
+- Git history не чистили (репо приватный, риск потери данных > риск утечки)
+
+**Остаток:**
+- Git история коммита `0db4ebe` всё ещё содержит старые токены
+- Нужна ротация `service_role` Supabase key
+- n8n env vars на VPS **ещё не настроены** — workflows с `$env.*` будут падать
+
+---
+
+### 2в. Booking workflows — error handling
+
+**Найденные баги:**
+
+| Баг | Workflow | Описание |
+|---|---|---|
+| Неправильный company_id | find YCLIENTS client | `1700961` вместо `1647948` — поиск в ЧУЖОЙ компании |
+| Hardcoded токены (второй слой) | find YCLIENTS client, ycl get bookings | `9w3368m7z9g4t727ajmj`, `sdf64d8bdazumg2b49a9` |
+| Zombie rows | create YCLIENTS record | При ошибке YClients запись всё равно шла в Supabase |
+| Безусловный Cancel | delete_book | Supabase обновлялся даже при 404/500 от YClients |
+| Неверный статус | update_book | После переноса статус сбрасывался в `waiting` |
+| Legacy таблица | create_client | Писало в `clients_tg` вместо `clients` |
+
+**Изменения в live n8n (через API):**
+
+| Workflow (ID) | Что изменено | Nodes |
+|---|---|---|
+| find YCLIENTS client (q79k1BWcbQwCw67M) | company_id 1700961→1647948, creds→env | 2 |
+| ycl get bookings (o9la7KcB4iO5K8yS) | hardcoded creds→env | 2 |
+| booking_dates (BAZyYLjb1XYEBaS2) | onError: continueRegularOutput | 2 |
+| create_client (itTbB4I1zLVJUnxx) | table clients_tg→clients, поля YC_ID→yc_id | 3 |
+| delete_book (pbWtCriTuU1ozq91) | IF success→Canceled / fail→cancel_failed | 3→5 |
+| create YCLIENTS record (3ZcJYOVdftZjNa3r) | Code: check success+record_id, IF gate | 6→9 |
+| update_book (cQeKCsKJlH58YKov) | IF success, статус waiting→rescheduled | 3→4 |
+
+**Коммит:** `85a1aac`
+
+**Риски:**
+- Validation Code node в `create YCLIENTS record` добавлен но **не подключён** — намеренно, нужно протестировать edge cases с нормализацией телефона перед включением
+- 2 archived копии `find_client` (ID: 1DmZjbQ4Rkonc6PL, 3hHM27ca2O6lWEt4) — неправильный company_id. Если разархивировать — снова баг
+- `get_clients_list` HTTP tool в AiAdmin — company_id в body запроса не проверен
+
+**Что осталось:**
+- [ ] Подключить validation node после тестирования
+- [ ] Удалить/пометить archived копии find_client
+- [ ] Проверить `get_clients_list` в AiAdmin на правильный company_id
+- [ ] Проверить `gs_get_bookinfo` tool — читает `YC_bookings_wtags`, таблица существует?
 
 ---
 

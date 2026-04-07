@@ -20,11 +20,26 @@ AI-платформа для сервисного бизнеса в РФ.
 | Слой | Технология | Роль |
 |---|---|---|
 | Frontend | Next.js 14 App Router + React 18 + Tailwind | Control plane |
-| Database | Supabase (PostgreSQL + Realtime) | Data / state layer |
-| Automation | n8n (19 workflows) | Execution / orchestration |
-| Channels | GREEN-API | Delivery layer (Telegram, WhatsApp, Max) |
+| Database | Supabase (PostgreSQL + Realtime + pgvector) | Data / state layer |
+| Automation | n8n (self-hosted на VPS) | Execution / orchestration |
+| Channels | GREEN-API | Delivery layer (WhatsApp, Max) |
 | Booking | YClients API | Главный transactional source |
+| AI | OpenRouter (Minimax-M2.5 / GPT-4.1), OpenAI embeddings, Cohere reranker | AI layer |
+| Memory | Redis | Сессии + дебаунс |
 | Deploy | Vercel | Hosting |
+
+---
+
+## Инфраструктура
+
+- **Frontend:** https://claudecodegrowice.vercel.app/ (Vercel, auto-deploy от push в main)
+- **n8n:** https://n8n.srv1090249.hstgr.cloud (VPS, self-hosted)
+- **Supabase:** https://ugocvtuomyopullvilim.supabase.co
+- **GitHub:** https://github.com/ss-twize/claudecodegrowice.git (private)
+- **YClients company_id:** `1647948` (только этот, не 1700961 и не другой)
+
+Все секреты — в `.env.local` (не в git) и в n8n env vars на VPS.
+Шаблон переменных: `.env.example` в корне репозитория.
 
 ---
 
@@ -43,16 +58,17 @@ YClients               = главный transactional source текущей ве
 
 ---
 
-## Текущее состояние (legacy, апрель 2026)
+## Текущее состояние (апрель 2026)
 
 - `ORG_UID = '11111111-1111-1111-1111-111111111111'` — хардкожен в `lib/supabase.ts`
 - Нет таблиц `organizations`, `branches`, `user_profiles` в Supabase
 - RLS политики открыты для `anon` — аутентификации нет
 - Все таблицы scoped только на `org_uid` (single-tenant режим)
 - YClients credentials хранятся в n8n env-переменных, а не в БД
-- Мастера не кэшируются в БД — fetchятся live из YClients API
 - `campaign_logs` отсутствует — только `action_log`
-- `clients_tg` — потенциально мертвый дубль, требует проверки
+- `clients_tg` — legacy дубль, читается фронтом (dashboard/analytics), но sync не идёт
+- `appointments` — пустая таблица (0 строк), синхронизация из YClients не настроена
+- `webhooks` таблица пустая — callWebhook() работает только через env vars
 
 ---
 
@@ -149,11 +165,45 @@ user_profiles — org_id + branch_access[]
 
 ### Критические правила совместимости
 
-1. **`org_uid` НИКОГДА не удалять** до полного перехода n8n (все 19 workflows его используют)
+1. **`org_uid` НИКОГДА не удалять** до полного перехода n8n
 2. **`branch_id` добавляется nullable** в первой волне, NOT NULL только после backfill
 3. **Существующие данные** → `org_uid='11111111-...'` = default org, default branch
 4. **UNIQUE constraints** меняются в два шага — сначала новый partial, потом удаление старого
 5. **RLS обновляется последним** — только после рабочей auth + заполненных branch_id
+
+---
+
+## n8n Workflows — ключевые ID
+
+### Production core (не трогать без анализа)
+
+| ID | Имя | Роль |
+|---|---|---|
+| YRc6sHkXYOsM4bDH | AiAdmin Telegram | AI-агент (telegramTrigger) |
+| B5zdaJNh5OwFk5Bh | AiAdmin Whatsapp | AI-агент (GREEN-API webhook) |
+| wOu3Xv9IhRY2rgNy | AiAdmin Max | AI-агент (GREEN-API webhook) |
+| EuoJznKBMjQouVzs | Reminder System | Напоминания |
+| FDFyvtbDWgDakcCA | 22_YClients_Attended_Visit_Followup | Пост-визит follow-up |
+| xaxrBlEkUgfMK13e | 21_YClients_Masters_To_Supabase | Синк мастеров |
+| GA4gUKr8Oz99Q4dI | sync clientbase from YC to Supabase | Синк клиентов |
+| UiPsFwkEoofL29mY | Growice Campaign Launcher | Рассылки |
+| wgwN6kJjxnKsoHqr | RAG Memory Uploader | Загрузка знаний |
+
+### Sub-workflows (вызываются из AiAdmin) ⚡ критичны
+
+| ID | Имя | Изменения |
+|---|---|---|
+| 3ZcJYOVdftZjNa3r | create YCLIENTS record | ✅ добавлен success check (9 nodes) |
+| pbWtCriTuU1ozq91 | delete_book | ✅ добавлен IF success (5 nodes) |
+| cQeKCsKJlH58YKov | update_book | ✅ добавлен IF success, статус rescheduled |
+| BAZyYLjb1XYEBaS2 | booking_dates | ✅ onError: continueRegularOutput |
+| **q79k1BWcbQwCw67M** | find YCLIENTS client | ✅ исправлен company_id 1700961→1647948 |
+| itTbB4I1zLVJUnxx | create_client | ✅ таблица clients_tg→clients |
+| HZBOuIdEf05OU4Es | ycl_bookings | — |
+| o9la7KcB4iO5K8yS | ycl get bookings | ✅ исправлены hardcoded creds |
+| fPcL4OPX63mgUSJG | get_staff | — |
+
+**Archived (не использовать):** 1DmZjbQ4Rkonc6PL, 3hHM27ca2O6lWEt4 — find_client с неправильным company_id
 
 ---
 
@@ -167,7 +217,7 @@ user_profiles — org_id + branch_access[]
 | Главный ID клиента | `clients.id` (UUID, Supabase) |
 | Внешний ID YClients | `clients.yc_id` / `clients.yclients_id` |
 | Конфиг автоматизаций | `system_states` (Supabase) |
-| Конфиг вебхуков | `webhooks` (Supabase) |
+| Конфиг вебхуков | `webhooks` (Supabase) — сейчас пустая |
 
 ---
 
@@ -180,33 +230,13 @@ user_profiles — org_id + branch_access[]
 5. Сначала сохранять совместимость, потом улучшать
 6. Не оставлять временные костыли без явной пометки `// TODO(migration):`
 7. Не делать frontend источником истины
-8. Не хранить секреты и токены в коде
-
----
-
-## Активные n8n workflows (19 штук)
-
-| Workflow | Назначение |
-|---|---|
-| AiAdmin Telegram/WhatsApp/Max | AI-агент по каналам |
-| Reminder System | Напоминания 24h/2h/1h |
-| Growice Campaign Launcher | Запуск кампаний |
-| 21_YClients_Masters_To_Supabase | Sync мастеров |
-| 22_YClients_Attended_Visit_Followup | Followup после визита |
-| 50-Days retrieve client system | Реактивация клиентов |
-| sync clientbase from YC to Supabase | Sync клиентской базы |
-| RAG Memory Uploader | Загрузка в RAG |
-| create/find/delete YCLIENTS record | CRUD записей |
-| ycl_staff / ycl_bookings / booking_dates | YClients helpers |
-| create_client | Создание клиента |
-
-**Все workflows используют `org_uid`. Не менять без обновления workflows.**
+8. Не хранить секреты и токены в коде — только `$env.NAME` (n8n) / `process.env.NAME` (Next.js)
 
 ---
 
 ## Git
 
-- Основная рабочая ветка: `main`
+- Основная рабочая ветка: **main**
 - Репозиторий: `ss-twize/claudecodegrowice`
 - Все изменения коммитить и пушить напрямую в `main`
 
@@ -218,8 +248,10 @@ user_profiles — org_id + branch_access[]
 |---|---|
 | `lib/supabase.ts` | ORG_UID константа + Supabase client |
 | `lib/auth.tsx` | Auth context (роли через localStorage) |
+| `lib/webhooks.ts` | callWebhook() + URL cache |
 | `supabase/migration.sql` | Основная схема БД |
 | `supabase/channels_migration.sql` | Схема каналов |
-| `n8n_workflows/` | Все 19 workflow экспортов |
+| `n8n_workflows/` | Экспорты workflows (sanitized, env placeholders) |
+| `.env.example` | Шаблон всех переменных окружения |
 | `PROGRESS.md` | Журнал выполненных задач |
-| `TECH Data.md` | ⚠️ Содержит реальные токены — не коммитить, ротировать |
+| `TECH Data.md` | ⚠️ Очищен от секретов. Добавлен в .gitignore |
