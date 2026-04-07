@@ -206,9 +206,9 @@ user_profiles — org_id + branch_access[]
 
 ## Git
 
-- Основная ветка разработки: `claude/servex-project-setup-i8xfk`
+- Основная рабочая ветка: `main`
 - Репозиторий: `ss-twize/claudecodegrowice`
-- Всегда push в ветку выше, не в main
+- Все изменения коммитить и пушить напрямую в `main`
 
 ---
 
