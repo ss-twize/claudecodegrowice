@@ -21,10 +21,10 @@
 | 9 | Error handling для 7 booking workflows + фикс company_id 1700961→1647948 | ✅ | 2 |
 | 10 | Реструктуризация модели клиентов: lifecycle_status, source_channel, lead→client | ✅ | 3 |
 | 11 | Автолинковка мессенджер→клиент при создании записи: client_channels + trigger | ✅ | 4 |
+| 12 | GREEN-API: динамические credentials из channel_connections для WA и Max | ✅ | 4 |
 
 ### Ожидает действий от владельца
 
-- [ ] Настроить env vars на VPS n8n: `SUPABASE_SERVICE_ROLE_KEY`, `YCLIENTS_PARTNER_TOKEN`, `YCLIENTS_USER_TOKEN`, `GREENAPI_WA_INSTANCE`, `GREENAPI_WA_INSTANCE_2`, `GREENAPI_MAX_INSTANCE`, `N8N_BASE_URL`
 - [ ] Добавить `NEXT_PUBLIC_N8N_WEBHOOK_BASE` в Vercel Dashboard
 - [ ] Ротировать Supabase `service_role` key (был в git-истории коммита `0db4ebe`)
 
@@ -36,6 +36,42 @@
 4. 🟡 Начать Волну 0 миграции (organizations, branches)
 5. 🟡 **Выполнить миграцию `add_client_lifecycle.sql`** вручную в Supabase SQL editor
 6. ✅ `add_booking_client_link.sql` — **уже применена** через Supabase MCP
+
+---
+
+## [2026-04-07] Сессия 4 (продолжение) — GREEN-API динамические credentials
+
+### Статус: ЗАВЕРШЕНО
+
+### Что сделано
+
+**1. Вставили GREEN-API credentials в channel_connections**
+- WA: instance `waInstance1105570041`, api_url `https://1105.api.green-api.com`
+- Max: instance `waInstance3100570071`, api_url `https://3100.api.green-api.com`
+- Запись в `channel_connections` с channel_code `whatsapp` / `max`
+
+**2. Обновили AiAdmin Whatsapp (B5zdaJNh5OwFk5Bh)**
+- Добавлена нода "Загрузить GREEN-API" (HTTP GET → Supabase channel_connections) между `WhatsApp Webhook1` и `Telegram Trigger1`
+- Добавлена нода "Загрузить GREEN-API (Настройка)" между `Manual Trigger | Setup Webhook` и `Set Green-API Webhook1`
+- 17 hardcoded URL (`https://1105.api.green-api.com/waInstance1105570041/METHOD/TOKEN`) заменены на динамические выражения
+- Итого нод: 124
+
+**3. Обновили AiAdmin Max (wOu3Xv9IhRY2rgNy)**
+- Аналогично, для channel_code `max`, instance `waInstance3100570071`
+- 17 URL заменены на динамические выражения
+- Итого нод: 124
+
+### Формат динамического URL
+
+```
+={{ $('Загрузить GREEN-API').item.json[0].api_url }}/{{ $('Загрузить GREEN-API').item.json[0].instance_id }}/METHOD/{{ $('Загрузить GREEN-API').item.json[0].api_token }}
+```
+
+### Локальные файлы
+
+Сохранены (с заменёнными секретами):
+- `n8n_workflows/AiAdmin_Whatsapp.json`
+- `n8n_workflows/AiAdmin_Max.json`
 
 ---
 
