@@ -95,7 +95,7 @@
       "typeVersion": 4.2,
       "position": [
         256,
-        0
+        -80
       ],
       "id": "3f834a78-9da3-4eb4-a7c8-16711e6cabf8",
       "name": "HTTP Request",
@@ -172,8 +172,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        896,
-        -144
+        1100,
+        -200
       ],
       "id": "22533b07-4bc2-42b5-9843-1bf68e0663b3",
       "name": "Create a row",
@@ -265,8 +265,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        752,
-        -144
+        704,
+        -80
       ],
       "id": "19732d15-7254-4eba-934c-3baeb7d5b70e",
       "name": "Merge"
@@ -297,33 +297,69 @@
       "typeVersion": 3.4,
       "position": [
         464,
-        0
+        80
       ],
       "id": "ce1ecda5-5d55-4619-bf9a-909ad4946c4d",
       "name": "Edit Fields"
-    }
-  ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "fullname": "Савелий",
-          "phone": "79039067787",
-          "services": "25025787",
-          "email": "mail@mail.rur",
-          "comment": "",
-          "staff_id": "4767285",
-          "datetime": "2026-02-25 17:30:00",
-          "chat_id": "6420087545",
-          "service_name": "Стрижка Фейд",
-          "duration_min": 30,
-          "price": "500",
-          "service_id": "25025787",
-          "staff_name": null
+    },
+    {
+      "id": "VALIDATE_INPUT",
+      "name": "Проверка данных",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        80
+      ],
+      "parameters": {
+        "jsCode": "\n// Проверка обязательных полей перед созданием записи\nconst inp = $input.item.json;\nconst errors = [];\n\nif (!inp.phone || String(inp.phone).replace(/\\D/g,'').length < 10) {\n  errors.push('phone: отсутствует или некорректный номер телефона');\n}\nif (!inp.fullname || inp.fullname.trim().length < 2) {\n  errors.push('fullname: имя клиента обязательно');\n}\nif (!inp.services && !inp.service_id) {\n  errors.push('services: не указана услуга');\n}\nif (!inp.staff_id) {\n  errors.push('staff_id: не указан мастер');\n}\nif (!inp.datetime) {\n  errors.push('datetime: не указаны дата и время');\n} else {\n  const dt = new Date(inp.datetime);\n  if (isNaN(dt.getTime())) {\n    errors.push('datetime: некорректный формат даты');\n  } else if (dt < new Date()) {\n    errors.push('datetime: нельзя создать запись на прошедшее время');\n  }\n}\n\nif (errors.length > 0) {\n  return [{ json: { \n    _validation_error: true, \n    error: 'Некорректные данные: ' + errors.join('; '),\n    errors\n  }}];\n}\n\n// Нормализация телефона\nconst phone = String(inp.phone).replace(/\\D/g,'');\nreturn [{ json: { \n  ...inp, \n  phone: phone.startsWith('8') ? '7' + phone.slice(1) : phone,\n  _validation_ok: true\n}}];\n"
+      }
+    },
+    {
+      "id": "CHECK_BOOK_SUCCESS",
+      "name": "Проверка ответа YClients",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -160
+      ],
+      "parameters": {
+        "jsCode": "\n// Проверяем что YClients вернул успех и record_id\nconst resp = $input.item.json;\n\n// YClients возвращает: { success: true/false, data: [...], meta: {message: '...'} }\nif (!resp.success) {\n  const msg = resp.meta?.message || resp.data?.message || 'YClients отклонил запись';\n  return [{ json: { \n    _book_error: true,\n    error: msg,\n    yclients_response: resp\n  }}];\n}\n\nconst record = resp.data?.[0];\nif (!record?.record_id) {\n  return [{ json: { \n    _book_error: true,\n    error: 'YClients не вернул record_id',\n    yclients_response: resp\n  }}];\n}\n\nreturn [{ json: {\n  _book_ok: true,\n  record_id: record.record_id,\n  record_hash: record.record_hash,\n  yclients_data: record\n}}];\n"
+      }
+    },
+    {
+      "id": "ROUTE_BOOK",
+      "name": "Запись создана?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -144
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check_ok",
+              "leftValue": "={{ $json.record_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
         }
       }
-    ]
-  },
+    }
+  ],
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -345,19 +381,18 @@
       "main": [
         [
           {
-            "node": "Edit Fields",
+            "node": "Проверка ответа YClients",
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
-    "Merge": {
+    "Проверка ответа YClients": {
       "main": [
         [
           {
-            "node": "Create a row",
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
@@ -374,9 +409,31 @@
           }
         ]
       ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Запись создана?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запись создана?": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "timezone": "Asia/Novosibirsk",
@@ -386,24 +443,5 @@
     "errorWorkflow": "yNxFIi6JUCI0vOzJ",
     "saveExecutionProgress": true
   },
-  "versionId": "27e75f66-bc65-4cdb-82ff-d57c3d26eeca",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
-  },
-  "id": "3ZcJYOVdftZjNa3r",
-  "tags": [
-    {
-      "updatedAt": "2025-12-21T05:00:38.092Z",
-      "createdAt": "2025-12-21T05:00:38.092Z",
-      "id": "aLNYQPH4e3SF2eTa",
-      "name": "yclients"
-    },
-    {
-      "updatedAt": "2025-12-21T05:00:38.088Z",
-      "createdAt": "2025-12-21T05:00:38.088Z",
-      "id": "sbqmnlv1KMbuRlJG",
-      "name": "booking"
-    }
-  ]
+  "active": true
 }

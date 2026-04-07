@@ -1,5 +1,5 @@
 {
-  "name": "delete_book",
+  "name": "update_book",
   "nodes": [
     {
       "parameters": {
@@ -12,6 +12,18 @@
             {
               "name": "record_hash",
               "type": "any"
+            },
+            {
+              "name": "datetime",
+              "type": "any"
+            },
+            {
+              "name": "comment",
+              "type": "any"
+            },
+            {
+              "name": "newdate",
+              "type": "any"
             }
           ]
         }
@@ -19,16 +31,16 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        0,
-        0
+        -32,
+        -16
       ],
-      "id": "0f3a986f-9b0d-4c5d-a83f-70c04e0c2b24",
+      "id": "7db23562-1282-4b86-bb9f-fa71d153a5e5",
       "name": "When Executed by Another Workflow"
     },
     {
       "parameters": {
-        "method": "DELETE",
-        "url": "=https://api.yclients.com/api/v1/user/records/{{ $json.record_id }}/{{ $json.record_hash }}",
+        "method": "PUT",
+        "url": "=https://api.yclients.com/api/v1/book_record/1647948/{{ $json.record_id }}/{{ $json.record_hash }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -38,14 +50,17 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
+              "value": "Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}"
             },
             {
-              "name": "Content-type",
+              "name": "Content-Type",
               "value": "application/json"
             }
           ]
         },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"datetime\": \"{{$json.datetime}}\",\n  \"comment\": \"{{$json.comment}}\"\n}\n",
         "options": {
           "response": {
             "response": {
@@ -58,11 +73,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        224,
-        0
+        176,
+        -16
       ],
-      "id": "f5179599-30bb-4b3c-af31-cd3732f11295",
-      "name": "HTTP Request1",
+      "id": "b38a57a3-0e5a-4f26-a847-a95e9dbcce9b",
+      "name": "HTTP Request",
       "onError": "continueRegularOutput",
       "alwaysOutputData": true
     },
@@ -83,7 +98,15 @@
           "fieldValues": [
             {
               "fieldId": "status",
-              "fieldValue": "Canceled"
+              "fieldValue": "rescheduled"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $json.data.date }}"
+            },
+            {
+              "fieldId": "comment",
+              "fieldValue": "={{ $json.data.comment }}"
             }
           ]
         }
@@ -91,10 +114,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        704,
+        640,
         -80
       ],
-      "id": "a1d2ee22-ee8f-44dd-8690-551711fa68a7",
+      "id": "4e5e243b-9630-46bd-9904-55c8d6aedf5e",
       "name": "Update a row",
       "credentials": {
         "supabaseApi": {
@@ -104,12 +127,12 @@
       }
     },
     {
-      "id": "CHECK_DELETE_SUCCESS",
-      "name": "Удаление успешно?",
+      "id": "CHECK_UPDATE_OK",
+      "name": "Перенос успешен?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        448,
+        420,
         0
       ],
       "parameters": {
@@ -121,53 +144,16 @@
           },
           "conditions": [
             {
-              "id": "check_status",
-              "leftValue": "={{ $json.statusCode }}",
-              "rightValue": 400,
+              "id": "check_success",
+              "leftValue": "={{ $json.body?.success ?? ($json.statusCode < 400) }}",
+              "rightValue": true,
               "operator": {
-                "type": "number",
-                "operation": "lt"
+                "type": "boolean",
+                "operation": "true"
               }
             }
           ],
           "combinator": "and"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "tableId": "appointments",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "record_id",
-              "condition": "eq",
-              "keyValue": "={{ $('When Executed by Another Workflow').item.json.record_id }}"
-            }
-          ]
-        },
-        "fieldsUi": {
-          "fieldValues": [
-            {
-              "fieldId": "status",
-              "fieldValue": "cancel_failed"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        704,
-        80
-      ],
-      "id": "FAIL_SUPABASE",
-      "name": "Пометить ошибку отмены",
-      "credentials": {
-        "supabaseApi": {
-          "id": "N1rBeU14IHpmSfYS",
-          "name": "GrowicePlatform"
         }
       }
     }
@@ -177,25 +163,25 @@
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request1": {
+    "HTTP Request": {
       "main": [
         [
           {
-            "node": "Удаление успешно?",
+            "node": "Перенос успешен?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Удаление успешно?": {
+    "Перенос успешен?": {
       "main": [
         [
           {
@@ -204,13 +190,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Пометить ошибку отмены",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     }
   },

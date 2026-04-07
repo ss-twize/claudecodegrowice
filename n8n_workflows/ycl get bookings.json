@@ -70,7 +70,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer sdf64d8bdazumg2b49a9, User 080cf0c8d6bdc3a85d984ef9a6b33628"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -82,7 +82,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
@@ -94,19 +96,6 @@
       "name": "HTTP Request"
     }
   ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "phone": "79039063796",
-          "date_from": "2026-01-09",
-          "date_to": "2026-01-09",
-          "record_id": "",
-          "company_id": "1709560"
-        }
-      }
-    ]
-  },
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -120,15 +109,10 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "983c8dbd-4de0-4055-9d13-cceea035e9ab",
-  "meta": {
-    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
-  },
-  "id": "o9la7KcB4iO5K8yS",
-  "tags": []
+  "active": true
 }

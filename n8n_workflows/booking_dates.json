@@ -74,7 +74,14 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "fullResponse": false
+            }
+          }
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -83,23 +90,10 @@
         0
       ],
       "id": "58b95b5d-8229-4a90-92a3-e3f33e5017fa",
-      "name": "HTTP Request"
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
     }
   ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "service_ids": null,
-          "staff_id": null,
-          "services": null,
-          "date": null,
-          "date_from": null,
-          "date_to": null
-        }
-      }
-    ]
-  },
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -113,22 +107,10 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "31429747-599b-4f48-87e0-da6b34b3304c",
-  "meta": {
-    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
-  },
-  "id": "BAZyYLjb1XYEBaS2",
-  "tags": [
-    {
-      "updatedAt": "2025-12-21T05:00:38.092Z",
-      "createdAt": "2025-12-21T05:00:38.092Z",
-      "id": "aLNYQPH4e3SF2eTa",
-      "name": "yclients"
-    }
-  ]
+  "active": true
 }

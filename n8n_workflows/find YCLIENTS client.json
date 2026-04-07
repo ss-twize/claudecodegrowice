@@ -23,12 +23,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.yclients.com/api/v1/company/1700961/clients/search",
-        "authentication": "predefinedCredentialType",
+        "url": "https://api.yclients.com/api/v1/company/1647948/clients/search",
+        "authentication": "genericCredentialType",
         "nodeCredentialType": "httpBearerAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
+            },
             {
               "name": "Accept",
               "value": "application/vnd.yclients.v2+json"
@@ -48,7 +52,8 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "genericAuthType": "httpHeaderAuth"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -57,25 +62,9 @@
         0
       ],
       "id": "e6d7eceb-890f-4b2a-8a82-b090c5f96064",
-      "name": "HTTP Request",
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "PvdVNtMtxF4ZAyLn",
-          "name": "Bearer Auth account 2"
-        }
-      }
+      "name": "HTTP Request"
     }
   ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "phone": 79039039900,
-          "id": 1
-        }
-      }
-    ]
-  },
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -89,28 +78,10 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "29f23d65-49e5-4475-91d9-50ef0d84f505",
-  "meta": {
-    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
-  },
-  "id": "q79k1BWcbQwCw67M",
-  "tags": [
-    {
-      "updatedAt": "2025-12-21T05:01:28.040Z",
-      "createdAt": "2025-12-21T05:01:28.040Z",
-      "id": "IiFXkSj7d1fak9X2",
-      "name": "search"
-    },
-    {
-      "updatedAt": "2025-12-21T05:00:38.092Z",
-      "createdAt": "2025-12-21T05:00:38.092Z",
-      "id": "aLNYQPH4e3SF2eTa",
-      "name": "yclients"
-    }
-  ]
+  "active": true
 }

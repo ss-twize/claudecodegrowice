@@ -81,11 +81,11 @@
     },
     {
       "parameters": {
-        "tableId": "clients_tg",
+        "tableId": "clients",
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "YC_ID",
+              "fieldId": "yc_id",
               "fieldValue": "={{ $json.data.id }}"
             },
             {
@@ -93,16 +93,12 @@
               "fieldValue": "={{ $('When Executed by Another Workflow').item.json.phone }}"
             },
             {
-              "fieldId": "name",
+              "fieldId": "fullname",
               "fieldValue": "={{ $('When Executed by Another Workflow').item.json.fullname }}"
             },
             {
-              "fieldId": "tg_id",
-              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat_id }}"
-            },
-            {
-              "fieldId": "Gender",
-              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Gender }}"
+              "fieldId": "org_uid",
+              "fieldValue": "={{$env.ORG_UID || '11111111-1111-1111-1111-111111111111'}}"
             }
           ]
         }
@@ -123,7 +119,6 @@
       }
     }
   ],
-  "pinData": {},
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -148,16 +143,10 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "1cf7066a-5f23-4f15-93b8-369e0177a36f",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "448605b2d85039fda3236eb2e96b6b266eec110c39c8f8814847e4541b63dac6"
-  },
-  "id": "itTbB4I1zLVJUnxx",
-  "tags": []
+  "active": true
 }
