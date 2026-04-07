@@ -69,6 +69,7 @@ YClients               = главный transactional source текущей ве
 - `clients_tg` — legacy дубль, читается фронтом (dashboard/analytics), но sync не идёт
 - `appointments` — пустая таблица (0 строк), синхронизация из YClients не настроена
 - `webhooks` таблица пустая — callWebhook() работает только через env vars
+- `clients.lifecycle_status` ('lead'|'client'|'inactive') — добавлено в сессии 3, **требует запуска `add_client_lifecycle.sql`**
 
 ---
 
@@ -254,4 +255,5 @@ user_profiles — org_id + branch_access[]
 | `n8n_workflows/` | Экспорты workflows (sanitized, env placeholders) |
 | `.env.example` | Шаблон всех переменных окружения |
 | `PROGRESS.md` | Журнал выполненных задач |
+| `supabase/add_client_lifecycle.sql` | Миграция lifecycle_status, source_channel, фикс blocked type |
 | `TECH Data.md` | ⚠️ Очищен от секретов. Добавлен в .gitignore |

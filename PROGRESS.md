@@ -19,6 +19,7 @@
 | 7 | Полный аудит системы (37 таблиц live, 40 active workflows, row counts) | ✅ | 2 |
 | 8 | Зачистка секретов: 97 замен в 16 workflow JSON, webhooks.ts, TECH Data.md | ✅ | 2 |
 | 9 | Error handling для 7 booking workflows + фикс company_id 1700961→1647948 | ✅ | 2 |
+| 10 | Реструктуризация модели клиентов: lifecycle_status, source_channel, lead→client | ✅ | 3 |
 
 ### Ожидает действий от владельца
 
@@ -32,6 +33,7 @@
 2. 🔴 Подключить метрики дашборда к `clients` вместо `clients_tg`
 3. 🟡 Заполнить таблицу `webhooks` URL-ами n8n
 4. 🟡 Начать Волну 0 миграции (organizations, branches)
+5. 🟡 **Выполнить миграцию `add_client_lifecycle.sql`** вручную в Supabase SQL editor
 
 ---
 
@@ -168,6 +170,64 @@
 - [ ] Удалить/пометить archived копии find_client
 - [ ] Проверить `get_clients_list` в AiAdmin на правильный company_id
 - [ ] Проверить `gs_get_bookinfo` tool — читает `YC_bookings_wtags`, таблица существует?
+
+---
+
+## [2026-04-07] Сессия 3 — Реструктуризация модели клиентов и контактов
+
+### Статус: ЗАВЕРШЕНО
+
+### Что сделано
+
+**Цель:** Привести модель данных к правильной структуре:
+- `clients` = бизнес-клиенты (могут быть лидами до первой записи)
+- `telegram_users` / `whatsapp_users` / `max_users` = контакты в каналах
+- `client_channels` = канонические связи клиента с каналами
+- Главный идентификатор — `clients.id` (UUID), не `yc_id`
+
+**SQL миграция `supabase/add_client_lifecycle.sql`:**
+
+| Изменение | Суть |
+|---|---|
+| `clients.lifecycle_status` TEXT | `'lead'` / `'client'` / `'inactive'`, DEFAULT 'lead' |
+| `clients.source_channel` TEXT | Первый канал входа: telegram/whatsapp/max/yclients/manual |
+| `clients.last_visit` nullable | Убрана некорректная NOT NULL constraint |
+| `clients.raw_payload` nullable | Убрана некорректная NOT NULL constraint |
+| `clients.updated_at` nullable | Убрана некорректная NOT NULL constraint |
+| `telegram_users.blocked` BOOLEAN | Исправлен тип с TEXT → BOOLEAN с миграцией данных |
+| Trigger `sync_user_to_clients_by_yc_id()` | Создаёт лидов даже без yc_id (если есть имя/телефон) |
+| Trigger `promote_lead_to_client()` | Автоматически меняет lifecycle='client' при появлении yc_id |
+| Backfill lifecycle_status | clients с yc_id → 'client', остальные → 'lead' |
+| Backfill source_channel | По наличию *_user_id |
+
+**Frontend `lib/hooks/useClients.ts`:**
+- Добавлен тип `LifecycleStatus = 'lead' | 'client' | 'inactive'`
+- Добавлены поля в интерфейс `Client`: `lifecycleStatus`, `sourceChannel`
+- Маппинг из DB в `mapRow()` с fallback на `'lead'`
+
+### Принятые решения
+
+| Решение | Обоснование |
+|---|---|
+| `lifecycle_status` — отдельное поле от вычисляемого `clientStatus` | clientStatus (new/regular/vip/sleeping/lost) — бизнес-сегмент из revenue/visits, lifecycle — онбординговое состояние |
+| Лид создаётся только при наличии имени или телефона | Без идентифицирующих данных запись в clients бессмысленна |
+| Поиск дубликатов лидов по channel user_id + org_uid | Предотвращает дублирование при повторных сообщениях без yc_id |
+| promote_lead_to_client как BEFORE UPDATE триггер | Автоматически без изменений n8n workflows |
+
+### Изменённые файлы
+- `supabase/add_client_lifecycle.sql` — новый файл миграции
+- `lib/hooks/useClients.ts` — LifecycleStatus тип + поля в Client + mapRow
+
+### ⚠️ Требует ручного действия
+- [ ] Выполнить `supabase/add_client_lifecycle.sql` в Supabase SQL editor:
+  https://supabase.com/dashboard/project/ugocvtuomyopullvilim/sql
+
+### Новые риски
+
+| Риск | Уровень |
+|---|---|
+| `telegram_users.blocked` TYPE migration — если есть неожиданные значения, конверсия вернёт FALSE | НИЗКИЙ |
+| Лиды, созданные через trigger без yc_id, могут дублироваться при race conditions | НИЗКИЙ (unique по channel_user_id + org_uid защищает) |
 
 ---
 

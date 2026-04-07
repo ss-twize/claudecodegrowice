@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 
 export type ClientStatus = 'new' | 'regular' | 'sleeping' | 'lost' | 'vip'
+export type LifecycleStatus = 'lead' | 'client' | 'inactive'
 export type VisitFrequency = 'weekly' | 'biweekly' | 'monthly' | 'rare'
 export type ValueCategory = 'high' | 'medium' | 'low'
 export type CommunicationActivity = 'opened' | 'replied' | 'ignored'
@@ -56,6 +57,8 @@ export interface Client {
   tags: string[]
   notes: string
   reactedToOffers: boolean
+  lifecycleStatus: LifecycleStatus
+  sourceChannel: string | null
 }
 
 const SERVICE_CATEGORY_MAP: Record<string, string> = {
@@ -252,6 +255,11 @@ function mapRow(row: any): Client {
       : []
   const notes = String(firstDefined(row, ['notes', 'comment', 'comments']) || '')
   const reactedToOffers = boolFromAny(firstDefined(row, ['reacted_to_offers', 'offer_response']), false)
+  const lifecycleStatus: LifecycleStatus =
+    (['lead', 'client', 'inactive'] as const).includes(row.lifecycle_status)
+      ? row.lifecycle_status as LifecycleStatus
+      : 'lead'
+  const sourceChannel: string | null = row.source_channel ?? null
 
   return {
     id,
@@ -301,6 +309,8 @@ function mapRow(row: any): Client {
     tags,
     notes,
     reactedToOffers,
+    lifecycleStatus,
+    sourceChannel,
   }
 }
 
