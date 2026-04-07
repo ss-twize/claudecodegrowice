@@ -1,26 +1,34 @@
-## TECH Data  
-  
-VPS claude user passw 544m8h3*Y8E5o9N  
-VPS root   
-  
-Фронт: https://claudecodegrowice.vercel.app/  
-Гитхаб репо:  
-ss-twize (username)  
-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 (git token)  
-https://github.com/ss-twize/claudecodegrowice.git  
-  
-Supabase:  
-https://ugocvtuomyopullvilim.supabase.co  
-sb_publishable_3NCG00skimjEDHMGTql3kw_5-ROZ3cM  
-legacy_key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwOTcxMjIsImV4cCI6MjA4NzY3MzEyMn0.rx7-A9_-WYWGRgZhDRwvLU3Roqds14Tv-DUqL9NJXrk  
-service_role: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb2N2dHVvbXlvcHVsbHZpbGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjA5NzEyMiwiZXhwIjoyMDg3NjczMTIyfQ.d91fw0hhpwr7dPU33ixPeEWkNhonv-tO0h8DfM8wvbQ  
-  
-Yclients:  
-org_id: 1647948  
-user_token: 3a3fac28a1cda42c028b46426004b68f  
-partner_token: ccg63r8xemyb6fm99c2k  
-(Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f)  
+## TECH Data
 
-n8n api:
-claude_code_n8n_api
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMjhkYWM1Yi01ZmEyLTRiNWUtYTcyOS03NmE4MzI1YWNiNzciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNjkxMjE4ZDEtY2JmZC00YmFlLWE2ZjQtZWI5OGNhYjNjYTI3IiwiaWF0IjoxNzc1NDc2NDAzfQ.aCtDzJ0bnIIrlRZgixs_4yH_iNpB1FKAV7uOU9OxYeg
+> **ВНИМАНИЕ**: Этот файл НЕ должен содержать реальные ключи и пароли.
+> Все секреты хранятся в защищённых хранилищах (Vercel env, n8n credentials, 1Password).
+
+VPS claude user: [см. vault]
+VPS root: [см. vault]
+
+Фронт: https://claudecodegrowice.vercel.app/
+Гитхаб репо:
+  username: ss-twize
+  repo: https://github.com/ss-twize/claudecodegrowice.git
+  token: [см. vault / GitHub Settings → Personal Access Tokens]
+
+Supabase:
+  URL: https://ugocvtuomyopullvilim.supabase.co
+  anon key: [Supabase Dashboard → Project Settings → API]
+  service_role key: [Supabase Dashboard → Project Settings → API → service_role]
+
+YClients:
+  org_id: 1647948
+  user_token: [YClients → Профиль → API]
+  partner_token: [YClients Partner Program]
+
+n8n:
+  URL: https://n8n.srv1090249.hstgr.cloud
+  API key name: claude_code_n8n_api
+  API key: [n8n → Settings → API Keys]
+
+GREEN-API:
+  instance WhatsApp: [GREEN-API Dashboard]
+  instance Max: [GREEN-API Dashboard]
+
+Переменные окружения: см. .env.example в репозитории

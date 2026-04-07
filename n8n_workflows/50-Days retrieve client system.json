@@ -162,7 +162,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105555249/sendMessage/0114f56bd3e247dd9bc0701418e128a81e495dc37c11430f8a",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE}}/sendMessage/0114f56bd3e247dd9bc0701418e128a81e495dc37c11430f8a",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -288,7 +288,7 @@
       "parameters": {
         "toolDescription": "Send message to client in WhatsApp",
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105555249/sendMessage/0114f56bd3e247dd9bc0701418e128a81e495dc37c11430f8a",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE}}/sendMessage/0114f56bd3e247dd9bc0701418e128a81e495dc37c11430f8a",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

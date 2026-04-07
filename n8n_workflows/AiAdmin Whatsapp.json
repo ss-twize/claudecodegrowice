@@ -15,7 +15,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/setSettings/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/setSettings/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -27,7 +27,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\"webhookUrl\": \"https://n8n.srv1090249.hstgr.cloud/webhook/a58bf35c-76da-4d4c-8f2e-1563cb04d946\", \"webhookUrlToken\": \"\", \"delaySendMessagesMilliseconds\": 1000, \"markIncomingMessagesReaded\": \"no\", \"markIncomingMessagesReadedOnReply\": \"no\", \"outgoingWebhook\": \"yes\", \"outgoingMessageWebhook\": \"yes\", \"outgoingAPIMessageWebhook\": \"yes\", \"incomingWebhook\": \"yes\", \"stateWebhook\": \"yes\"}",
+        "jsonBody": "{\"webhookUrl\": \"{{$env.N8N_BASE_URL}}/webhook/a58bf35c-76da-4d4c-8f2e-1563cb04d946\", \"webhookUrlToken\": \"\", \"delaySendMessagesMilliseconds\": 1000, \"markIncomingMessagesReaded\": \"no\", \"markIncomingMessagesReadedOnReply\": \"no\", \"outgoingWebhook\": \"yes\", \"outgoingMessageWebhook\": \"yes\", \"outgoingAPIMessageWebhook\": \"yes\", \"incomingWebhook\": \"yes\", \"stateWebhook\": \"yes\"}",
         "options": {}
       },
       "id": "bd47a1c5-deca-4df2-b72d-6759a7ea2dd6",
@@ -77,7 +77,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -110,7 +110,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -163,7 +163,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -263,7 +263,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -296,7 +296,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -677,7 +677,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Content-Type",
@@ -705,7 +705,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -738,7 +738,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendTyping/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendTyping/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -768,7 +768,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -874,7 +874,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/downloadFile/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/downloadFile/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1057,7 +1057,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/downloadFile/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/downloadFile/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1562,7 +1562,7 @@
       "parameters": {
         "toolDescription": "Send message to client in WhatsApp",
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1651,7 +1651,7 @@
       "parameters": {
         "toolDescription": "Send message to client in WhatsApp",
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1681,7 +1681,7 @@
       "parameters": {
         "toolDescription": "Notify owner in WhatsApp",
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1785,7 +1785,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendTyping/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendTyping/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2010,7 +2010,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             }
           ]
         },
@@ -2094,7 +2094,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2162,7 +2162,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendInteractiveButtons/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendInteractiveButtons/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2220,7 +2220,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2785,7 +2785,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2848,7 +2848,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2911,7 +2911,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -3137,7 +3137,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Content-type",
@@ -3370,7 +3370,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/sendMessage/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -3566,7 +3566,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://1105.api.green-api.com/waInstance1105570041/readChat/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
+        "url": "https://1105.api.green-api.com/{{$env.GREENAPI_WA_INSTANCE_2}}/readChat/3e6368ef29c74e9f826b15b8de4fa4f387d34715254f426aa4",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

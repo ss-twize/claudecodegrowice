@@ -39,7 +39,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -72,7 +72,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -125,7 +125,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -225,7 +225,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -258,7 +258,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -639,7 +639,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Content-Type",
@@ -667,7 +667,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Accept",
@@ -1953,7 +1953,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             }
           ]
         },
@@ -2883,7 +2883,7 @@
             },
             {
               "name": "Authorization",
-              "value": "=Bearer ccg63r8xemyb6fm99c2k, User 3a3fac28a1cda42c028b46426004b68f"
+              "value": "=Bearer {{$env.YCLIENTS_PARTNER_TOKEN}}, User {{$env.YCLIENTS_USER_TOKEN}}"
             },
             {
               "name": "Content-type",

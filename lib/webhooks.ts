@@ -2,12 +2,13 @@ import { supabase, ORG_UID } from './supabase'
 
 let urlCache: Record<string, string> | null = null
 
+const N8N_BASE = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE ?? ''
+
 const DEFAULT_WEBHOOK_URLS: Record<string, string> = {
-  rassylka_zapustit: 'https://n8n.srv1090249.hstgr.cloud/webhook/growice/rassylka_zapustit',
+  rassylka_zapustit: N8N_BASE ? `${N8N_BASE}/webhook/growice/rassylka_zapustit` : '',
 }
 
 async function getUrl(code: string): Promise<string | null> {
-  if (code === 'rassylka_zapustit') return 'https://n8n.srv1090249.hstgr.cloud/webhook/growice/rassylka_zapustit'
   if (!urlCache) {
     const { data } = await supabase
       .from('webhooks')
