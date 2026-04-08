@@ -1,6 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase, ORG_UID } from '../supabase'
+import { useOrgConfig, type ClientConfig } from '../contexts/OrgConfigContext'
 
 export type ClientStatus = 'new' | 'regular' | 'sleeping' | 'lost' | 'vip'
 export type LifecycleStatus = 'lead' | 'client' | 'inactive'
@@ -63,17 +64,8 @@ export interface Client {
   waCheckStatus: WaCheckStatus
 }
 
-const SERVICE_CATEGORY_MAP: Record<string, string> = {
-  Маникюр: 'Ногтевой сервис',
-  Педикюр: 'Ногтевой сервис',
-  Окрашивание: 'Волосы',
-  Стрижка: 'Волосы',
-  Брови: 'Брови и ресницы',
-  Косметология: 'Косметология',
-  Массаж: 'SPA',
-}
 
-function computeSegment(createdAt: string | null, lastVisitAt: string | null): string {
+function computeSegment(createdAt: string | null, lastVisitAt: string | null, cfg: ClientConfig): string {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
@@ -83,8 +75,8 @@ function computeSegment(createdAt: string | null, lastVisitAt: string | null): s
   if (!lastContact || isNaN(lastContact.getTime())) return 'inactive'
 
   const daysSince = (now.getTime() - lastContact.getTime()) / (1000 * 60 * 60 * 24)
-  if (daysSince <= 30) return 'active'
-  if (daysSince <= 90) return 'atRisk'
+  if (daysSince <= cfg.active_days) return 'active'
+  if (daysSince <= cfg.at_risk_days) return 'atRisk'
   return 'inactive'
 }
 
@@ -163,11 +155,11 @@ function computeAgeGroup(age: number | null): string {
   return '45+'
 }
 
-function computeClientStatus(revenue: number, visits: number, daysAbsent: number): ClientStatus {
-  if (revenue >= 80000 || visits >= 12) return 'vip'
+function computeClientStatus(revenue: number, visits: number, daysAbsent: number, cfg: ClientConfig): ClientStatus {
+  if (revenue >= cfg.vip_revenue_min || visits >= cfg.vip_visits_min) return 'vip'
   if (visits <= 1 || daysAbsent <= 21) return 'new'
-  if (daysAbsent > 120) return 'lost'
-  if (daysAbsent > 60) return 'sleeping'
+  if (daysAbsent > cfg.lost_days) return 'lost'
+  if (daysAbsent > cfg.sleeping_days) return 'sleeping'
   return 'regular'
 }
 
@@ -185,21 +177,21 @@ function computeAbsenceBucket(daysAbsent: number): '30' | '60' | '90+' | 'recent
   return 'recent'
 }
 
-function computeValueCategory(revenue: number): ValueCategory {
-  if (revenue >= 50000) return 'high'
-  if (revenue >= 15000) return 'medium'
+function computeValueCategory(revenue: number, cfg: ClientConfig): ValueCategory {
+  if (revenue >= cfg.high_value_revenue) return 'high'
+  if (revenue >= cfg.medium_value_revenue) return 'medium'
   return 'low'
 }
 
-function computeMarketingSegment(status: ClientStatus, daysAbsent: number): string {
+function computeMarketingSegment(status: ClientStatus, daysAbsent: number, cfg: ClientConfig): string {
   if (status === 'vip') return 'VIP'
-  if (daysAbsent >= 90) return 'Потерянные'
-  if (daysAbsent >= 45) return 'На реактивацию'
+  if (daysAbsent >= cfg.at_risk_days) return 'Потерянные'
+  if (daysAbsent >= cfg.reactivation_days) return 'На реактивацию'
   if (status === 'new') return 'Новые'
   return 'Постоянные'
 }
 
-function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
+function mapRow(row: any, upcomingClientIds: Set<string> | undefined, cfg: ClientConfig): Client {
   const id = String(firstDefined(row, ['id', 'client_id']) || '')
   const fullName =
     firstDefined<string>(row, ['display_name', 'name', 'fullname']) ||
@@ -223,7 +215,7 @@ function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
     : []
 
   const favoriteService = String(firstDefined(row, ['favorite_service', 'top_service']) || services[0] || '—')
-  const serviceCategory = SERVICE_CATEGORY_MAP[favoriteService] || '—'
+  const serviceCategory = cfg.service_category_map[favoriteService] || '—'
   const source = String(firstDefined(row, ['source', 'traffic_source', 'acquisition_source']) || 'Не указан')
   const city = String(firstDefined(row, ['city', 'client_city', 'location']) || 'Не указан')
   const master = String(firstDefined(row, ['master', 'master_name', 'favorite_master']) || '—')
@@ -252,8 +244,8 @@ function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
   // telegram_user_id как строка — для поиска и проверки наличия Telegram
   const telegram = row.telegram_user_id ? String(row.telegram_user_id) : null
   const daysAbsent = diffInDays(lastVisitAt)
-  const clientStatus = computeClientStatus(revenue, visits, daysAbsent)
-  const segment = computeSegment(createdAt, lastVisitAt)
+  const clientStatus = computeClientStatus(revenue, visits, daysAbsent, cfg)
+  const segment = computeSegment(createdAt, lastVisitAt, cfg)
   const cancellationCount = toNumber(firstDefined(row, ['cancel_count', 'cancellations_count', 'cancellation_count']), 0)
   const noShowCount = toNumber(firstDefined(row, ['no_show_count', 'missed_count', 'no_shows']), 0)
   const communicationActivity = firstDefined<CommunicationActivity>(row, ['communication_activity', 'message_activity']) || 'ignored'
@@ -307,7 +299,7 @@ function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
     master,
     branch,
     segment,
-    marketingSegment: computeMarketingSegment(clientStatus, daysAbsent),
+    marketingSegment: computeMarketingSegment(clientStatus, daysAbsent, cfg),
     churnRisk: computeChurnRisk(segment),
     score: computeScore(revenue, segment),
     createdAt,
@@ -317,7 +309,7 @@ function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
     visitFrequency: computeVisitFrequency(visits, daysAbsent),
     daysAbsent,
     absenceBucket: computeAbsenceBucket(daysAbsent),
-    valueCategory: computeValueCategory(revenue),
+    valueCategory: computeValueCategory(revenue, cfg),
     upcomingAppointment,
     cancellationCount,
     noShowCount,
@@ -336,11 +328,12 @@ function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
 }
 
 export function useClients() {
+  const { clientConfig } = useOrgConfig()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     const now = new Date().toISOString()
 
     // Параллельно загружаем клиентов и предстоящие записи
@@ -371,10 +364,10 @@ export function useClients() {
       (appointmentsRes.data || []).map((a: any) => String(a.client_id)).filter(Boolean)
     )
 
-    setClients((clientsRes.data || []).map(row => mapRow(row, upcomingClientIds)))
+    setClients((clientsRes.data || []).map(row => mapRow(row, upcomingClientIds, clientConfig)))
     setError(null)
     setLoading(false)
-  }
+  }, [clientConfig])
 
   useEffect(() => {
     fetchClients()
@@ -385,7 +378,7 @@ export function useClients() {
     return () => {
       supabase.removeChannel(ch)
     }
-  }, [])
+  }, [fetchClients])
 
   return { clients, loading, error }
 }
