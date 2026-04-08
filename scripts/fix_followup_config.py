@@ -138,6 +138,13 @@ def main():
         print("⚠ 'Загрузить org_settings' already present — aborting (already patched?)")
         return
 
+    # ── Guard: required nodes must exist ───────────────────────────────────
+    required = ["Build Follow-up Config", "Claim Client Follow-up", "Build Claimed Message"]
+    missing = [n for n in required if n not in nodes_by_name]
+    if missing:
+        print(f"ERROR: required nodes not found: {missing}")
+        return
+
     # ── Find anchor positions ───────────────────────────────────────────────
     build_cfg = nodes_by_name["Build Follow-up Config"]
     cfg_x, cfg_y = build_cfg["position"]
@@ -204,6 +211,8 @@ def main():
     claim["parameters"]["specifyBody"] = "json"
     claim["parameters"]["jsonBody"]    = "={{ { p_client_id: $json.client_id, p_record_id: $json.yclients_record_id } }}"
     claim["parameters"].pop("queryParameters", None)
+    claim.pop("continueOnFail", None)
+    claim.pop("onError", None)
     print("  ✓ Claim Client Follow-up: PATCH → RPC POST claim_followup()")
 
     # ── 5. Add IF node "Claim: успешно?" ───────────────────────────────────
@@ -222,7 +231,7 @@ def main():
                         "id": str(uuid.uuid4()),
                         "leftValue": "={{ $json }}",
                         "rightValue": "",
-                        "operator": {"type": "string", "operation": "notEmpty", "singleValue": True},
+                        "operator": {"type": "object", "operation": "exists", "singleValue": True},
                     }
                 ],
                 "combinator": "and",
