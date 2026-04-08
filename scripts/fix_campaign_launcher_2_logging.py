@@ -64,6 +64,11 @@ const resp = await fetch(`${SUPABASE_URL}/rest/v1/campaign_runs`, {
   })
 });
 
+if (!resp.ok) {
+  const errText = await resp.text();
+  throw new Error(`campaign_runs INSERT failed (HTTP ${resp.status}): ${errText}`);
+}
+
 const data = await resp.json();
 if (data.error) throw new Error(`campaign_runs INSERT failed: ${data.error.message || JSON.stringify(data.error)}`);
 const campaignRunId = Array.isArray(data) ? data[0].id : data.id;
@@ -92,6 +97,9 @@ return [{ json: { campaign_run_id, total_sent, total_failed, failed_ids } }];
 
 FINISH_RUN_CODE = r"""
 const item = $input.first().json;
+if (!item.campaign_run_id) {
+  return [{ json: { success: false, error: 'campaign_run_id missing — skipping finish' } }];
+}
 const SUPABASE_URL = 'https://ugocvtuomyopullvilim.supabase.co';
 const SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;
 
