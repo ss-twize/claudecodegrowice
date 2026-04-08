@@ -103,7 +103,7 @@ if (!item.campaign_run_id) {
 const SUPABASE_URL = 'https://ugocvtuomyopullvilim.supabase.co';
 const SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;
 
-await fetch(`${SUPABASE_URL}/rest/v1/campaign_runs?id=eq.${item.campaign_run_id}`, {
+const patchResp = await fetch(`${SUPABASE_URL}/rest/v1/campaign_runs?id=eq.${item.campaign_run_id}`, {
   method: 'PATCH',
   headers: {
     'apikey': SUPABASE_KEY,
@@ -118,6 +118,10 @@ await fetch(`${SUPABASE_URL}/rest/v1/campaign_runs?id=eq.${item.campaign_run_id}
     finished_at: new Date().toISOString()
   })
 });
+if (!patchResp.ok) {
+  const errText = await patchResp.text();
+  throw new Error(`campaign_runs PATCH failed (HTTP ${patchResp.status}): ${errText}`);
+}
 
 return [{ json: {
   success: true,
