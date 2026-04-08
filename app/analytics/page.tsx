@@ -6,11 +6,12 @@ import RevenueChart from "@/components/charts/RevenueChart";
 import MetricCard from "@/components/ui/MetricCard";
 import { ORG_UID, supabase } from "@/lib/supabase";
 import {
-  analyticsKPIs, cancellationsData,
+  cancellationsData,
   dailyKPITable, topDaysByRevenue,
   topDaysByAppointments, serviceAnalyticsData,
   analyticsTrends, revenueData,
 } from "@/lib/mockData";
+import { useAnalyticsData } from "@/lib/hooks/useAnalyticsData";
 import { formatCurrency } from "@/lib/utils";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -145,7 +146,28 @@ export default function AnalyticsPage() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-  const k = analyticsKPIs;
+  const { data: analyticsData, loading: analyticsLoading } = useAnalyticsData()
+
+  const k = {
+    revenue: analyticsData?.totalRevenue ?? 0,
+    revenueAvgDay: analyticsData ? Math.round(analyticsData.totalRevenue / 30) : 0,
+    appointments: analyticsData?.totalVisits ?? 0,
+    appointmentsAvgDay: analyticsData ? Math.round(analyticsData.totalVisits / 30) : 0,
+    conversionRate: 0,
+    avgCheck: analyticsData?.avgCheck ?? 0,
+    noShowCount: 0,
+    noShowPercent: 0,
+    messagesPerContact: analyticsData && analyticsData.totalClients > 0
+      ? Math.round((analyticsData.totalMessages / analyticsData.totalClients) * 10) / 10
+      : 0,
+    retention: 0,
+    avgResponseTime: â,
+    offHoursAppointments: 0,
+    timeSaved: 0,
+    reactivated: analyticsData?.campaignRecipients ?? 0,
+    incomingMessages: analyticsData?.totalMessages ?? 0,
+    outgoingMessages: 0,
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -245,7 +267,7 @@ export default function AnalyticsPage() {
   return (
     <div>
       <Header title="Аналитика" subtitle="Полная аналитика бизнеса и агента" />
-      <div className="p-6 space-y-6">
+      <div className={"p-6 space-y-6 transition-opacity" + (analyticsLoading ? " opacity-50" : "")}>
 
         <div className="grid grid-cols-1 xl:grid-cols-[auto,1fr] gap-4 items-stretch">
           {/* Period selector */}
