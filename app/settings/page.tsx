@@ -62,6 +62,7 @@ export default function SettingsPage() {
       currency: orgConfigSettings.currency,
       support_url: orgConfigSettings.support_url ?? '',
     });
+    setGreeting(orgConfigSettings.greeting_message);
   }, [orgConfigSettings]);
 
   const [segForm, setSegForm] = useState({
@@ -258,7 +259,7 @@ export default function SettingsPage() {
           org_uid: ORG_UID,
           integration_code: code,
           credentials: integrationForms[code],
-          status: 'connected',
+          status: 'connected', // TODO(integration-verify): replace with actual API check before setting connected
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'org_uid,integration_code' },
