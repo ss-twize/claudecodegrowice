@@ -24,6 +24,9 @@
 | 12 | GREEN-API: динамические credentials из channel_connections для WA и Max | ✅ | 4 |
 | 13 | Автолинковка клиентов YClients с контактами мессенджеров по телефону | ✅ | 5 |
 | 14 | Двусторонняя синхронизация клиентов СЕРВЕКС ↔ YClients с разрешением конфликтов | ✅ | 5 |
+| 15 | Автообновление контактных данных при входящих сообщениях (upsert_channel_user_profile) | ✅ | 5 |
+| 16 | Контакты сотрудников: таблица staff_contacts + update_staff_contact_on_message RPC | ✅ | 5 |
+| 17 | WA Check: проверка WhatsApp по телефону — workflow + поля wa_check_status/wa_checked_at | ✅ | 6 |
 
 ### Ожидает действий от владельца
 
@@ -34,12 +37,53 @@
 
 1. ✅ Автолинковка клиентов по телефону — сделано в сессии 5
 2. ✅ Двусторонняя синхронизация СЕРВЕКС ↔ YClients — сделано в сессии 5
-3. 🔴 Синхронизация `appointments` из YClients — таблица пустая, дашборд мёртвый
+3. ✅ WA Check workflow — сделано в сессии 6 (id: 95r2hdpLOuODR6ql)
+4. 🔴 Синхронизация `appointments` из YClients — таблица пустая, дашборд мёртвый
 2. 🔴 Подключить метрики дашборда к `clients` вместо `clients_tg`
 3. 🟡 Заполнить таблицу `webhooks` URL-ами n8n
 4. 🟡 Начать Волну 0 миграции (organizations, branches)
 5. 🟡 **Выполнить миграцию `add_client_lifecycle.sql`** вручную в Supabase SQL editor
 6. ✅ `add_booking_client_link.sql` — **уже применена** через Supabase MCP
+
+---
+
+## [2026-04-08] Сессия 6 — WA Check + Staff Contacts (завершение сессии 5)
+
+### Статус: ЗАВЕРШЕНО
+
+### Что сделано
+
+**1. staff_contacts.sql — контакты сотрудников**
+- Таблица `staff_contacts`: tg_id, tg_username, wa_id, max_id, роли owner/admin/master/staff
+- RPC `update_staff_contact_on_message()`: обновляет tg_username при входящих сообщениях
+- View `v_staff_with_master`: LEFT JOIN с masters для дашборда
+- Ноды "Проверить сотрудника" добавлены в AiAdmin WA и Max параллельно триггеру
+
+**2. fix_owner_contact.py — исправлен OWNER_WA_ID**
+- Добавлена нода "Загрузить контакт владельца" (GET staff_contacts WHERE role=owner)
+- to_owner1 / to_owner: chatId берётся из staff_contacts.wa_id / max_id (не из $env)
+
+**3. update_channel_user_on_message.sql — автообновление контактов**
+- Добавлен `updated_at` в telegram_users, whatsapp_users, max_users
+- RPC `upsert_channel_user_profile()`: UPSERT + обновление имён клиента
+- Нода "Обновить контакт" добавлена в AiAdmin WA и Max параллельно триггеру
+
+**4. WA Check workflow (id: 95r2hdpLOuODR6ql)**
+- Таблица `clients`: добавлены `wa_check_status` (unchecked/found/not_found) + `wa_checked_at`
+- Workflow "WA Check — Проверка WhatsApp по телефону": ежедневно 03:00
+  - Берёт клиентов с телефоном, без whatsapp_user_id, wa_check_status ≠ found
+  - Нормализует телефон (8→7, 10-значные добавляет 7)
+  - POST GREEN-API checkWhatsapp → existsWhatsapp
+  - Найден: upsert whatsapp_users + PATCH clients (wa_check_status=found, whatsapp_user_id) + upsert client_channels(whatsapp, priority=2)
+  - Не найден: PATCH clients (wa_check_status=not_found) + upsert client_channels(phone, priority=99) — SMS fallback
+  - Лимит: 1 запрос/сек, 200 клиентов за запуск
+  - Активирован автоматически
+
+### Важные детали
+- Реальная org_uid с клиентами: `9f5a0e68-7f42-4ca6-bf0d-3ed6bb0c6bf1`
+- Тест: `11111111-1111-1111-1111-111111111111` — пустая org (0 клиентов)
+- GREEN-API instance: `waInstance1105570041`, api_url `https://1105.api.green-api.com`
+- UNIQUE constraint `client_channels(client_id, channel)` — upsert on_conflict работает
 
 ---
 

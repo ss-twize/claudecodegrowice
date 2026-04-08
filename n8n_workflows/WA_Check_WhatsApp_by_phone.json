@@ -1,0 +1,304 @@
+{
+  "name": "WA Check — Проверка WhatsApp по телефону",
+  "id": "95r2hdpLOuODR6ql",
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true
+  },
+  "nodes": [
+    {
+      "id": "SCHEDULE",
+      "name": "Расписание",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "cronExpression", "expression": "0 3 * * *"}]
+        }
+      }
+    },
+    {
+      "id": "LOAD_CLIENTS",
+      "name": "Загрузить клиентов без WA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "{{SUPABASE_URL}}/rest/v1/clients?org_uid=eq.{{ORG_UID}}&phone=not.is.null&whatsapp_user_id=is.null&wa_check_status=neq.found&select=id,org_uid,phone,normalized_phone,first_name,last_name,display_name&order=wa_checked_at.asc.nullsfirst&limit=200",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey",        "value": "{{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type",  "value": "application/json"}
+          ]
+        },
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "SPLIT",
+      "name": "По одному клиенту",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [440, 0],
+      "parameters": {"batchSize": 1, "options": {}}
+    },
+    {
+      "id": "NORMALIZE",
+      "name": "Нормализовать телефон",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "parameters": {
+        "jsCode": "const client = $input.item.json;\nlet phone = (client.normalized_phone || client.phone || '').replace(/\\D/g, '');\n\nif (phone.length === 11 && phone.startsWith('8')) {\n  phone = '7' + phone.slice(1);\n} else if (phone.length === 10) {\n  phone = '7' + phone;\n}\n\nif (phone.length < 10) {\n  return [{ json: { ...client, _skip: true, phone_digits: null, wa_id: null } }];\n}\n\nreturn [{\n  json: {\n    ...client,\n    _skip: false,\n    phone_digits: phone,\n    wa_id: phone + '@c.us',\n  }\n}];"
+      }
+    },
+    {
+      "id": "IF_VALID_PHONE",
+      "name": "Телефон валиден?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 0],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json._skip }}",
+              "rightValue": false,
+              "operator": {"type": "boolean", "operation": "equals"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "WAIT",
+      "name": "Пауза 1 сек",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1100, -80],
+      "parameters": {"unit": "seconds", "amount": 1},
+      "webhookId": "wa-check-wait"
+    },
+    {
+      "id": "CHECK_WA",
+      "name": "Проверить WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, -80],
+      "parameters": {
+        "method": "POST",
+        "url": "{{GREENAPI_URL}}/waInstance{{GREENAPI_INSTANCE_ID}}/checkWhatsapp/{{GREENAPI_TOKEN}}",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"phoneNumber\": \"{{ $(\"Нормализовать телефон\").item.json.phone_digits }}\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "IF_FOUND",
+      "name": "Найден WhatsApp?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1540, -80],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.existsWhatsapp }}",
+              "rightValue": true,
+              "operator": {"type": "boolean", "operation": "equals"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "UPSERT_WA_USER",
+      "name": "Создать whatsapp_users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, -200],
+      "parameters": {
+        "method": "POST",
+        "url": "{{SUPABASE_URL}}/rest/v1/whatsapp_users?on_conflict=org_uid,user_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey",        "value": "{{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type",  "value": "application/json"},
+            {"name": "Prefer",        "value": "resolution=merge-duplicates,return=representation"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"org_uid\":\"{{ORG_UID}}\",\"user_id\":\"{{ $(\"Нормализовать телефон\").item.json.wa_id }}\",\"first_name\":\"{{ $(\"Нормализовать телефон\").item.json.first_name ?? '' }}\",\"last_name\":\"{{ $(\"Нормализовать телефон\").item.json.last_name ?? '' }}\",\"client_id\":\"{{ $(\"Нормализовать телефон\").item.json.id }}\",\"client_phone\":\"{{ $(\"Нормализовать телефон\").item.json.phone_digits }}\",\"can_message\":true,\"allow_marketing\":true}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "UPDATE_CLIENT_FOUND",
+      "name": "Обновить клиента (найден)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, -200],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"{{SUPABASE_URL}}/rest/v1/clients?id=eq.\" + $(\"Нормализовать телефон\").item.json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey",        "value": "{{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type",  "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"wa_check_status\":\"found\",\"wa_checked_at\":\"{{ $now.toISO() }}\",\"whatsapp_user_id\":\"{{ $(\"Нормализовать телефон\").item.json.wa_id }}\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "UPSERT_CHANNEL_WA",
+      "name": "Привязать канал WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, -200],
+      "parameters": {
+        "method": "POST",
+        "url": "{{SUPABASE_URL}}/rest/v1/client_channels?on_conflict=client_id,channel",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey",        "value": "{{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type",  "value": "application/json"},
+            {"name": "Prefer",        "value": "resolution=merge-duplicates,return=representation"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"client_id\":\"{{ $(\"Нормализовать телефон\").item.json.id }}\",\"channel\":\"whatsapp\",\"channel_user_id\":\"{{ $(\"Нормализовать телефон\").item.json.wa_id }}\",\"priority\":2,\"is_active\":true,\"can_notify\":true,\"identified_via\":\"wa_check\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "UPDATE_CLIENT_NOT_FOUND",
+      "name": "Обновить клиента (не найден)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 60],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"{{SUPABASE_URL}}/rest/v1/clients?id=eq.\" + $(\"Нормализовать телефон\").item.json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey",        "value": "{{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type",  "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"wa_check_status\":\"not_found\",\"wa_checked_at\":\"{{ $now.toISO() }}\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "UPSERT_CHANNEL_PHONE",
+      "name": "Привязать канал телефон (SMS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "{{SUPABASE_URL}}/rest/v1/client_channels?on_conflict=client_id,channel",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "apikey",        "value": "{{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Content-Type",  "value": "application/json"},
+            {"name": "Prefer",        "value": "resolution=merge-duplicates,return=representation"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"client_id\":\"{{ $(\"Нормализовать телефон\").item.json.id }}\",\"channel\":\"phone\",\"channel_user_id\":\"{{ $(\"Нормализовать телефон\").item.json.phone_digits }}\",\"priority\":99,\"is_active\":true,\"can_notify\":false,\"identified_via\":\"wa_check_fallback\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Расписание": {
+      "main": [[{"node": "Загрузить клиентов без WA", "type": "main", "index": 0}]]
+    },
+    "Загрузить клиентов без WA": {
+      "main": [[{"node": "По одному клиенту", "type": "main", "index": 0}]]
+    },
+    "По одному клиенту": {
+      "main": [
+        [{"node": "Нормализовать телефон", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Нормализовать телефон": {
+      "main": [[{"node": "Телефон валиден?", "type": "main", "index": 0}]]
+    },
+    "Телефон валиден?": {
+      "main": [
+        [{"node": "Пауза 1 сек", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Пауза 1 сек": {
+      "main": [[{"node": "Проверить WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Проверить WhatsApp": {
+      "main": [[{"node": "Найден WhatsApp?", "type": "main", "index": 0}]]
+    },
+    "Найден WhatsApp?": {
+      "main": [
+        [{"node": "Создать whatsapp_users", "type": "main", "index": 0}],
+        [{"node": "Обновить клиента (не найден)", "type": "main", "index": 0}]
+      ]
+    },
+    "Создать whatsapp_users": {
+      "main": [[{"node": "Обновить клиента (найден)", "type": "main", "index": 0}]]
+    },
+    "Обновить клиента (найден)": {
+      "main": [[{"node": "Привязать канал WhatsApp", "type": "main", "index": 0}]]
+    },
+    "Обновить клиента (не найден)": {
+      "main": [[{"node": "Привязать канал телефон (SMS)", "type": "main", "index": 0}]]
+    }
+  }
+}
