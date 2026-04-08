@@ -78,6 +78,40 @@ export default function SettingsPage() {
   const [segSaving, setSegSaving] = useState(false);
   const [segSaved, setSegSaved] = useState(false);
 
+  const [integrationForms, setIntegrationForms] = useState<Record<string, Record<string, string>>>({
+    yclients: { company_id: '', api_key: '' },
+    green_api: { partner_token: '' },
+    telegram: { bot_token: '', bot_name: '' },
+  });
+  const [integrationSaving, setIntegrationSaving] = useState<string | null>(null);
+  const [integrationSaved, setIntegrationSaved] = useState<string | null>(null);
+  const [revealedField, setRevealedField] = useState<string | null>(null);
+
+  // Load credentials from DB (separate query — not in OrgConfigContext)
+  useEffect(() => {
+    supabase
+      .from('integration_settings')
+      .select('integration_code, credentials')
+      .eq('org_uid', ORG_UID)
+      .then(({ data }) => {
+        if (!data) return;
+        const forms: Record<string, Record<string, string>> = {
+          yclients: { company_id: '', api_key: '' },
+          green_api: { partner_token: '' },
+          telegram: { bot_token: '', bot_name: '' },
+        };
+        for (const row of data) {
+          if (row.integration_code in forms && row.credentials) {
+            forms[row.integration_code] = {
+              ...forms[row.integration_code],
+              ...(row.credentials as Record<string, string>),
+            };
+          }
+        }
+        setIntegrationForms(forms);
+      });
+  }, []);
+
   // Populate from context once loaded
   useEffect(() => {
     const { service_category_map: _, ...rest } = clientConfig;
@@ -215,6 +249,30 @@ export default function SettingsPage() {
     setSalonSaving(false);
   };
 
+  const saveIntegration = async (code: string) => {
+    setIntegrationSaving(code);
+    await supabase
+      .from('integration_settings')
+      .upsert(
+        {
+          org_uid: ORG_UID,
+          integration_code: code,
+          credentials: integrationForms[code],
+          status: 'connected',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'org_uid,integration_code' },
+      );
+    setIntegrationSaved(code);
+    setTimeout(() => setIntegrationSaved(null), 2000);
+    setIntegrationSaving(null);
+  };
+
+  const revealFor5s = (fieldKey: string) => {
+    setRevealedField(fieldKey);
+    setTimeout(() => setRevealedField(null), 5000);
+  };
+
   const saveSegmentation = async () => {
     setSegSaving(true);
     await supabase
@@ -306,6 +364,189 @@ export default function SettingsPage() {
               {salonSaved && <CheckCircle2 size={14} />}
               {salonSaved ? "Сохранено" : salonSaving ? "Сохранение..." : "Сохранить"}
             </button>
+          </div>
+        </div>
+
+        {/* ── Интеграции ── */}
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Bot size={16} className="text-[#00FF00]" />
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Интеграции</h3>
+          </div>
+          <p className="text-[#5E7488] text-sm mb-4">Credentials внешних сервисов</p>
+
+          <div className="space-y-4">
+            {/* YClients */}
+            {(() => {
+              const code = 'yclients';
+              const form = integrationForms[code];
+              const isSaving = integrationSaving === code;
+              const isSaved = integrationSaved === code;
+              return (
+                <div className="bg-[#0A0D14] border border-[#223444] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center">
+                      <span className="text-[#8299B4] text-xs font-bold">YC</span>
+                    </div>
+                    <span className="text-[#EDF2FA] text-sm font-semibold">YClients</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="text-[#5E7488] text-xs mb-1 block">Company ID</label>
+                      <input
+                        value={form.company_id}
+                        onChange={(e) => setIntegrationForms(f => ({ ...f, [code]: { ...f[code], company_id: e.target.value } }))}
+                        placeholder="1647948"
+                        className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[#5E7488] text-xs mb-1 block">API Key</label>
+                      <div className="flex gap-2">
+                        <input
+                          type={revealedField === `${code}_api_key` ? 'text' : 'password'}
+                          value={form.api_key}
+                          onChange={(e) => setIntegrationForms(f => ({ ...f, [code]: { ...f[code], api_key: e.target.value } }))}
+                          placeholder="••••••••••••"
+                          className="flex-1 bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+                        />
+                        <button
+                          onClick={() => revealFor5s(`${code}_api_key`)}
+                          className="px-2 rounded-lg border border-[#223444] text-[#5E7488] hover:text-[#EDF2FA] text-xs transition-colors flex-shrink-0"
+                        >
+                          {revealedField === `${code}_api_key` ? 'Скрыть' : 'Показать'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => saveIntegration(code)}
+                      disabled={isSaving}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                          : isSaving ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                          : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                      }`}
+                    >
+                      {isSaved && <CheckCircle2 size={12} />}
+                      {isSaved ? "Сохранено" : isSaving ? "Сохранение..." : "Сохранить"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* GREEN-API */}
+            {(() => {
+              const code = 'green_api';
+              const form = integrationForms[code];
+              const isSaving = integrationSaving === code;
+              const isSaved = integrationSaved === code;
+              return (
+                <div className="bg-[#0A0D14] border border-[#223444] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center">
+                      <span className="text-[#8299B4] text-xs font-bold">GA</span>
+                    </div>
+                    <span className="text-[#EDF2FA] text-sm font-semibold">GREEN-API</span>
+                  </div>
+                  <div className="mb-3">
+                    <label className="text-[#5E7488] text-xs mb-1 block">Partner Token</label>
+                    <div className="flex gap-2">
+                      <input
+                        type={revealedField === `${code}_partner_token` ? 'text' : 'password'}
+                        value={form.partner_token}
+                        onChange={(e) => setIntegrationForms(f => ({ ...f, [code]: { ...f[code], partner_token: e.target.value } }))}
+                        placeholder="••••••••••••"
+                        className="flex-1 bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+                      />
+                      <button
+                        onClick={() => revealFor5s(`${code}_partner_token`)}
+                        className="px-2 rounded-lg border border-[#223444] text-[#5E7488] hover:text-[#EDF2FA] text-xs transition-colors flex-shrink-0"
+                      >
+                        {revealedField === `${code}_partner_token` ? 'Скрыть' : 'Показать'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => saveIntegration(code)}
+                      disabled={isSaving}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                          : isSaving ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                          : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                      }`}
+                    >
+                      {isSaved && <CheckCircle2 size={12} />}
+                      {isSaved ? "Сохранено" : isSaving ? "Сохранение..." : "Сохранить"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Telegram */}
+            {(() => {
+              const code = 'telegram';
+              const form = integrationForms[code];
+              const isSaving = integrationSaving === code;
+              const isSaved = integrationSaved === code;
+              return (
+                <div className="bg-[#0A0D14] border border-[#223444] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center">
+                      <span className="text-[#8299B4] text-xs font-bold">TG</span>
+                    </div>
+                    <span className="text-[#EDF2FA] text-sm font-semibold">Telegram</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="text-[#5E7488] text-xs mb-1 block">Имя бота</label>
+                      <input
+                        value={form.bot_name}
+                        onChange={(e) => setIntegrationForms(f => ({ ...f, [code]: { ...f[code], bot_name: e.target.value } }))}
+                        placeholder="@your_bot"
+                        className="w-full bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[#5E7488] text-xs mb-1 block">Bot Token</label>
+                      <div className="flex gap-2">
+                        <input
+                          type={revealedField === `${code}_bot_token` ? 'text' : 'password'}
+                          value={form.bot_token}
+                          onChange={(e) => setIntegrationForms(f => ({ ...f, [code]: { ...f[code], bot_token: e.target.value } }))}
+                          placeholder="••••••••••••"
+                          className="flex-1 bg-[#0F1622] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+                        />
+                        <button
+                          onClick={() => revealFor5s(`${code}_bot_token`)}
+                          className="px-2 rounded-lg border border-[#223444] text-[#5E7488] hover:text-[#EDF2FA] text-xs transition-colors flex-shrink-0"
+                        >
+                          {revealedField === `${code}_bot_token` ? 'Скрыть' : 'Показать'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => saveIntegration(code)}
+                      disabled={isSaving}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                          : isSaving ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                          : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+                      }`}
+                    >
+                      {isSaved && <CheckCircle2 size={12} />}
+                      {isSaved ? "Сохранено" : isSaving ? "Сохранение..." : "Сохранить"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
