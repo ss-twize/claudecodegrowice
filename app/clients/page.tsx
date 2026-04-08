@@ -746,7 +746,7 @@ export default function ClientsPage() {
                           <td className="px-5 py-3.5 text-[#EDF2FA] text-sm whitespace-nowrap">{formatCurrency(client.avgCheck)}</td>
                           <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.discount}%</td>
                           <td className="px-5 py-3.5"><ServicesCell services={client.services.slice(-3)} /></td>
-                          <td className="px-5 py-3.5 text-sm whitespace-nowrap"><span className="text-xs px-2 py-1 rounded-md bg-[#1A2535] text-[#8299B4] border border-[#223444]">{client.communicationChannel}</span></td>
+                          <td className="px-5 py-3.5 text-sm whitespace-nowrap"><span className={`text-xs px-2 py-1 rounded-md border ${client.communicationChannel === 'Нет канала' ? 'bg-[#1A1A1A] text-[#5E5E5E] border-[#333]' : client.communicationChannel === 'Телефон' ? 'bg-[#1A1F12] text-[#7A8A6A] border-[#2A3020]' : 'bg-[#1A2535] text-[#8299B4] border-[#223444]'}`}>{client.communicationChannel}</span></td>
                           <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.master}</td>
                           <td className="px-5 py-3.5 text-[#8299B4] text-sm whitespace-nowrap">{client.birthday ? new Date(client.birthday).toLocaleDateString("ru-RU") : "—"}</td>
                           <td className="px-5 py-3.5 text-[#8299B4] text-sm max-w-[260px] truncate" title={client.notes}>{client.notes || "—"}</td>

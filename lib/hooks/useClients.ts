@@ -7,7 +7,8 @@ export type LifecycleStatus = 'lead' | 'client' | 'inactive'
 export type VisitFrequency = 'weekly' | 'biweekly' | 'monthly' | 'rare'
 export type ValueCategory = 'high' | 'medium' | 'low'
 export type CommunicationActivity = 'opened' | 'replied' | 'ignored'
-export type ContactChannel = 'Telegram' | 'Whatsapp' | 'Max' | 'Телефон'
+export type ContactChannel = 'Telegram' | 'Whatsapp' | 'Max' | 'Телефон' | 'Нет канала'
+export type WaCheckStatus = 'unchecked' | 'found' | 'not_found'
 
 export interface Client {
   id: string
@@ -59,6 +60,7 @@ export interface Client {
   reactedToOffers: boolean
   lifecycleStatus: LifecycleStatus
   sourceChannel: string | null
+  waCheckStatus: WaCheckStatus
 }
 
 const SERVICE_CATEGORY_MAP: Record<string, string> = {
@@ -227,11 +229,17 @@ function mapRow(row: any): Client {
   const master = String(firstDefined(row, ['master', 'master_name', 'favorite_master']) || '—')
   const branch = String(firstDefined(row, ['branch', 'branch_name', 'salon_branch']) || '—')
   const rawChannel = String(firstDefined(row, ['channel', 'communication_channel', 'preferred_channel', 'contact']) || '').toLowerCase()
+  const waCheckStatus: WaCheckStatus =
+    (['unchecked', 'found', 'not_found'] as const).includes(row.wa_check_status)
+      ? row.wa_check_status as WaCheckStatus
+      : 'unchecked'
   const communicationChannel: ContactChannel =
     rawChannel.includes('telegram') || rawChannel === 'tg' ? 'Telegram'
       : rawChannel.includes('whatsapp') || rawChannel.includes('whats') || rawChannel === 'wa' ? 'Whatsapp'
         : rawChannel.includes('max') ? 'Max'
-          : 'Телефон'
+          // Телефон (SMS) только если WhatsApp явно не найден
+          : waCheckStatus === 'not_found' ? 'Телефон'
+            : 'Нет канала'
   const channel = communicationChannel
   const telegram = null
   const daysAbsent = diffInDays(lastVisitAt)
@@ -311,6 +319,7 @@ function mapRow(row: any): Client {
     reactedToOffers,
     lifecycleStatus,
     sourceChannel,
+    waCheckStatus,
   }
 }
 
