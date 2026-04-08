@@ -378,7 +378,9 @@ function matchesCampaignFilter(client: Client, options: CampaignFilterOptions): 
   addCheck(options.cancellations !== "all", matchesBinaryFilter(client.cancellationCount > 0, options.cancellations));
   addCheck(options.noShows !== "all", matchesBinaryFilter(client.noShowCount > 0, options.noShows));
   addCheck(options.upcomingAppointment !== "all", matchesBinaryFilter(client.upcomingAppointment, options.upcomingAppointment));
-  addCheck(options.channel !== "all", client.communicationChannel === options.channel || (options.channel === "Telegram" && Boolean(client.telegram)));
+  addCheck(options.channel !== "all",
+    client.communicationChannel?.toLowerCase() === options.channel.toLowerCase() ||
+    (options.channel.toLowerCase() === "telegram" && Boolean(client.telegram)));
   addCheck(options.consentToMarketing !== "all", matchesBinaryFilter(client.consentToMarketing, options.consentToMarketing));
   addCheck(options.source !== "all", client.source === options.source);
   addCheck(Boolean(options.tagsQuery.trim()), matchesText(client.tags.join(" "), options.tagsQuery));
