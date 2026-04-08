@@ -76,7 +76,7 @@ def make_action_log_node(channel, position):
             },
             "sendBody": True,
             "specifyBody": "json",
-            "jsonBody": '={{ JSON.stringify({ org_uid: "' + ORG_UID + '", type: "followup_sent", payload: { client_id: $json.client_id, channel: "' + channel + '", record_id: $json.yclients_record_id } }) }}',
+            "jsonBody": f'={{{{ {{ org_uid: "{ORG_UID}", type: "followup_sent", payload: {{ client_id: $json.client_id, channel: "{channel}", record_id: $json.yclients_record_id }} }} }}}}',
             "options": {"timeout": 10000},
         },
         "continueOnFail": True,
