@@ -8,19 +8,20 @@ export interface SystemState {
   name: string
   description: string
   enabled: boolean
+  is_available: boolean
   updated_at: string
 }
 
 export const DEFAULT_SYSTEMS: SystemState[] = [
-  { id: '1', system_code: 'main_agent',         name: 'Основной агент',       description: 'Обработка входящих обращений и запись клиентов',      enabled: true,  updated_at: '' },
-  { id: '2', system_code: 'vozvrat_klienta',    name: 'Возврат клиента',      description: 'Авторассылка клиентам, не посещавшим более 50 дней',  enabled: false, updated_at: '' },
-  { id: '3', system_code: 'blagodarnost',       name: 'Благодарность',        description: 'Запрос отзыва и чаевых после визита',                 enabled: true,  updated_at: '' },
-  { id: '4', system_code: 'napominaniya',       name: 'Напоминания',          description: 'Поэтапное подтверждение записи (24ч, 2ч, 1ч)',        enabled: true,  updated_at: '' },
-  { id: '5', system_code: 'otchetnost',         name: 'Отчётность',           description: 'Еженедельный отчёт владельцу',                        enabled: true,  updated_at: '' },
-  { id: '6', system_code: 'avto_sdvig',         name: 'Авто-сдвиг',          description: 'Предложить более раннее время при появлении окна',    enabled: false, updated_at: '' },
-  { id: '7', system_code: 'doprodazha',         name: 'Допродажа',            description: 'Смежные услуги после записи',                         enabled: false, updated_at: '' },
-  { id: '8', system_code: 'analitika_otmeny',   name: 'Аналитика отмены',     description: 'Уточнение причины отмены или неявки',                 enabled: true,  updated_at: '' },
-  { id: '9', system_code: 'obrabotchik_otzyvov',name: 'Обработчик отзывов',   description: 'Автоответы на отзывы + уведомление администратора',   enabled: false, updated_at: '' },
+  { id: '1', system_code: 'main_agent',          name: 'Основной агент',        description: 'Обработка входящих обращений и запись клиентов',      enabled: true,  is_available: true,  updated_at: '' },
+  { id: '2', system_code: 'vozvrat_klienta',     name: 'Возврат клиента',       description: 'Авторассылка клиентам, не посещавшим более 50 дней',  enabled: false, is_available: true,  updated_at: '' },
+  { id: '3', system_code: 'blagodarnost',        name: 'Благодарность',         description: 'Запрос отзыва и чаевых после визита',                 enabled: true,  is_available: true,  updated_at: '' },
+  { id: '4', system_code: 'napominaniya',        name: 'Напоминания',           description: 'Поэтапное подтверждение записи (24ч, 2ч, 1ч)',        enabled: true,  is_available: true,  updated_at: '' },
+  { id: '5', system_code: 'otchetnost',          name: 'Отчётность',            description: 'Еженедельный отчёт владельцу',                        enabled: true,  is_available: true,  updated_at: '' },
+  { id: '6', system_code: 'avto_sdvig',          name: 'Авто-сдвиг',           description: 'Предложить более раннее время при появлении окна',    enabled: false, is_available: false, updated_at: '' },
+  { id: '7', system_code: 'doprodazha',          name: 'Допродажа',             description: 'Смежные услуги после записи',                         enabled: false, is_available: true,  updated_at: '' },
+  { id: '8', system_code: 'analitika_otmeny',    name: 'Аналитика отмены',      description: 'Уточнение причины отмены или неявки',                 enabled: true,  is_available: false, updated_at: '' },
+  { id: '9', system_code: 'obrabotchik_otzyvov', name: 'Обработчик отзывов',    description: 'Автоответы на отзывы + уведомление администратора',   enabled: false, is_available: false, updated_at: '' },
 ]
 
 export function useSystemStates() {

@@ -17,7 +17,6 @@ const TELEGRAM_CHANNEL = {
   botName: "", webhookUrl: "",
 };
 
-const IN_DEVELOPMENT_SYSTEM_CODES = new Set(["avto_sdvig", "analitika_otmeny", "obrabotchik_otzyvov"]);
 
 export default function SystemPage() {
   const { role, isOwner } = useAuth();
@@ -173,7 +172,7 @@ export default function SystemPage() {
             <p className="text-[#5E7488] text-sm mb-6">Автоматические сценарии работы с клиентами</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {autoSystems.map((system) => {
-                const isInDevelopment = IN_DEVELOPMENT_SYSTEM_CODES.has(system.system_code);
+                const isInDevelopment = !system.is_available;
 
                 return (
                 <div
