@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
       ? Math.round((analyticsData.totalMessages / analyticsData.totalClients) * 10) / 10
       : 0,
     retention: 0,
-    avgResponseTime: â,
+    avgResponseTime: '—',
     offHoursAppointments: 0,
     timeSaved: 0,
     reactivated: analyticsData?.campaignRecipients ?? 0,

@@ -199,7 +199,7 @@ function computeMarketingSegment(status: ClientStatus, daysAbsent: number): stri
   return 'Постоянные'
 }
 
-function mapRow(row: any): Client {
+function mapRow(row: any, upcomingClientIds?: Set<string>): Client {
   const id = String(firstDefined(row, ['id', 'client_id']) || '')
   const fullName =
     firstDefined<string>(row, ['display_name', 'name', 'fullname']) ||
@@ -228,30 +228,42 @@ function mapRow(row: any): Client {
   const city = String(firstDefined(row, ['city', 'client_city', 'location']) || 'Не указан')
   const master = String(firstDefined(row, ['master', 'master_name', 'favorite_master']) || '—')
   const branch = String(firstDefined(row, ['branch', 'branch_name', 'salon_branch']) || '—')
-  const rawChannel = String(firstDefined(row, ['channel', 'communication_channel', 'preferred_channel', 'contact']) || '').toLowerCase()
   const waCheckStatus: WaCheckStatus =
     (['unchecked', 'found', 'not_found'] as const).includes(row.wa_check_status)
       ? row.wa_check_status as WaCheckStatus
       : 'unchecked'
+
+  // Канал определяется по реальным полям DB (telegram_user_id / whatsapp_user_id / max_user_id)
+  const hasTelegram = Boolean(row.telegram_user_id)
+  const hasWhatsapp = Boolean(row.whatsapp_user_id)
+  const hasMax = Boolean(row.max_user_id)
+  // Поддержка legacy поля channel (если вдруг заполнено)
+  const rawChannel = String(firstDefined(row, ['channel', 'communication_channel', 'preferred_channel', 'contact']) || '').toLowerCase()
   const communicationChannel: ContactChannel =
     rawChannel.includes('telegram') || rawChannel === 'tg' ? 'Telegram'
       : rawChannel.includes('whatsapp') || rawChannel.includes('whats') || rawChannel === 'wa' ? 'Whatsapp'
         : rawChannel.includes('max') ? 'Max'
-          // Телефон (SMS) только если WhatsApp явно не найден
-          : waCheckStatus === 'not_found' ? 'Телефон'
-            : 'Нет канала'
+          : hasTelegram ? 'Telegram'
+            : hasWhatsapp ? 'Whatsapp'
+              : hasMax ? 'Max'
+                : waCheckStatus === 'not_found' ? 'Телефон'
+                  : 'Нет канала'
   const channel = communicationChannel
-  const telegram = null
+  // telegram_user_id как строка — для поиска и проверки наличия Telegram
+  const telegram = row.telegram_user_id ? String(row.telegram_user_id) : null
   const daysAbsent = diffInDays(lastVisitAt)
   const clientStatus = computeClientStatus(revenue, visits, daysAbsent)
   const segment = computeSegment(createdAt, lastVisitAt)
-  const cancellationCount = toNumber(firstDefined(row, ['cancel_count', 'cancellations_count']), 0)
-  const noShowCount = toNumber(firstDefined(row, ['no_show_count', 'missed_count']), 0)
+  const cancellationCount = toNumber(firstDefined(row, ['cancel_count', 'cancellations_count', 'cancellation_count']), 0)
+  const noShowCount = toNumber(firstDefined(row, ['no_show_count', 'missed_count', 'no_shows']), 0)
   const communicationActivity = firstDefined<CommunicationActivity>(row, ['communication_activity', 'message_activity']) || 'ignored'
   const hasBonuses = boolFromAny(firstDefined(row, ['has_bonuses', 'bonuses_available']), false)
   const hasSubscription = boolFromAny(firstDefined(row, ['has_subscription', 'subscription_active']), false)
   const hasDeposit = boolFromAny(firstDefined(row, ['has_deposit', 'deposit_balance']), false)
-  const upcomingAppointment = boolFromAny(firstDefined(row, ['has_upcoming_appointment', 'future_appointment']), false)
+  // upcomingAppointment: проверяем по данным из appointments (передаётся через upcomingClientIds)
+  const upcomingAppointment = upcomingClientIds
+    ? upcomingClientIds.has(String(firstDefined(row, ['id', 'client_id']) || ''))
+    : boolFromAny(firstDefined(row, ['has_upcoming_appointment', 'future_appointment']), false)
   const consentToMarketing = boolFromAny(firstDefined(row, ['consent_to_marketing', 'marketing_consent']), true)
   const lastCampaignAt = toDateString(firstDefined(row, ['last_campaign_at', 'last_mailing_at']))
   const age = computeAge(birthday)
@@ -329,19 +341,28 @@ export function useClients() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchClients = async () => {
-    const { data, error: err } = await supabase
-      .from('clients')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(2000)
+    const now = new Date().toISOString()
 
-    if (err) {
-      console.error('useClients error:', err.message)
-      setError(err.message)
-    } else {
-      setClients((data || []).map(mapRow))
-      setError(null)
+    // Параллельно загружаем клиентов и предстоящие записи
+    const [clientsRes, appointmentsRes] = await Promise.all([
+      supabase.from('clients').select('*').order('created_at', { ascending: false }).limit(2000),
+      supabase.from('appointments').select('client_id').gte('date', now).eq('deleted', false).not('status', 'eq', 'cancelled').limit(5000),
+    ])
+
+    if (clientsRes.error) {
+      console.error('useClients error:', clientsRes.error.message)
+      setError(clientsRes.error.message)
+      setLoading(false)
+      return
     }
+
+    // Строим set client_id с предстоящими записями для O(1) lookup
+    const upcomingClientIds = new Set<string>(
+      (appointmentsRes.data || []).map((a: any) => String(a.client_id)).filter(Boolean)
+    )
+
+    setClients((clientsRes.data || []).map(row => mapRow(row, upcomingClientIds)))
+    setError(null)
     setLoading(false)
   }
 
