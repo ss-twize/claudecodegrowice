@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-4 xl:flex-row">
           <div className="xl:w-2/3 flex flex-col gap-4">
-            <RevenueChart data={revenueSeries} />
+            <RevenueChart />
             <div className="xl:flex-1">
               <AppointmentsChart data={appointmentsByDay} />
             </div>
