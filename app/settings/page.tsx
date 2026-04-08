@@ -14,7 +14,10 @@ import {
   RefreshCw,
   MessageSquare,
   Bot,
+  Settings2,
+  Users,
 } from "lucide-react";
+import { useOrgConfig } from "@/lib/contexts/OrgConfigContext";
 
 type ImportSource = "yclients" | "google_sheets";
 
@@ -39,6 +42,27 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
 
 export default function SettingsPage() {
   const { files, setFiles } = useKnowledgeFiles();
+
+  const { settings: orgConfigSettings } = useOrgConfig();
+
+  const [salonForm, setSalonForm] = useState({
+    salon_name: '',
+    timezone: 'Europe/Moscow',
+    currency: 'RUB',
+    support_url: '',
+  });
+  const [salonSaving, setSalonSaving] = useState(false);
+  const [salonSaved, setSalonSaved] = useState(false);
+
+  // Populate form from context once loaded
+  useEffect(() => {
+    setSalonForm({
+      salon_name: orgConfigSettings.salon_name,
+      timezone: orgConfigSettings.timezone,
+      currency: orgConfigSettings.currency,
+      support_url: orgConfigSettings.support_url ?? '',
+    });
+  }, [orgConfigSettings]);
 
   const [greetingSaved, setGreetingSaved] = useState(false);
 
@@ -158,10 +182,100 @@ export default function SettingsPage() {
     setImportSourceSaving(false);
   };
 
+  const saveSalon = async () => {
+    setSalonSaving(true);
+    await supabase
+      .from('org_settings')
+      .upsert(
+        { org_uid: ORG_UID, ...salonForm, updated_at: new Date().toISOString() },
+        { onConflict: 'org_uid' },
+      );
+    setSalonSaved(true);
+    setTimeout(() => setSalonSaved(false), 2000);
+    setSalonSaving(false);
+  };
+
   return (
     <div>
       <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
       <div className="p-6 space-y-6">
+        {/* ── Параметры салона ── */}
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Settings2 size={16} className="text-[#00FF00]" />
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Параметры салона</h3>
+          </div>
+          <p className="text-[#5E7488] text-sm mb-4">Основные сведения и региональные настройки</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-[#5E7488] text-xs mb-1 block">Название салона</label>
+              <input
+                value={salonForm.salon_name}
+                onChange={(e) => setSalonForm(f => ({ ...f, salon_name: e.target.value }))}
+                placeholder="Салон красоты"
+                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+              />
+            </div>
+            <div>
+              <label className="text-[#5E7488] text-xs mb-1 block">Ссылка поддержки</label>
+              <input
+                value={salonForm.support_url}
+                onChange={(e) => setSalonForm(f => ({ ...f, support_url: e.target.value }))}
+                placeholder="https://t.me/support"
+                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]"
+              />
+            </div>
+            <div>
+              <label className="text-[#5E7488] text-xs mb-1 block">Часовой пояс</label>
+              <select
+                value={salonForm.timezone}
+                onChange={(e) => setSalonForm(f => ({ ...f, timezone: e.target.value }))}
+                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors"
+              >
+                <option value="Europe/Moscow">Москва (UTC+3)</option>
+                <option value="Europe/Kaliningrad">Калининград (UTC+2)</option>
+                <option value="Asia/Yekaterinburg">Екатеринбург (UTC+5)</option>
+                <option value="Asia/Novosibirsk">Новосибирск (UTC+7)</option>
+                <option value="Asia/Krasnoyarsk">Красноярск (UTC+7)</option>
+                <option value="Asia/Irkutsk">Иркутск (UTC+8)</option>
+                <option value="Asia/Vladivostok">Владивосток (UTC+10)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[#5E7488] text-xs mb-1 block">Валюта</label>
+              <select
+                value={salonForm.currency}
+                onChange={(e) => setSalonForm(f => ({ ...f, currency: e.target.value }))}
+                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors"
+              >
+                <option value="RUB">₽ Рубль</option>
+                <option value="USD">$ Доллар</option>
+                <option value="EUR">€ Евро</option>
+                <option value="KZT">₸ Тенге</option>
+                <option value="BYN">Br Белорусский рубль</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={saveSalon}
+              disabled={salonSaving}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                salonSaved
+                  ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                  : salonSaving
+                    ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                    : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+              }`}
+            >
+              {salonSaved && <CheckCircle2 size={14} />}
+              {salonSaved ? "Сохранено" : salonSaving ? "Сохранение..." : "Сохранить"}
+            </button>
+          </div>
+        </div>
+
         <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Bot size={16} className="text-[#00FF00]" />
