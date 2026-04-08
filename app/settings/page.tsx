@@ -43,7 +43,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
 export default function SettingsPage() {
   const { files, setFiles } = useKnowledgeFiles();
 
-  const { settings: orgConfigSettings } = useOrgConfig();
+  const { settings: orgConfigSettings, clientConfig } = useOrgConfig();
 
   const [salonForm, setSalonForm] = useState({
     salon_name: '',
@@ -63,6 +63,26 @@ export default function SettingsPage() {
       support_url: orgConfigSettings.support_url ?? '',
     });
   }, [orgConfigSettings]);
+
+  const [segForm, setSegForm] = useState({
+    vip_revenue_min: 80000,
+    vip_visits_min: 12,
+    lost_days: 120,
+    sleeping_days: 60,
+    active_days: 30,
+    at_risk_days: 90,
+    high_value_revenue: 50000,
+    medium_value_revenue: 15000,
+    reactivation_days: 45,
+  });
+  const [segSaving, setSegSaving] = useState(false);
+  const [segSaved, setSegSaved] = useState(false);
+
+  // Populate from context once loaded
+  useEffect(() => {
+    const { service_category_map: _, ...rest } = clientConfig;
+    setSegForm(rest);
+  }, [clientConfig]);
 
   const [greetingSaved, setGreetingSaved] = useState(false);
 
@@ -195,6 +215,19 @@ export default function SettingsPage() {
     setSalonSaving(false);
   };
 
+  const saveSegmentation = async () => {
+    setSegSaving(true);
+    await supabase
+      .from('client_config')
+      .upsert(
+        { org_uid: ORG_UID, ...segForm, updated_at: new Date().toISOString() },
+        { onConflict: 'org_uid' },
+      );
+    setSegSaved(true);
+    setTimeout(() => setSegSaved(false), 2000);
+    setSegSaving(false);
+  };
+
   return (
     <div>
       <Header title="Настройки" subtitle="Управление агентом, базой знаний и параметрами" />
@@ -272,6 +305,107 @@ export default function SettingsPage() {
             >
               {salonSaved && <CheckCircle2 size={14} />}
               {salonSaved ? "Сохранено" : salonSaving ? "Сохранение..." : "Сохранить"}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Сегментация клиентов ── */}
+        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Users size={16} className="text-[#00FF00]" />
+            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Сегментация клиентов</h3>
+          </div>
+          <p className="text-[#5E7488] text-sm mb-4">Пороги для автоматической классификации клиентов</p>
+
+          <div className="space-y-4">
+            {/* Статусы */}
+            <div>
+              <p className="text-[#8299B4] text-xs font-medium mb-2 uppercase tracking-wide">Статусы клиентов</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">VIP — от, ₽</span>
+                  <input type="number" value={segForm.vip_revenue_min}
+                    onChange={(e) => setSegForm(f => ({ ...f, vip_revenue_min: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">VIP — от, визитов</span>
+                  <input type="number" value={segForm.vip_visits_min}
+                    onChange={(e) => setSegForm(f => ({ ...f, vip_visits_min: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Потерян, дней</span>
+                  <input type="number" value={segForm.lost_days}
+                    onChange={(e) => setSegForm(f => ({ ...f, lost_days: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Спящий, дней</span>
+                  <input type="number" value={segForm.sleeping_days}
+                    onChange={(e) => setSegForm(f => ({ ...f, sleeping_days: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Активный, дней</span>
+                  <input type="number" value={segForm.active_days}
+                    onChange={(e) => setSegForm(f => ({ ...f, active_days: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Зона риска, дней</span>
+                  <input type="number" value={segForm.at_risk_days}
+                    onChange={(e) => setSegForm(f => ({ ...f, at_risk_days: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+              </div>
+            </div>
+
+            {/* Ценность */}
+            <div>
+              <p className="text-[#8299B4] text-xs font-medium mb-2 uppercase tracking-wide">Ценность клиента</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Высокая, от ₽</span>
+                  <input type="number" value={segForm.high_value_revenue}
+                    onChange={(e) => setSegForm(f => ({ ...f, high_value_revenue: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Средняя, от ₽</span>
+                  <input type="number" value={segForm.medium_value_revenue}
+                    onChange={(e) => setSegForm(f => ({ ...f, medium_value_revenue: Number(e.target.value) }))}
+                    className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+                </div>
+              </div>
+            </div>
+
+            {/* Реактивация */}
+            <div>
+              <p className="text-[#8299B4] text-xs font-medium mb-2 uppercase tracking-wide">Реактивация</p>
+              <div className="flex items-center gap-2 max-w-xs">
+                <span className="text-[#5E7488] text-xs w-32 flex-shrink-0">Кандидат, дней</span>
+                <input type="number" value={segForm.reactivation_days}
+                  onChange={(e) => setSegForm(f => ({ ...f, reactivation_days: Number(e.target.value) }))}
+                  className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2 outline-none focus:border-[#00FF00]/50 transition-colors" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={saveSegmentation}
+              disabled={segSaving}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                segSaved
+                  ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30"
+                  : segSaving
+                    ? "bg-[#00FF00]/50 text-black cursor-not-allowed"
+                    : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
+              }`}
+            >
+              {segSaved && <CheckCircle2 size={14} />}
+              {segSaved ? "Сохранено" : segSaving ? "Сохранение..." : "Сохранить пороги"}
             </button>
           </div>
         </div>
