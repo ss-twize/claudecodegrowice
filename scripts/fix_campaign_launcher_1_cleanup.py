@@ -62,6 +62,7 @@ const campaignRunId = items[0]?.json.campaign_run_id;
 const text = items[0]?.json.text;
 
 const idsParam = clientIds.map(id => `"${id}"`).join(',');
+if (!clientIds.length) return [];
 
 // Batch fetch: client_channels, channel_connections, client phones
 const [ccRaw, connRaw, clientsRaw] = await Promise.all([
@@ -69,6 +70,9 @@ const [ccRaw, connRaw, clientsRaw] = await Promise.all([
   fetch(`${SUPABASE_URL}/rest/v1/channel_connections?channel_code=in.("whatsapp","max")`, { headers }).then(r => r.json()),
   fetch(`${SUPABASE_URL}/rest/v1/clients?id=in.(${idsParam})&select=id,phone`, { headers }).then(r => r.json()),
 ]);
+if (connRaw.error) throw new Error(`channel_connections fetch failed: ${connRaw.error.message || JSON.stringify(connRaw.error)}`);
+if (ccRaw.error) throw new Error(`client_channels fetch failed: ${ccRaw.error.message || JSON.stringify(ccRaw.error)}`);
+if (clientsRaw.error) throw new Error(`clients fetch failed: ${clientsRaw.error.message || JSON.stringify(clientsRaw.error)}`);
 
 // Fetch channel user records (only for IDs we actually have)
 const tgIds = ccRaw.filter(c => c.channel_code === 'telegram').map(c => `"${c.channel_user_id}"`);
@@ -195,7 +199,7 @@ def main():
     wf = fetch_wf(WF_ID)
     nodes_by_name = {n["name"]: n for n in wf["nodes"]}
 
-    REQUIRED = ["Load Telegram Recipient", "Resolve Targets", "Split Recipient IDs1", "Normalize Request"]
+    REQUIRED = ["Resolve Targets", "Split Recipient IDs1", "Normalize Request"]
     missing = [n for n in REQUIRED if n not in nodes_by_name]
     if missing:
         print(f"  ✗ Required nodes missing: {missing} — abort")
