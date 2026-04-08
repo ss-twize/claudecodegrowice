@@ -169,6 +169,7 @@ def main():
 
     if "Создать campaign_run" in nodes_by_name:
         print("⚠ 'Создать campaign_run' already exists — abort (already patched?)")
+        print("  To update JS code only (without re-adding nodes), run the dedup script.")
         return
 
     conns = wf["connections"]
