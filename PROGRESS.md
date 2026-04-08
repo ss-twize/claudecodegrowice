@@ -27,6 +27,8 @@
 | 15 | Автообновление контактных данных при входящих сообщениях (upsert_channel_user_profile) | ✅ | 5 |
 | 16 | Контакты сотрудников: таблица staff_contacts + update_staff_contact_on_message RPC | ✅ | 5 |
 | 17 | WA Check: проверка WhatsApp по телефону — workflow + поля wa_check_status/wa_checked_at | ✅ | 6 |
+| 18 | SMS fallback enforcement: DB-триггеры + Reminder System fix (wa_check_status) + frontend channel display | ✅ | 6 |
+| 19 | Анти-игнор в AiAdmin Telegram: 14 нод (сброс на входе + оценка + LLM + напоминание via native TG node) | ✅ | 6 |
 
 ### Ожидает действий от владельца
 
