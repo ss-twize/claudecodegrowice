@@ -31,6 +31,7 @@
 | 19 | Анти-игнор в AiAdmin Telegram: 14 нод (сброс на входе + оценка + LLM + напоминание via native TG node) | ✅ | 6 |
 | 20 | Reminder System: TG send исправлен (GREEN-API→Telegram inline keyboard) + continueOnFail на 16 send нодах | ✅ | 6 |
 | 21 | Follow-up: production hardening — loader nodes, atomic dedup RPC, continueOnFail, action_log | ✅ | 6 |
+| 22 | Campaign Launcher: remove clients_tg legacy branch, rewrite Resolve Targets multi-channel, add campaign_runs logging | ✅ | 8 |
 
 ### Ожидает действий от владельца
 
