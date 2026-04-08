@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, ORG_UID } from '../supabase'
-import { useOrgConfig, type ClientConfig } from '../contexts/OrgConfigContext'
+import { useOrgConfig, type ClientConfig, CLIENT_CONFIG_DEFAULTS } from '../contexts/OrgConfigContext'
 
 export type ClientStatus = 'new' | 'regular' | 'sleeping' | 'lost' | 'vip'
 export type LifecycleStatus = 'lead' | 'client' | 'inactive'
