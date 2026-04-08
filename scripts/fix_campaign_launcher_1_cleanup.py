@@ -84,6 +84,9 @@ const [tgRaw, waRaw, maxRaw] = await Promise.all([
   waIds.length ? fetch(`${SUPABASE_URL}/rest/v1/whatsapp_users?id=in.(${waIds.join(',')})`, { headers }).then(r => r.json()) : Promise.resolve([]),
   maxIds.length ? fetch(`${SUPABASE_URL}/rest/v1/max_users?id=in.(${maxIds.join(',')})`, { headers }).then(r => r.json()) : Promise.resolve([]),
 ]);
+if (tgRaw.error) throw new Error(`telegram_users fetch failed: ${tgRaw.error.message || JSON.stringify(tgRaw.error)}`);
+if (waRaw.error) throw new Error(`whatsapp_users fetch failed: ${waRaw.error.message || JSON.stringify(waRaw.error)}`);
+if (maxRaw.error) throw new Error(`max_users fetch failed: ${maxRaw.error.message || JSON.stringify(maxRaw.error)}`);
 
 // Index by id
 const tgUsers = Object.fromEntries(tgRaw.map(u => [u.id, u]));
