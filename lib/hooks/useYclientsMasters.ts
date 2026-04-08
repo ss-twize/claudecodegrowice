@@ -106,7 +106,7 @@ export function useYclientsMasters() {
 
     const ch = supabase
       .channel('masters_yclients_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'masters' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'masters', filter: `org_uid=eq.${ORG_UID}` }, (payload) => {
         const incoming = payload.new ? normalizeMaster(payload.new) : null
 
         setMasters((prev) => {

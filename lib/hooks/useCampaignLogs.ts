@@ -72,7 +72,7 @@ export function useCampaignLogs(limit = 100) {
     fetchLogs()
     const ch = supabase
       .channel('campaign_logs_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'action_log' }, fetchLogs)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'action_log', filter: `org_uid=eq.${ORG_UID}` }, fetchLogs)
       .subscribe()
 
     return () => {

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../supabase'
+import { supabase, ORG_UID } from '../supabase'
 
 export interface DashboardStats {
   monthlyRevenue: number
@@ -39,6 +39,8 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const debounceRef = { timer: null as ReturnType<typeof setTimeout> | null }
+
     const load = async () => {
       const curr = monthBounds(0)
       const prev = monthBounds(-1)
@@ -49,10 +51,10 @@ export function useDashboardStats() {
         { count: currNew },
         { count: prevNew },
       ] = await Promise.all([
-        supabase.from('appointments').select('price').gte('date', curr.start).lte('date', `${curr.end}T23:59:59`),
-        supabase.from('appointments').select('price').gte('date', prev.start).lte('date', `${prev.end}T23:59:59`),
-        supabase.from('clients_tg').select('tg_id', { count: 'exact', head: true }).gte('created_at', curr.start),
-        supabase.from('clients_tg').select('tg_id', { count: 'exact', head: true }).gte('created_at', prev.start).lt('created_at', curr.start),
+        supabase.from('appointments').select('price').eq('org_uid', ORG_UID).gte('date', curr.start).lte('date', `${curr.end}T23:59:59`),
+        supabase.from('appointments').select('price').eq('org_uid', ORG_UID).gte('date', prev.start).lte('date', `${prev.end}T23:59:59`),
+        supabase.from('clients').select('id', { count: 'exact', head: true }).eq('org_uid', ORG_UID).gte('created_at', curr.start),
+        supabase.from('clients').select('id', { count: 'exact', head: true }).eq('org_uid', ORG_UID).gte('created_at', prev.start).lt('created_at', curr.start),
       ])
 
       const currRev = (currAppts || []).reduce((s, r) => s + (Number(r.price) || 0), 0)
@@ -74,17 +76,23 @@ export function useDashboardStats() {
 
     load()
 
+    const debouncedLoad = () => {
+      if (debounceRef.timer) clearTimeout(debounceRef.timer)
+      debounceRef.timer = setTimeout(() => { load() }, 300)
+    }
+
     const apptCh = supabase
       .channel('dashboard_stats_appointments_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `org_uid=eq.${ORG_UID}` }, debouncedLoad)
       .subscribe()
 
     const clientsCh = supabase
       .channel('dashboard_stats_clients_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients_tg' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients', filter: `org_uid=eq.${ORG_UID}` }, debouncedLoad)
       .subscribe()
 
     return () => {
+      if (debounceRef.timer) clearTimeout(debounceRef.timer)
       supabase.removeChannel(apptCh)
       supabase.removeChannel(clientsCh)
     }

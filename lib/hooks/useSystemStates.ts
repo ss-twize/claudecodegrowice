@@ -31,7 +31,7 @@ export function useSystemStates() {
       .then(({ data }) => { if (data?.length) setSystems(data) })
 
     const ch = supabase.channel('system_states_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_states' },
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_states', filter: `org_uid=eq.${ORG_UID}` },
         (p) => {
           if (p.eventType === 'UPDATE') setSystems(prev => prev.map(s => s.id === (p.new as any).id ? p.new as SystemState : s))
         })

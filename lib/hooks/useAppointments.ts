@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../supabase'
+import { supabase, ORG_UID } from '../supabase'
 
 export interface Appointment {
   id: string
@@ -75,6 +75,7 @@ export function useAppointments(limit = 300) {
     const { data, error: err } = await supabase
       .from('appointments')
       .select('record_id, status, service_name, master_name, date, duration_min, price, clientName, phone')
+      .eq('org_uid', ORG_UID)
       .order('date', { ascending: false })
       .limit(limit)
 
@@ -92,7 +93,7 @@ export function useAppointments(limit = 300) {
     fetchAppointments()
     const ch = supabase
       .channel('appointments_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, fetchAppointments)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `org_uid=eq.${ORG_UID}` }, fetchAppointments)
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

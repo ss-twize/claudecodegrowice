@@ -16,11 +16,14 @@ export function useKnowledgeFiles() {
   const [files, setFiles] = useState<KnowledgeFile[]>([])
 
   useEffect(() => {
-    supabase.from('knowledge_files').select('*').eq('org_uid', ORG_UID).order('created_at', { ascending: false })
+    supabase.from('knowledge_files')
+      .select('id,name,file_type,storage_url,drive_url,status,created_at')
+      .eq('org_uid', ORG_UID)
+      .order('created_at', { ascending: false })
       .then(({ data }) => { if (data?.length) setFiles(data) })
 
     const ch = supabase.channel('knowledge_files_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'knowledge_files' },
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'knowledge_files', filter: `org_uid=eq.${ORG_UID}` },
         (p) => {
           if (p.eventType === 'INSERT') setFiles(prev => [p.new as KnowledgeFile, ...prev])
           if (p.eventType === 'UPDATE') setFiles(prev => prev.map(f => f.id === (p.new as any).id ? p.new as KnowledgeFile : f))

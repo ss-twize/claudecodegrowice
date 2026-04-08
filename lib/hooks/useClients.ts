@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../supabase'
+import { supabase, ORG_UID } from '../supabase'
 
 export type ClientStatus = 'new' | 'regular' | 'sleeping' | 'lost' | 'vip'
 export type LifecycleStatus = 'lead' | 'client' | 'inactive'
@@ -345,8 +345,18 @@ export function useClients() {
 
     // Параллельно загружаем клиентов и предстоящие записи
     const [clientsRes, appointmentsRes] = await Promise.all([
-      supabase.from('clients').select('*').order('created_at', { ascending: false }).limit(2000),
-      supabase.from('appointments').select('client_id').gte('date', now).eq('deleted', false).not('status', 'eq', 'cancelled').limit(5000),
+      supabase.from('clients')
+        .select('id,name,phone,gender,sex,age,birth_date,birthday,revenue,spent,ltv,paid,visits,avg_check,average_check,discount,first_visit,last_visit,last_change_date,last_message,source,city,branch,master,cancel_count,no_show_count,created_at,telegram_user_id,whatsapp_user_id,max_user_id,wa_check_status,communication_activity,has_bonuses,has_subscription,has_deposit,tags,notes,reacted_to_offers,lifecycle_status,source_channel,services,favorite_service,channel')
+        .eq('org_uid', ORG_UID)
+        .order('created_at', { ascending: false })
+        .limit(2000),
+      supabase.from('appointments')
+        .select('client_id')
+        .eq('org_uid', ORG_UID)
+        .gte('date', now)
+        .eq('deleted', false)
+        .not('status', 'eq', 'cancelled')
+        .limit(5000),
     ])
 
     if (clientsRes.error) {
@@ -370,7 +380,7 @@ export function useClients() {
     fetchClients()
     const ch = supabase
       .channel('clients_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, fetchClients)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients', filter: `org_uid=eq.${ORG_UID}` }, fetchClients)
       .subscribe()
     return () => {
       supabase.removeChannel(ch)

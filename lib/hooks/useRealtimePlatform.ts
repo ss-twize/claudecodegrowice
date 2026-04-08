@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../supabase'
+import { supabase, ORG_UID } from '../supabase'
 
 export type RevenuePoint = { month: string; revenue: number; expenses: number }
 export type ServicePoint = { name: string; value: number; color: string }
@@ -208,12 +208,26 @@ export function useRealtimePlatform() {
   const [activity, setActivity] = useState<ActivityItem[]>([])
 
   useEffect(() => {
+    const debounceRef = { timer: null as ReturnType<typeof setTimeout> | null }
+
     const load = async () => {
       try {
         const [{ data: appointments }, { data: clients }, { data: metricsMonth }] = await Promise.all([
-          supabase.from('appointments').select('*').order('date', { ascending: false }).limit(4000),
-          supabase.from('clients_tg').select('tg_id,name,first_name,last_name,created_at').order('created_at', { ascending: false }).limit(1000),
-          supabase.from('metrics_month').select('month,revenue').order('month', { ascending: false }).limit(24),
+          supabase.from('appointments')
+            .select('record_id,date,service_name,status,price,clientName,master_name')
+            .eq('org_uid', ORG_UID)
+            .order('date', { ascending: false })
+            .limit(4000),
+          supabase.from('clients')
+            .select('id,name,created_at')
+            .eq('org_uid', ORG_UID)
+            .order('created_at', { ascending: false })
+            .limit(1000),
+          supabase.from('metrics_month')
+            .select('month,revenue')
+            .eq('org_uid', ORG_UID)
+            .order('month', { ascending: false })
+            .limit(24),
         ])
 
         const appts = appointments || []
@@ -237,17 +251,23 @@ export function useRealtimePlatform() {
 
     load()
 
+    const debouncedLoad = () => {
+      if (debounceRef.timer) clearTimeout(debounceRef.timer)
+      debounceRef.timer = setTimeout(() => { load() }, 300)
+    }
+
     const apptCh = supabase
       .channel('realtime_platform_appointments')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `org_uid=eq.${ORG_UID}` }, debouncedLoad)
       .subscribe()
 
     const clientCh = supabase
       .channel('realtime_platform_clients')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients_tg' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients', filter: `org_uid=eq.${ORG_UID}` }, debouncedLoad)
       .subscribe()
 
     return () => {
+      if (debounceRef.timer) clearTimeout(debounceRef.timer)
       supabase.removeChannel(apptCh)
       supabase.removeChannel(clientCh)
     }

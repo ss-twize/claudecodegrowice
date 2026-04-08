@@ -23,7 +23,7 @@ export function useMapRatings() {
       .then(({ data }) => { if (data?.length) setRatings(data) })
 
     const ch = supabase.channel('map_ratings_ch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'map_ratings' },
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'map_ratings', filter: `org_uid=eq.${ORG_UID}` },
         (p) => {
           if (p.eventType === 'INSERT') setRatings(prev => [...prev, p.new as MapRating])
           if (p.eventType === 'UPDATE') setRatings(prev => prev.map(r => r.id === (p.new as any).id ? p.new as MapRating : r))
