@@ -2,22 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import Header from "@/components/layout/Header";
-import { profileSettings, orgSettings, notificationsConfig } from "@/lib/mockData";
 import { callWebhook } from "@/lib/webhooks";
 import { supabase, ORG_UID } from "@/lib/supabase";
-import { useSystemStates } from "@/lib/hooks/useSystemStates";
 import { useKnowledgeFiles } from "@/lib/hooks/useKnowledgeFiles";
 import {
   ExternalLink,
   CheckCircle2,
-  Bell,
   Upload,
   FileText,
   X,
   RefreshCw,
   MessageSquare,
-  Power,
-  Settings2,
   Bot,
 } from "lucide-react";
 
@@ -43,15 +38,8 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
 }
 
 export default function SettingsPage() {
-  const { systems, setSystems } = useSystemStates();
   const { files, setFiles } = useKnowledgeFiles();
 
-  const [profile, setProfile] = useState({ ...profileSettings });
-  const [org, setOrg] = useState({ ...orgSettings });
-  const [notifications, setNotifications] = useState(notificationsConfig.map((n) => ({ ...n })));
-
-  const [profileSaved, setProfileSaved] = useState(false);
-  const [orgSaved, setOrgSaved] = useState(false);
   const [greetingSaved, setGreetingSaved] = useState(false);
 
   const [greeting, setGreeting] = useState("Привет! Я ваш помощник салона красоты. Как могу помочь?");
@@ -61,7 +49,6 @@ export default function SettingsPage() {
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [togglingSystem, setTogglingSystem] = useState<string | null>(null);
   const [importSource, setImportSource] = useState<ImportSource>("yclients");
   const [importSourceSaving, setImportSourceSaving] = useState(false);
   const [importSourceSaved, setImportSourceSaved] = useState(false);
@@ -82,12 +69,6 @@ export default function SettingsPage() {
 
     void loadImportSource();
   }, []);
-
-  const saveProfile = () => { setProfileSaved(true); setTimeout(() => setProfileSaved(false), 2000); };
-  const saveOrg = () => { setOrgSaved(true); setTimeout(() => setOrgSaved(false), 2000); };
-
-  const toggleNotification = (id: string, channel: "telegram" | "email") =>
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, [channel]: !n[channel] } : n));
 
   // Knowledge base upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,30 +139,6 @@ export default function SettingsPage() {
     setTimeout(() => setGreetingSaved(false), 2000);
     setGreetingLoading(false);
   };
-
-  // System toggle
-  const toggleSystem = async (systemCode: string, currentEnabled: boolean) => {
-    if (togglingSystem) return;
-    setTogglingSystem(systemCode);
-    const newEnabled = !currentEnabled;
-    const result = await callWebhook('sistema_toggle', { system_code: systemCode, enabled: newEnabled });
-    if (result.configured || !result.configured) {
-      // Optimistic update
-      setSystems(prev => prev.map(s => s.system_code === systemCode ? { ...s, enabled: newEnabled } : s));
-      await supabase.from('system_states').update({ enabled: newEnabled, updated_at: new Date().toISOString() })
-        .eq('org_uid', ORG_UID).eq('system_code', systemCode);
-    }
-    setTogglingSystem(null);
-  };
-
-  const configureSystem = async (systemCode: string) => {
-    const result = await callWebhook('sistema_nastroit', { system_code: systemCode });
-    if (!result.configured) {
-      alert("Вебхук не настроен. Добавьте адрес для действия «sistema_nastroit».");
-    }
-  };
-
-  const autoSystems = systems.filter(s => s.system_code !== 'main_agent');
 
   const saveImportSource = async () => {
     setImportSourceSaving(true);
@@ -334,117 +291,6 @@ export default function SettingsPage() {
           {files.length === 0 && !uploading && (
             <p className="text-[#5E7488] text-xs mt-3 text-center">Файлы не загружены</p>
           )}
-        </div>
-
-        {/* ── Profile ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Профиль</h3>
-          <p className="text-[#5E7488] text-sm mb-5">Личные данные</p>
-          <div className="space-y-4">
-            {[
-              { label: "ФИО", field: "name" as const },
-              { label: "Телефон", field: "phone" as const },
-            ].map(({ label, field }) => (
-              <div key={field}>
-                <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">{label}</label>
-                <input value={profile[field]} onChange={(e) => setProfile((p) => ({ ...p, [field]: e.target.value }))}
-                  className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
-              </div>
-            ))}
-            <div className="flex justify-end pt-2">
-              <button onClick={saveProfile}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  profileSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30" : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
-                }`}>
-                {profileSaved && <CheckCircle2 size={14} />}
-                {profileSaved ? "Сохранено" : "Сохранить"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Organization ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="mb-5">
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded mb-1">Организация</h3>
-            <p className="text-[#5E7488] text-sm">Данные салона и контакты</p>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Название организации</label>
-              <input value={org.name} onChange={(e) => setOrg((o) => ({ ...o, name: e.target.value }))}
-                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
-            </div>
-            <div>
-              <label className="text-[#8299B4] text-xs font-medium mb-1.5 block">Адрес</label>
-              <input value={org.address} onChange={(e) => setOrg((o) => ({ ...o, address: e.target.value }))}
-                className="w-full bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors" />
-            </div>
-            <div>
-              <label className="text-[#8299B4] text-xs font-medium mb-2 block">Страница на картах</label>
-              <div className="space-y-2">
-                {[
-                  { key: "yandexMapsUrl" as const, label: "Я", placeholder: "Ссылка на Яндекс Карты" },
-                  { key: "dgisUrl" as const, label: "2Г", placeholder: "Ссылка на 2ГИС" },
-                ].map((map) => (
-                  <div key={map.key} className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-[#EDF2FA]">{map.label}</span>
-                    </div>
-                    <input value={org[map.key]} onChange={(e) => setOrg((o) => ({ ...o, [map.key]: e.target.value }))}
-                      placeholder={map.placeholder}
-                      className="flex-1 bg-[#0A0D14] border border-[#223444] text-[#EDF2FA] text-sm rounded-lg px-3 py-2.5 outline-none focus:border-[#00FF00]/50 transition-colors placeholder-[#5E7488]" />
-                    <a href={org[map.key]} target="_blank" rel="noopener noreferrer"
-                      className="w-9 h-9 rounded-lg bg-[#1A2535] border border-[#223444] flex items-center justify-center hover:border-[#2C4460] transition-colors flex-shrink-0">
-                      <ExternalLink size={14} className="text-[#8299B4]" />
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-end pt-2">
-              <button onClick={saveOrg}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  orgSaved ? "bg-[#00FF00]/10 text-[#00FF00] border border-[#00FF00]/30" : "bg-[#00FF00] text-black hover:bg-[#ccff33]"
-                }`}>
-                {orgSaved && <CheckCircle2 size={14} />}
-                {orgSaved ? "Сохранено" : "Сохранить"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Notifications ── */}
-        <div className="bg-[#0F1622] border border-[#223444] rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Bell size={16} className="text-[#00FF00]" />
-            <h3 className="text-[#EDF2FA] font-semibold font-unbounded">Уведомления</h3>
-          </div>
-          <p className="text-[#5E7488] text-sm mb-5">Настройте, куда приходят уведомления о событиях</p>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#1A2535]">
-                  <th className="text-left text-[#5E7488] text-xs font-medium pb-3">Событие</th>
-                  <th className="text-center text-[#5E7488] text-xs font-medium pb-3 px-4 whitespace-nowrap">Telegram</th>
-                  <th className="text-center text-[#5E7488] text-xs font-medium pb-3 px-4 whitespace-nowrap">Email</th>
-                </tr>
-              </thead>
-              <tbody>
-                {notifications.map((notif) => (
-                  <tr key={notif.id} className="border-b border-[#1A2535] last:border-0">
-                    <td className="py-3 pr-4"><span className="text-[#8299B4] text-sm">{notif.label}</span></td>
-                    <td className="py-3 px-4 text-center">
-                      <Toggle enabled={notif.telegram} onChange={() => toggleNotification(notif.id, "telegram")} />
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <Toggle enabled={notif.email} onChange={() => toggleNotification(notif.id, "email")} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
 
       </div>
