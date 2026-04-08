@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Unbounded, Montserrat } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
+import { OrgConfigProvider } from "@/lib/contexts/OrgConfigContext";
 
 const unbounded = Unbounded({
   subsets: ["latin", "cyrillic"],
@@ -28,10 +29,12 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${unbounded.variable} ${montserrat.variable} font-montserrat bg-[#0A0D14] text-[#EDF2FA] antialiased`}>
+        <OrgConfigProvider>
           <Sidebar />
           <main className="ml-60 min-h-screen">
             {children}
           </main>
+        </OrgConfigProvider>
       </body>
     </html>
   );
