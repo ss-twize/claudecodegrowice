@@ -20,6 +20,8 @@ import {
 import { useOrgConfig } from "@/lib/contexts/OrgConfigContext";
 
 type ImportSource = "yclients" | "google_sheets";
+type IntegrationCode = "yclients" | "green_api" | "telegram";
+type IntegrationStatus = "connected" | "error" | "not_configured";
 
 const FILE_TYPE_LABELS: Record<string, string> = {
   pdf: "PDF", txt: "Текст", doc: "Ворд", docx: "Ворд",
@@ -30,6 +32,33 @@ const STATUS_COLORS: Record<string, string> = {
   ошибка: "text-red-400 bg-red-500/10 border-red-500/20",
   отправлен: "text-blue-400 bg-blue-500/10 border-blue-500/20",
 };
+
+function getIntegrationStatus(
+  code: IntegrationCode,
+  credentials: Record<string, string>,
+): IntegrationStatus {
+  const trimmed = Object.fromEntries(
+    Object.entries(credentials).map(([key, value]) => [key, value?.trim() ?? ""]),
+  );
+
+  if (code === "yclients") {
+    const companyId = trimmed.company_id;
+    const apiKey = trimmed.api_key;
+    if (!companyId && !apiKey) return "not_configured";
+    return companyId && apiKey ? "connected" : "error";
+  }
+
+  if (code === "green_api") {
+    const partnerToken = trimmed.partner_token;
+    if (!partnerToken) return "not_configured";
+    return "connected";
+  }
+
+  const botToken = trimmed.bot_token;
+  const botName = trimmed.bot_name;
+  if (!botToken && !botName) return "not_configured";
+  return botToken && botName ? "connected" : "error";
+}
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
   return (
@@ -250,16 +279,17 @@ export default function SettingsPage() {
     setSalonSaving(false);
   };
 
-  const saveIntegration = async (code: string) => {
+  const saveIntegration = async (code: IntegrationCode) => {
     setIntegrationSaving(code);
+    const credentials = integrationForms[code];
     await supabase
       .from('integration_settings')
       .upsert(
         {
           org_uid: ORG_UID,
           integration_code: code,
-          credentials: integrationForms[code],
-          status: 'connected', // TODO(integration-verify): replace with actual API check before setting connected
+          credentials,
+          status: getIntegrationStatus(code, credentials),
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'org_uid,integration_code' },
