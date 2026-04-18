@@ -442,44 +442,6 @@ section:not(.hero) { padding: var(--section-padding); }
   color: var(--color-text-secondary);
 }
 
-/* ── SIZES ───────────────────────────────────────────────────── */
-.sizes { background: var(--color-white); }
-
-.sizes__table {
-  width: 100%;
-  max-width: 480px;
-  border-collapse: collapse;
-  margin-top: 32px;
-  font-size: 0.95rem;
-}
-
-.sizes__table th,
-.sizes__table td {
-  padding: 14px 16px;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.sizes__table th {
-  font-weight: 600;
-  color: var(--color-text);
-  font-family: var(--font-heading);
-}
-
-.sizes__table td { color: var(--color-text-secondary); }
-
-.sizes__note {
-  margin-top: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
-}
-
-.sizes__contact-btn { padding: 8px 18px; font-size: 0.9rem; min-height: 40px; }
-
 /* ── FAQ ─────────────────────────────────────────────────────── */
 .faq__list {
   margin-top: 40px;
